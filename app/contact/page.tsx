@@ -250,7 +250,7 @@ function ContactPageContent() {
                   <Phone className="h-5 w-5 text-primary" />
                   <div>
                     <div className="font-medium">Phone</div>
-                    <div className="text-muted-foreground">+971 XX XXX XXXX</div>
+                    <div className="text-muted-foreground">+971 52 244 8485</div>
                   </div>
                 </div>
                 
@@ -258,7 +258,7 @@ function ContactPageContent() {
                   <Mail className="h-5 w-5 text-primary" />
                   <div>
                     <div className="font-medium">Email</div>
-                    <div className="text-muted-foreground">info@georgiaused.com</div>
+                    <div className="text-muted-foreground">info@georgiacars.com</div>
                   </div>
                 </div>
                 

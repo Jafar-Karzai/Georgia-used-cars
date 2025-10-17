@@ -149,7 +149,7 @@ export default function HomePage() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-8 pt-12">
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.totalVehicles}+</div>
+                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.totalVehicles}+4500</div>
                 <div className="text-sm text-muted-foreground">Vehicles Imported</div>
               </div>
               <div className="text-center">
@@ -157,7 +157,7 @@ export default function HomePage() {
                 <div className="text-sm text-muted-foreground">Available Now</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.happyCustomers}+</div>
+                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.happyCustomers}+2000</div>
                 <div className="text-sm text-muted-foreground">Happy Customers</div>
               </div>
             </div>
@@ -317,13 +317,13 @@ export default function HomePage() {
             <Card className="text-center p-6">
               <Phone className="h-12 w-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Phone</h3>
-              <p className="text-muted-foreground">+971 XX XXX XXXX</p>
+              <p className="text-muted-foreground">+971 52 244 8485</p>
             </Card>
 
             <Card className="text-center p-6">
               <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Email</h3>
-              <p className="text-muted-foreground">info@georgiaused.com</p>
+              <p className="text-muted-foreground">info@georgiacars.com</p>
             </Card>
 
             <Card className="text-center p-6">
