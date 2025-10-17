@@ -7,22 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  Car, 
-  Users, 
-  Star, 
-  Shield, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  ChevronRight,
-  Search,
-  Filter,
-  TrendingUp,
-  Award,
-  CheckCircle
-} from 'lucide-react'
+import { Car, Users, Star, Shield, Phone, Mail, MapPin, ChevronRight, Search, Filter, TrendingUp, Award, CheckCircle } from 'lucide-react'
 import { SiteNavbar } from '@/components/layout/site-navbar'
+import { Hero03 } from '@/components/marketing/hero-03'
 
 interface FeaturedVehicle {
   id: string
@@ -95,47 +82,23 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <SiteNavbar />
 
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <div className="container mx-auto px-4">
-          <div className="text-center space-y-8 max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Premium Salvage Vehicles
-              <span className="text-primary block">From US & Canada</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Your trusted partner for quality used cars in Sharjah, UAE. We import carefully selected vehicles from top auction houses including Copart and IAAI.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button asChild size="lg" className="text-lg px-8">
-                <Link href="/inventory">
-                  <Search className="h-5 w-5 mr-2" />
-                  Browse Inventory
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 border-accent text-accent hover:bg-accent hover:text-accent-foreground">
-                <Link href="/contact">
-                  <Phone className="h-5 w-5 mr-2" />
-                  Get Quote
-                </Link>
-              </Button>
-            </div>
+      <Hero03 />
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 pt-12">
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.totalVehicles}+4500</div>
-                <div className="text-sm text-muted-foreground">Vehicles Imported</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.availableVehicles}</div>
-                <div className="text-sm text-muted-foreground">Available Now</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.happyCustomers}+2000</div>
-                <div className="text-sm text-muted-foreground">Happy Customers</div>
-              </div>
+      {/* Stats Strip */}
+      <section className="py-10 bg-gradient-to-b from-background to-muted/40">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-primary">{stats.totalVehicles}+</div>
+              <div className="text-sm text-muted-foreground">Vehicles Imported</div>
+            </div>
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-primary">{stats.availableVehicles}</div>
+              <div className="text-sm text-muted-foreground">Available Now</div>
+            </div>
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-primary">{stats.happyCustomers}+</div>
+              <div className="text-sm text-muted-foreground">Happy Customers</div>
             </div>
           </div>
         </div>
