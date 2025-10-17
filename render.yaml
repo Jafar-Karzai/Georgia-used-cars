@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: georgia-used-cars
+    env: node
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXTAUTH_URL
+        fromService:
+          type: web
+          property: url
