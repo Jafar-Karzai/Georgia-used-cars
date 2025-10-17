@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { VehicleService } from '@/lib/services/vehicles'
 import { InquiryService } from '@/lib/services/inquiries'
@@ -47,7 +47,7 @@ interface Vehicle {
   price: number
 }
 
-export default function ContactPage() {
+function ContactPageContent() {
   const searchParams = useSearchParams()
   const vehicleId = searchParams.get('vehicle')
   const inquiryType = searchParams.get('type') || 'general'
@@ -501,5 +501,13 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}> 
+      <ContactPageContent />
+    </Suspense>
   )
 }
