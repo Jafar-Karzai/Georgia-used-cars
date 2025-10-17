@@ -5,6 +5,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    // Avoid requiring TypeScript during production builds on Render
+    ignoreDuringBuilds: true,
+  },
   images: {
     domains: ['supabase.co', 'localhost'],
     formats: ['image/webp'],
