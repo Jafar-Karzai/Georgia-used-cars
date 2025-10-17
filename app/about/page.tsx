@@ -79,7 +79,7 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  Founded with a passion for quality vehicles and transparent business practices, 
+                  Founded with a passion by Hedayatullah Nasimi for quality vehicles and transparent business practices, 
                   Georgia Used Cars has become a leading importer of salvage vehicles from North American auctions.
                 </p>
                 <p>
@@ -98,11 +98,11 @@ export default function AboutPage() {
               <div className="bg-primary/10 rounded-lg p-8">
                 <div className="grid grid-cols-2 gap-6 text-center">
                   <div>
-                    <div className="text-3xl font-bold text-primary mb-2">500+</div>
+                    <div className="text-3xl font-bold text-primary mb-2">4500+</div>
                     <div className="text-sm text-muted-foreground">Vehicles Imported</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-primary mb-2">5+</div>
+                    <div className="text-3xl font-bold text-primary mb-2">13+</div>
                     <div className="text-sm text-muted-foreground">Years Experience</div>
                   </div>
                   <div>

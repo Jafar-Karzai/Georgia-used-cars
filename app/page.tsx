@@ -378,7 +378,7 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold mb-4">Contact Info</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p>+971 XX XXX XXXX</p>
+                <p>+971 52 244 8485</p>
                 <p>info@georgiaused.com</p>
                 <p>Sharjah, UAE</p>
               </div>
@@ -386,7 +386,7 @@ export default function HomePage() {
           </div>
 
           <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Georgia Used Cars. All rights reserved.</p>
+            <p>&copy; 2025 Georgia Used Cars. All rights reserved.</p>
           </div>
         </div>
       </footer>
