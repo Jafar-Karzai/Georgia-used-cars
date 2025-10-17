@@ -17,33 +17,12 @@ import {
   Truck,
   FileText
 } from 'lucide-react'
-import { Logo } from '@/components/ui/logo'
+import { SiteNavbar } from '@/components/layout/site-navbar'
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Logo href="/" />
-          
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Home</Link>
-            <Link href="/inventory" className="text-muted-foreground hover:text-foreground transition-colors">Inventory</Link>
-            <Link href="/about" className="text-foreground font-medium">About</Link>
-            <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/inventory">Browse Inventory</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/contact">Contact Us</Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <SiteNavbar />
 
       {/* Breadcrumb */}
       <div className="border-b bg-muted/30">

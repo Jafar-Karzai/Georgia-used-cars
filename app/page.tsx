@@ -22,7 +22,7 @@ import {
   Award,
   CheckCircle
 } from 'lucide-react'
-import { Logo } from '@/components/ui/logo'
+import { SiteNavbar } from '@/components/layout/site-navbar'
 
 interface FeaturedVehicle {
   id: string
@@ -93,31 +93,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Logo href="/" />
-          
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-foreground hover:text-primary transition-colors">Home</Link>
-            <Link href="/inventory" className="text-foreground hover:text-primary transition-colors">Inventory</Link>
-            <Link href="/about" className="text-foreground hover:text-primary transition-colors">About</Link>
-            <Link href="/contact" className="text-foreground hover:text-primary transition-colors">Contact</Link>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/inventory">
-                <Search className="h-4 w-4 mr-2" />
-                Browse Cars
-              </Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/contact">Contact Us</Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <SiteNavbar />
 
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SiteNavbar } from '@/components/layout/site-navbar'
 import { Separator } from '@/components/ui/separator'
 import { 
   Car, 
@@ -169,12 +170,7 @@ export default function VehicleDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Navigation Skeleton */}
-        <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-4 py-4">
-            <Skeleton className="h-8 w-48" />
-          </div>
-        </nav>
+        <SiteNavbar />
         
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-2 gap-8">
@@ -194,14 +190,7 @@ export default function VehicleDetailPage() {
   if (error || !vehicle) {
     return (
       <div className="min-h-screen bg-background">
-        <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-4 py-4">
-            <Link href="/" className="flex items-center gap-2">
-              <Car className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold">Georgia Used Cars</span>
-            </Link>
-          </div>
-        </nav>
+        <SiteNavbar />
         
         <div className="container mx-auto px-4 py-16 text-center">
           <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -222,28 +211,7 @@ export default function VehicleDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Car className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Georgia Used Cars</span>
-          </Link>
-          
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Home</Link>
-            <Link href="/inventory" className="text-foreground font-medium">Inventory</Link>
-            <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">About</Link>
-            <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/contact">Get Quote</Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <SiteNavbar />
 
       {/* Breadcrumb */}
       <div className="border-b bg-muted/30">
