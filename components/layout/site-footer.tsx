@@ -38,8 +38,8 @@ export function SiteFooter() {
           <div>
             <h4 className="font-semibold mb-4">Contact Info</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>+971 52 244 8485</p>
-              <p>info@georgiaused.com</p>
+              <p>+971 55 546 7220</p>
+              <p>info@georgiacars.com</p>
               <p>Sharjah, UAE</p>
             </div>
           </div>

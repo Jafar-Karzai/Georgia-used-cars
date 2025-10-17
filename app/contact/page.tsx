@@ -217,7 +217,7 @@ function ContactPageContent() {
                   <Phone className="h-5 w-5 text-primary" />
                   <div>
                     <div className="font-medium">Phone</div>
-                    <div className="text-muted-foreground">+971 52 244 8485</div>
+                    <div className="text-muted-foreground">+971 55 546 7220</div>
                   </div>
                 </div>
                 

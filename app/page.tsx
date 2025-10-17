@@ -293,7 +293,7 @@ export default function HomePage() {
             <Card className="text-center p-6">
               <Phone className="h-12 w-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Phone</h3>
-              <p className="text-muted-foreground">+971 52 244 8485</p>
+              <p className="text-muted-foreground">+971 55 546 7220</p>
             </Card>
 
             <Card className="text-center p-6">
