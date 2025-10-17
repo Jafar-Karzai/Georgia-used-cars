@@ -1,0 +1,489 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Enums
+enum UserRole {
+  super_admin
+  manager
+  inventory_manager
+  finance_manager
+  sales_agent
+  viewer
+
+}
+
+enum VehicleStatus {
+  auction_won
+  payment_processing
+  pickup_scheduled
+  in_transit_to_port
+  at_port
+  shipped
+  in_transit
+  at_uae_port
+  customs_clearance
+  released_from_customs
+  in_transit_to_yard
+  at_yard
+  under_enhancement
+  ready_for_sale
+  reserved
+  sold
+  delivered
+
+}
+
+enum DamageSeverity {
+  minor
+  moderate
+  major
+  total_loss
+
+}
+
+enum ExpenseCategory {
+  acquisition
+  transportation
+  import
+  enhancement
+  marketing
+  operational
+
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  viewed
+  partially_paid
+  fully_paid
+  overdue
+  cancelled
+
+}
+
+enum InquirySource {
+  website
+  phone
+  walk_in
+  social_media
+  referral
+  email
+
+}
+
+enum CurrencyCode {
+  USD
+  CAD
+  AED
+
+}
+
+enum CommunicationType {
+  email
+  phone
+  sms
+  whatsapp
+  meeting
+  note
+
+}
+
+enum CommunicationDirection {
+  inbound
+  outbound
+
+}
+
+enum PaymentMethod {
+  cash
+  bank_transfer
+  check
+  credit_card
+  other
+
+}
+
+enum Cylinders {
+  two
+  three
+  four
+  five
+  six
+  eight
+  ten
+  twelve
+
+}
+
+enum Drivetrain {
+  AWD
+  FWD
+  RWD
+  four_WD
+
+}
+
+// Models
+model Profile {
+  id        String    @id @db.Uuid
+  email     String    @unique
+  fullName  String    @map("full_name")
+  role      UserRole  @default(viewer)
+  phone     String?
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  vehicles              Vehicle[]
+  expenses              Expense[]
+  inquiries             Inquiry[]
+  communications        Communication[]
+  invoices              Invoice[]
+  payments              Payment[]
+  vehicleStatusHistory  VehicleStatusHistory[]
+  vehiclePhotos         VehiclePhoto[]
+  vehicleDocuments      VehicleDocument[]
+  auditLog              AuditLog[]
+  settings              Setting[]
+
+  @@map("profiles")
+}
+
+model Vehicle {
+  id                   String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  vin                  String             @unique @db.VarChar(17)
+  year                 Int
+  make                 String
+  model                String
+  trim                 String?
+  engine               String?
+  mileage              Int?
+  exteriorColor        String?            @map("exterior_color")
+  interiorColor        String?            @map("interior_color")
+  transmission         String?
+  fuelType             String?            @map("fuel_type")
+  bodyStyle            String?            @map("body_style")
+  cylinders            Cylinders?
+  drivetrain           Drivetrain?
+
+  // Auction information
+  auctionHouse         String             @map("auction_house")
+  auctionLocation      String?            @map("auction_location")
+  saleDate             DateTime?          @map("sale_date") @db.Date
+  lotNumber            String?            @map("lot_number")
+
+  // Damage assessment
+  primaryDamage        String?            @map("primary_damage")
+  secondaryDamage      String?            @map("secondary_damage")
+  damageDescription    String?            @map("damage_description")
+  damageSeverity       DamageSeverity?    @map("damage_severity")
+  repairEstimate       Decimal?           @map("repair_estimate") @db.Decimal(10, 2)
+
+  // Status tracking
+  currentStatus        VehicleStatus      @default(auction_won) @map("current_status")
+  currentLocation      String?            @map("current_location")
+
+  // Documentation
+  titleStatus          String?            @map("title_status")
+  keysAvailable        Boolean            @default(false) @map("keys_available")
+  runAndDrive          Boolean            @default(false) @map("run_and_drive")
+
+  // Financial
+  purchasePrice        Decimal            @map("purchase_price") @db.Decimal(10, 2)
+  purchaseCurrency     CurrencyCode       @default(USD) @map("purchase_currency")
+  estimatedTotalCost   Decimal?           @map("estimated_total_cost") @db.Decimal(10, 2)
+  salePrice            Decimal?           @map("sale_price") @db.Decimal(10, 2)
+  saleCurrency         CurrencyCode?      @default(AED) @map("sale_currency")
+
+  // Visibility
+  isPublic             Boolean?           @map("is_public")
+
+  // Metadata
+  createdBy            String?            @map("created_by") @db.Uuid
+  createdByProfile     Profile?           @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  statusHistory        VehicleStatusHistory[]
+  photos               VehiclePhoto[]
+  documents            VehicleDocument[]
+  expenses             Expense[]
+  inquiries            Inquiry[]
+  invoices             Invoice[]
+
+  @@index([vin])
+  @@index([currentStatus])
+  @@index([make, model])
+  @@index([createdAt])
+  @@map("vehicles")
+}
+
+model VehicleStatusHistory {
+  id        String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  vehicleId String        @map("vehicle_id") @db.Uuid
+  status    VehicleStatus
+  location  String?
+  notes     String?
+  changedBy String?       @map("changed_by") @db.Uuid
+  changedAt DateTime      @default(now()) @map("changed_at") @db.Timestamptz(6)
+
+  // Relations
+  vehicle   Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  profile   Profile?      @relation(fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@index([vehicleId])
+  @@index([status])
+  @@map("vehicle_status_history")
+}
+
+model VehiclePhoto {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  vehicleId String   @map("vehicle_id") @db.Uuid
+  url       String
+  caption   String?
+  isPrimary Boolean  @default(false) @map("is_primary")
+  sortOrder Int      @default(0) @map("sort_order")
+  uploadedBy String? @map("uploaded_by") @db.Uuid
+  uploadedAt DateTime @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+
+  // Relations
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  profile   Profile? @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@map("vehicle_photos")
+}
+
+model VehicleDocument {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  vehicleId String   @map("vehicle_id") @db.Uuid
+  documentType String @map("document_type")
+  fileUrl   String   @map("file_url")
+  fileName  String   @map("file_name")
+  fileSize  Int?     @map("file_size")
+  uploadedBy String? @map("uploaded_by") @db.Uuid
+  uploadedAt DateTime @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+
+  // Relations
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  profile   Profile? @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@map("vehicle_documents")
+}
+
+model Expense {
+  id        String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  vehicleId String?         @map("vehicle_id") @db.Uuid
+  category  ExpenseCategory
+  subcategory String?
+  description String
+  amount    Decimal         @db.Decimal(10, 2)
+  currency  CurrencyCode    @default(AED)
+  date      DateTime        @db.Date
+  vendor    String?
+  receiptUrl String?        @map("receipt_url")
+  notes     String?
+  createdBy String?         @map("created_by") @db.Uuid
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  vehicle   Vehicle?        @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  profile   Profile?        @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([vehicleId])
+  @@index([category])
+  @@index([date])
+  @@map("expenses")
+}
+
+model Customer {
+  id                String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email             String?  @unique
+  fullName          String   @map("full_name")
+  phone             String?
+  address           String?
+  city              String?
+  country           String   @default("UAE")
+  dateOfBirth       DateTime? @map("date_of_birth") @db.Date
+  preferredLanguage String   @default("en") @map("preferred_language")
+  marketingConsent  Boolean  @default(false) @map("marketing_consent")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  inquiries         Inquiry[]
+  communications    Communication[]
+  invoices          Invoice[]
+
+  @@map("customers")
+}
+
+model Inquiry {
+  id          String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customerId  String?       @map("customer_id") @db.Uuid
+  source      InquirySource
+  subject     String?
+  message     String
+  vehicleId   String?       @map("vehicle_id") @db.Uuid
+  budgetMin   Decimal?      @map("budget_min") @db.Decimal(10, 2)
+  budgetMax   Decimal?      @map("budget_max") @db.Decimal(10, 2)
+  assignedTo  String?       @map("assigned_to") @db.Uuid
+  status      String        @default("new")
+  priority    String        @default("medium")
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  customer    Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  vehicle     Vehicle?      @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  assignedToProfile Profile? @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  communications Communication[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([assignedTo])
+  @@map("inquiries")
+}
+
+model Communication {
+  id          String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  inquiryId   String?              @map("inquiry_id") @db.Uuid
+  customerId  String?              @map("customer_id") @db.Uuid
+  type        CommunicationType
+  direction   CommunicationDirection
+  subject     String?
+  content     String
+  handledBy   String?              @map("handled_by") @db.Uuid
+  scheduledAt DateTime?            @map("scheduled_at") @db.Timestamptz(6)
+  completedAt DateTime?            @map("completed_at") @db.Timestamptz(6)
+  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  inquiry     Inquiry?             @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  customer    Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  profile     Profile?             @relation(fields: [handledBy], references: [id], onDelete: SetNull)
+
+  @@map("communications")
+}
+
+model Invoice {
+  id          String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  invoiceNumber String      @unique @map("invoice_number")
+  customerId  String        @map("customer_id") @db.Uuid
+  vehicleId   String?       @map("vehicle_id") @db.Uuid
+  subtotal    Decimal       @db.Decimal(10, 2)
+  vatRate     Decimal       @default(0.05) @map("vat_rate") @db.Decimal(5, 4)
+  vatAmount   Decimal       @map("vat_amount") @db.Decimal(10, 2)
+  totalAmount Decimal       @map("total_amount") @db.Decimal(10, 2)
+  currency    CurrencyCode  @default(AED)
+  status      InvoiceStatus @default(draft)
+  dueDate     DateTime?     @map("due_date") @db.Date
+  terms       String?
+  notes       String?
+  createdBy   String?       @map("created_by") @db.Uuid
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  customer    Customer      @relation(fields: [customerId], references: [id])
+  vehicle     Vehicle?      @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  createdByProfile Profile? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  items       InvoiceItem[]
+  payments    Payment[]
+
+  @@index([customerId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id        String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  invoiceId String  @map("invoice_id") @db.Uuid
+  description String
+  quantity  Decimal @default(1) @db.Decimal(10, 2)
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
+  totalPrice Decimal @map("total_price") @db.Decimal(10, 2)
+  sortOrder Int     @default(0) @map("sort_order")
+
+  // Relations
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_items")
+}
+
+model Payment {
+  id            String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  invoiceId     String        @map("invoice_id") @db.Uuid
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      CurrencyCode  @default(AED)
+  paymentMethod PaymentMethod @map("payment_method")
+  paymentDate   DateTime      @map("payment_date") @db.Date
+  referenceNumber String?     @map("reference_number")
+  transactionId String?       @map("transaction_id")
+  notes         String?
+  recordedBy    String?       @map("recorded_by") @db.Uuid
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  profile       Profile?      @relation(fields: [recordedBy], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@map("payments")
+}
+
+model ExchangeRate {
+  id          String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  fromCurrency CurrencyCode @map("from_currency")
+  toCurrency  CurrencyCode @map("to_currency")
+  rate        Decimal      @db.Decimal(10, 6)
+  date        DateTime     @db.Date
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([fromCurrency, toCurrency, date])
+  @@map("exchange_rates")
+}
+
+model Setting {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  key       String   @unique
+  value     Json
+  description String?
+  updatedBy String?  @map("updated_by") @db.Uuid
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  profile   Profile? @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("settings")
+}
+
+model AuditLog {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tableName String   @map("table_name")
+  recordId  String   @map("record_id") @db.Uuid
+  action    String   // INSERT, UPDATE, DELETE
+  oldValues Json?    @map("old_values")
+  newValues Json?    @map("new_values")
+  userId    String?  @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  user      Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tableName, recordId])
+  @@map("audit_log")
+}

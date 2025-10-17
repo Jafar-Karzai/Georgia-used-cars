@@ -1,0 +1,395 @@
+'use client'
+
+import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { VehicleService } from '@/lib/services/vehicles'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { 
+  Car, 
+  Users, 
+  Star, 
+  Shield, 
+  Phone, 
+  Mail, 
+  MapPin, 
+  ChevronRight,
+  Search,
+  Filter,
+  TrendingUp,
+  Award,
+  CheckCircle
+} from 'lucide-react'
+import { Logo } from '@/components/ui/logo'
+
+interface FeaturedVehicle {
+  id: string
+  year: number
+  make: string
+  model: string
+  price: number
+  photos: string[]
+  status: string
+  mileage?: number
+}
+
+export default function HomePage() {
+  const [featuredVehicles, setFeaturedVehicles] = useState<FeaturedVehicle[]>([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<{
+    totalVehicles: number
+    availableVehicles: number
+    happyCustomers: number
+  }>({
+    totalVehicles: 0,
+    availableVehicles: 0,
+    happyCustomers: 0
+  })
+
+  useEffect(() => {
+    loadFeaturedVehicles()
+    loadStats()
+  }, [])
+
+  const loadFeaturedVehicles = async () => {
+    try {
+      const response = await VehicleService.getPublic({}, 1, 3)
+      
+      if (response.success && response.data) {
+        setFeaturedVehicles(response.data.slice(0, 3))
+      }
+    } catch (error) {
+      console.error('Failed to load featured vehicles:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadStats = async () => {
+    try {
+      const response = await VehicleService.getStatistics()
+      if (response.success && response.data) {
+        setStats({
+          totalVehicles: response.data.total,
+          availableVehicles: response.data.byStatus.available || 0,
+          happyCustomers: Math.floor(response.data.total * 0.8) // Approximate based on total vehicles sold
+        })
+      }
+    } catch (error) {
+      console.error('Failed to load stats:', error)
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-AE', {
+      style: 'currency',
+      currency: 'AED',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Logo href="/" />
+          
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/" className="text-foreground hover:text-primary transition-colors">Home</Link>
+            <Link href="/inventory" className="text-foreground hover:text-primary transition-colors">Inventory</Link>
+            <Link href="/about" className="text-foreground hover:text-primary transition-colors">About</Link>
+            <Link href="/contact" className="text-foreground hover:text-primary transition-colors">Contact</Link>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/inventory">
+                <Search className="h-4 w-4 mr-2" />
+                Browse Cars
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/contact">Contact Us</Link>
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-8 max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+              Premium Salvage Vehicles
+              <span className="text-primary block">From US & Canada</span>
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Your trusted partner for quality used cars in Sharjah, UAE. We import carefully selected vehicles from top auction houses including Copart and IAAI.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button asChild size="lg" className="text-lg px-8">
+                <Link href="/inventory">
+                  <Search className="h-5 w-5 mr-2" />
+                  Browse Inventory
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 border-accent text-accent hover:bg-accent hover:text-accent-foreground">
+                <Link href="/contact">
+                  <Phone className="h-5 w-5 mr-2" />
+                  Get Quote
+                </Link>
+              </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-8 pt-12">
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.totalVehicles}+</div>
+                <div className="text-sm text-muted-foreground">Vehicles Imported</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.availableVehicles}</div>
+                <div className="text-sm text-muted-foreground">Available Now</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-primary">{stats.happyCustomers}+</div>
+                <div className="text-sm text-muted-foreground">Happy Customers</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Vehicles */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Vehicles</h2>
+            <p className="text-xl text-muted-foreground">Handpicked selections from our current inventory</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {loading ? (
+              [...Array(3)].map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="h-48 w-full" />
+                  <CardContent className="p-6">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2 mb-4" />
+                    <Skeleton className="h-8 w-1/3" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : featuredVehicles.length > 0 ? (
+              featuredVehicles.map((vehicle) => (
+                <Card key={vehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
+                  <Link href={`/inventory/${vehicle.id}`}>
+                    <div className="relative h-48 bg-muted">
+                      {vehicle.photos?.[0] ? (
+                        <img 
+                          src={vehicle.photos[0]} 
+                          alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Car className="h-16 w-16 text-muted-foreground" />
+                        </div>
+                      )}
+                      <Badge className="absolute top-3 right-3 bg-emerald-500 hover:bg-emerald-600">
+                        {vehicle.status}
+                      </Badge>
+                      {vehicle.price && vehicle.price < 50000 && (
+                        <Badge className="absolute top-3 left-3 bg-brand-red-500 text-white">
+                          Great Deal
+                        </Badge>
+                      )}
+                    </div>
+                    <CardContent className="p-6">
+                      <h3 className="text-xl font-semibold mb-2">
+                        {vehicle.year} {vehicle.make} {vehicle.model}
+                      </h3>
+                      {vehicle.mileage && (
+                        <p className="text-muted-foreground mb-4">
+                          {vehicle.mileage.toLocaleString()} miles
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-primary">
+                          {formatCurrency(vehicle.price)}
+                        </span>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-12">
+                <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-xl text-muted-foreground">No vehicles available at the moment</p>
+                <p className="text-muted-foreground">Check back soon for new arrivals</p>
+              </div>
+            )}
+          </div>
+
+          {featuredVehicles.length > 0 && (
+            <div className="text-center mt-12">
+              <Button asChild variant="outline" size="lg">
+                <Link href="/inventory">
+                  View All Vehicles
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Why Choose Us */}
+      <section className="py-20 bg-muted/50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Georgia Used Cars?</h2>
+            <p className="text-xl text-muted-foreground">Your trusted partner in quality vehicle imports</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="text-center p-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
+                <Shield className="h-8 w-8 text-primary" />
+              </div>
+              <CardHeader className="pb-4">
+                <CardTitle>Quality Assurance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Every vehicle is carefully inspected and selected from reputable auction houses. We provide complete transparency about vehicle history and condition.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center p-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
+                <Award className="h-8 w-8 text-primary" />
+              </div>
+              <CardHeader className="pb-4">
+                <CardTitle>Expert Experience</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Years of experience in salvage vehicle imports with deep knowledge of US and Canada auction markets. We handle all import procedures.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center p-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
+                <CheckCircle className="h-8 w-8 text-primary" />
+              </div>
+              <CardHeader className="pb-4">
+                <CardTitle>Complete Support</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  From initial inquiry to final delivery, we provide comprehensive support throughout your vehicle purchase journey.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Get In Touch</h2>
+            <p className="text-xl text-muted-foreground">Ready to find your next vehicle? Contact us today</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <Card className="text-center p-6">
+              <Phone className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Phone</h3>
+              <p className="text-muted-foreground">+971 XX XXX XXXX</p>
+            </Card>
+
+            <Card className="text-center p-6">
+              <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Email</h3>
+              <p className="text-muted-foreground">info@georgiaused.com</p>
+            </Card>
+
+            <Card className="text-center p-6">
+              <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Location</h3>
+              <p className="text-muted-foreground">Sharjah, UAE</p>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Link href="/contact">
+                Contact Us Today
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t bg-muted/50 py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <Logo variant="compact" className="mb-4" />
+              <p className="text-muted-foreground text-sm">
+                Premium salvage vehicles imported from US and Canada auctions. Your trusted partner in Sharjah, UAE.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <div className="space-y-2 text-sm">
+                <Link href="/" className="block text-muted-foreground hover:text-foreground transition-colors">Home</Link>
+                <Link href="/inventory" className="block text-muted-foreground hover:text-foreground transition-colors">Inventory</Link>
+                <Link href="/about" className="block text-muted-foreground hover:text-foreground transition-colors">About</Link>
+                <Link href="/contact" className="block text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Services</h4>
+              <div className="space-y-2 text-sm">
+                <p className="text-muted-foreground">Vehicle Import</p>
+                <p className="text-muted-foreground">Auction Bidding</p>
+                <p className="text-muted-foreground">Inspection Services</p>
+                <p className="text-muted-foreground">Documentation</p>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Contact Info</h4>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>+971 XX XXX XXXX</p>
+                <p>info@georgiaused.com</p>
+                <p>Sharjah, UAE</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
+            <p>&copy; 2024 Georgia Used Cars. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}
