@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CustomerService, type UpdateCustomerData } from '@/lib/services/customers'
 import { getCurrentUser, hasPermission } from '@/lib/auth'
+import { serializeToSnakeCase } from '@/lib/utils/serialization'
 
 // Helper function to sanitize error messages
 function sanitizeError(error: string): string {
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest, { params: paramsPromise }: Route
           { status: 404 }
         )
       }
-      
+
       return NextResponse.json(
         { success: false, error: sanitizeError(result.error!) },
         { status: 500 }
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest, { params: paramsPromise }: Route
 
     return NextResponse.json({
       success: true,
-      data: result.data
+      data: serializeToSnakeCase(result.data)
     })
 
   } catch (error: unknown) {
@@ -215,7 +216,7 @@ export async function PUT(request: NextRequest, { params: paramsPromise }: Route
           { status: 409 }
         )
       }
-      
+
       return NextResponse.json(
         { success: false, error: sanitizeError(result.error!) },
         { status: 500 }
@@ -224,7 +225,7 @@ export async function PUT(request: NextRequest, { params: paramsPromise }: Route
 
     return NextResponse.json({
       success: true,
-      data: result.data
+      data: serializeToSnakeCase(result.data)
     })
 
   } catch (error: unknown) {

@@ -1,4 +1,5 @@
 'use client'
+// moved into (site) route group to use site layout
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
@@ -17,13 +18,14 @@ import {
   ChevronLeft,
   Grid3X3,
   List,
-  MapPin,
-  Calendar,
   Gauge,
   Fuel,
+  Cog,
   Home
 } from 'lucide-react'
 import { SiteNavbar } from '@/components/layout/site-navbar'
+import { getPublicStatusLabel, getPublicStatusBadgeStyle } from '@/lib/utils/vehicle-status'
+import type { VehicleStatus } from '@/types/database'
 
 interface PublicVehicle {
   id: string
@@ -39,6 +41,10 @@ interface PublicVehicle {
   current_status: string
   purchase_price: number
   purchase_currency: string
+  sale_price?: number
+  sale_currency?: string
+  sale_type?: string
+  sale_price_includes_vat?: boolean
   current_location?: string
   sale_date?: string
   created_at: string
@@ -76,8 +82,35 @@ export default function InventoryPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalVehicles, setTotalVehicles] = useState(0)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [isUAE, setIsUAE] = useState<boolean | null>(null)
 
   const itemsPerPage = 12
+
+  // Detect if user is in UAE
+  useEffect(() => {
+    const detectLocation = async () => {
+      try {
+        // Use a reliable geolocation API with timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000)
+        
+        const response = await fetch('https://ipapi.co/json/', { signal: controller.signal })
+        clearTimeout(timeoutId)
+        
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}`)
+        }
+        
+        const data = await response.json()
+        setIsUAE(data.country_code === 'AE')
+      } catch (error) {
+        console.warn('Location detection failed, defaulting to non-UAE:', error)
+        // Default to non-UAE if detection fails
+        setIsUAE(false)
+      }
+    }
+    detectLocation()
+  }, [])
 
   useEffect(() => {
     loadVehicles()
@@ -138,7 +171,8 @@ export default function InventoryPage() {
     setCurrentPage(1)
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    if (typeof amount === 'string') return amount
     return new Intl.NumberFormat('en-AE', {
       style: 'currency',
       currency: 'AED',
@@ -147,12 +181,56 @@ export default function InventoryPage() {
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
+  // Calculate display price based on vehicle's sale type and user location
+  const getDisplayPrice = (vehicle: PublicVehicle): number | string => {
+    // Only show price if sale_price exists and is greater than 0
+    if (!vehicle.sale_price || vehicle.sale_price <= 0) return 'Contact for Price'
+
+    const basePrice = vehicle.sale_price
+    const saleType = vehicle.sale_type || 'local_and_export'
+    const includesVat = vehicle.sale_price_includes_vat ?? false
+
+    // For export-only vehicles, no VAT applies
+    if (saleType === 'export_only') {
+      return basePrice
+    }
+
+    // For local-only vehicles, always show with VAT
+    if (saleType === 'local_only') {
+      return includesVat ? basePrice : basePrice * 1.05
+    }
+
+    // For local_and_export (both markets), show appropriate price based on location
+    if (isUAE) {
+      // UAE customers see price with VAT
+      return includesVat ? basePrice : basePrice * 1.05
+    } else {
+      // Export customers see price without VAT
+      return basePrice
+    }
+  }
+
+  // Get VAT note for display
+  const getVatNote = (vehicle: PublicVehicle) => {
+    // Only show VAT note if sale_price exists and is greater than 0
+    if (!vehicle.sale_price || vehicle.sale_price <= 0) return null
+
+    const saleType = vehicle.sale_type || 'local_and_export'
+
+    if (saleType === 'export_only') {
+      return 'VAT free'
+    }
+
+    if (saleType === 'local_only') {
+      return 'Includes 5% VAT'
+    }
+
+    // For local_and_export
+    if (isUAE) {
+      return 'Includes 5% VAT (UAE)'
+    } else {
+      return 'VAT free (Export)'
+    }
   }
 
   return (
@@ -369,76 +447,102 @@ export default function InventoryPage() {
 
         {/* Vehicle Grid/List */}
         {loading ? (
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+          <div className={`grid gap-6 ${viewMode === 'grid' ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
             {[...Array(itemsPerPage)].map((_, i) => (
               <Card key={i} className="overflow-hidden">
-                <Skeleton className="h-48 w-full" />
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2 mb-4" />
-                  <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-60 w-full" />
+                <CardContent className="p-5">
+                  <Skeleton className="h-6 w-3/4 mb-3" />
+                  <Skeleton className="h-20 w-full mb-3" />
+                  <Skeleton className="h-10 w-2/3" />
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : vehicles.length > 0 ? (
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+          <div className={`grid gap-6 ${viewMode === 'grid' ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
             {vehicles.map((vehicle) => (
-              <Card key={vehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-                <Link href={`/inventory/${vehicle.id}`}>
-                  <div className={`relative bg-muted ${viewMode === 'grid' ? 'h-48' : 'h-32 md:h-48'}`}>
+              <Card key={vehicle.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-border/50 flex flex-col">
+                <Link href={`/inventory/${vehicle.id}`} className="flex flex-col h-full">
+                  {/* Fixed Height Image Container */}
+                  <div className="relative bg-muted h-60 flex-shrink-0">
                     {vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url ? (
-                      <img 
-                        src={vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url || ''} 
+                      <img
+                        src={vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url || ''}
                         alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover object-center"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Car className="h-16 w-16 text-muted-foreground" />
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Car className="h-16 w-16 text-muted-foreground/50" />
                       </div>
                     )}
-                    <Badge className="absolute top-3 right-3 bg-emerald-500 hover:bg-emerald-600">
-                      {vehicle.current_status}
-                    </Badge>
+                    {getPublicStatusLabel(vehicle.current_status as VehicleStatus) && (
+                      <Badge className={`absolute top-3 right-3 border font-semibold shadow-sm ${getPublicStatusBadgeStyle(vehicle.current_status as VehicleStatus)}`}>
+                        {getPublicStatusLabel(vehicle.current_status as VehicleStatus)}
+                      </Badge>
+                    )}
                   </div>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold mb-2">
+
+                  {/* Card Content with proper spacing */}
+                  <CardContent className="p-5 flex flex-col flex-grow">
+                    {/* Vehicle Title */}
+                    <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
                       {vehicle.year} {vehicle.make} {vehicle.model}
                     </h3>
-                    
-                    <div className="space-y-2 mb-4">
+
+                    {/* Specs Section */}
+                    <div className="grid grid-cols-2 gap-2.5 py-3 mb-3 border-y border-border/40">
                       {vehicle.mileage && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Gauge className="h-4 w-4" />
-                          {vehicle.mileage.toLocaleString()} miles
+                        <div className="flex items-center gap-1.5">
+                          <Gauge className="h-4 w-4 flex-shrink-0 text-primary" />
+                          <span className="text-sm font-medium text-muted-foreground truncate">
+                            {vehicle.mileage.toLocaleString()} mi
+                          </span>
+                        </div>
+                      )}
+                      {vehicle.transmission && (
+                        <div className="flex items-center gap-1.5">
+                          <Cog className="h-4 w-4 flex-shrink-0 text-primary" />
+                          <span className="text-sm font-medium text-muted-foreground truncate">
+                            {vehicle.transmission}
+                          </span>
                         </div>
                       )}
                       {vehicle.fuel_type && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Fuel className="h-4 w-4" />
-                          {vehicle.fuel_type}
+                        <div className="flex items-center gap-1.5">
+                          <Fuel className="h-4 w-4 flex-shrink-0 text-primary" />
+                          <span className="text-sm font-medium text-muted-foreground truncate">
+                            {vehicle.fuel_type}
+                          </span>
                         </div>
                       )}
-                      {vehicle.current_location && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4" />
-                          {vehicle.current_location}
-                        </div>
-                      )}
-                      {vehicle.sale_date && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          Auction: {formatDate(vehicle.sale_date)}
+                      {vehicle.body_style && (
+                        <div className="flex items-center gap-1.5">
+                          <Car className="h-4 w-4 flex-shrink-0 text-primary" />
+                          <span className="text-sm font-medium text-muted-foreground truncate">
+                            {vehicle.body_style}
+                          </span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-primary">
-                        {formatCurrency(vehicle.purchase_price)}
-                      </span>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    {/* Price Section */}
+                    <div className="flex items-end justify-between pt-3 mt-auto border-t border-border/40">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground mb-1.5">
+                          {vehicle.sale_price && vehicle.sale_price > 0 ? 'Sale Price' : 'Price'}
+                        </p>
+                        <p className="text-2xl font-bold text-primary truncate">
+                          {formatCurrency(getDisplayPrice(vehicle))}
+                        </p>
+                        {getVatNote(vehicle) && (
+                          <p className="text-xs text-amber-600 font-medium mt-1">
+                            {getVatNote(vehicle)}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0 ml-2" />
                     </div>
                   </CardContent>
                 </Link>

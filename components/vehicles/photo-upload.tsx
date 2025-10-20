@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { StorageClient } from '@/lib/storage/client'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -78,9 +79,12 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
 
     setUploading(true)
     try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData?.session?.access_token
+
       const uploadPromises = selectedFiles.map(async (file, index) => {
         const result = await StorageClient.uploadVehicleImage(vehicleId, file, user.id)
-        
+
         if (result.success && result.url) {
           // Save to database
           console.log('🖼️ Inserting photo to database:', {
@@ -90,23 +94,28 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
             sort_order: photos.length + index,
             uploaded_by: user.id
           })
-          
-          const { data: dbResult, error: dbError } = await supabase
-            .from('vehicle_photos')
-            .insert({
-              vehicle_id: vehicleId,
-              url: result.url,
-              is_primary: photos.length === 0 && index === 0, // First photo is primary if no photos exist
-              sort_order: photos.length + index,
-              uploaded_by: user.id
-            })
-            
-          if (dbError) {
-            console.error('❌ Database insert error:', dbError)
-            return { success: false, error: dbError.message }
+
+          const headers: HeadersInit = { 'Content-Type': 'application/json' }
+          if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`
           }
-          
-          console.log('✅ Photo saved to database:', dbResult)
+
+          const res = await fetch(`/api/vehicles/${vehicleId}/photos`, {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({
+              url: result.url,
+              is_primary: photos.length === 0 && index === 0,
+              sort_order: photos.length + index,
+            })
+          })
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            console.error('❌ Photo DB insert API error:', err)
+            return { success: false, error: err?.error || `HTTP ${res.status}` }
+          }
+          console.log('✅ Photo saved to database via API')
         }
         return result
       })
@@ -131,17 +140,24 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
 
   const setPrimaryPhoto = async (photoId: string) => {
     try {
-      // Remove primary from all photos
-      await supabase
-        .from('vehicle_photos')
-        .update({ is_primary: false })
-        .eq('vehicle_id', vehicleId)
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData?.session?.access_token
 
-      // Set new primary
-      await supabase
-        .from('vehicle_photos')
-        .update({ is_primary: true })
-        .eq('id', photoId)
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`
+      }
+
+      const res = await fetch(`/api/vehicles/${vehicleId}/photos/${photoId}`, {
+        method: 'PUT',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ is_primary: true })
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error || `HTTP ${res.status}`)
+      }
 
       onPhotosUpdate()
     } catch (error) {
@@ -154,15 +170,28 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
       // Extract path from URL
       const urlParts = photoUrl.split('/')
       const path = urlParts.slice(-2).join('/') // Get last 2 parts (folder/filename)
-      
+
       // Delete from storage
       await StorageClient.deleteFile('vehicle-images', path)
-      
-      // Delete from database
-      await supabase
-        .from('vehicle_photos')
-        .delete()
-        .eq('id', photoId)
+
+      // Delete from database via API
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData?.session?.access_token
+
+      const headers: HeadersInit = {}
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`
+      }
+
+      const res = await fetch(`/api/vehicles/${vehicleId}/photos/${photoId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error || `HTTP ${res.status}`)
+      }
 
       onPhotosUpdate()
     } catch (error) {
@@ -213,6 +242,7 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
                   <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
                     {previews.map((preview, index) => (
                       <div key={index} className="relative group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
@@ -271,10 +301,13 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {photos.map((photo) => (
             <div key={photo.id} className="relative group">
-              <img
+              <Image
                 src={photo.url}
                 alt={photo.caption || 'Vehicle photo'}
+                width={128}
+                height={128}
                 className="w-full h-32 object-cover rounded-lg border"
+                priority={false}
               />
               
               {/* Photo controls */}

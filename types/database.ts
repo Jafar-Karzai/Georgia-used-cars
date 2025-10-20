@@ -24,6 +24,7 @@ export type ExpenseCategory = 'acquisition' | 'transportation' | 'import' | 'enh
 export type InvoiceStatus = 'draft' | 'sent' | 'viewed' | 'partially_paid' | 'fully_paid' | 'overdue' | 'cancelled'
 export type InquirySource = 'website' | 'phone' | 'walk_in' | 'social_media' | 'referral' | 'email'
 export type CurrencyCode = 'USD' | 'CAD' | 'AED'
+export type SaleType = 'local_only' | 'export_only' | 'local_and_export'
 
 export interface Profile {
   id: string
@@ -50,44 +51,53 @@ export interface Vehicle {
   transmission?: string
   fuel_type?: string
   body_style?: string
-  
+
   // Auction information
   auction_house: string
   auction_location?: string
   sale_date?: string
   lot_number?: string
-  
+
   // Damage assessment
   primary_damage?: string
   secondary_damage?: string
   damage_description?: string
   damage_severity?: DamageSeverity
   repair_estimate?: number
-  
+
   // Status tracking
   current_status: VehicleStatus
   current_location?: string
   gps_coordinates?: { x: number; y: number }
-  
+
   // Documentation
   title_status?: string
   keys_available: boolean
   run_and_drive: boolean
-  
+
   // Financial
   purchase_price: number
   purchase_currency: CurrencyCode
   estimated_total_cost?: number
   sale_price?: number
   sale_currency?: CurrencyCode
-  
+  sale_price_includes_vat?: boolean
+  sale_type?: SaleType
+  drivetrain?: string
+
   // Visibility
   is_public?: boolean
-  
+
   // Metadata
   created_by?: string
   created_at: string
   updated_at: string
+
+  // Related data (enriched when fetching vehicle details)
+  vehicle_photos?: VehiclePhoto[]
+  documents?: Record<string, unknown>[]
+  vehicle_status_history?: VehicleStatusHistory[]
+  expenses?: Expense[]
 }
 
 export interface VehicleStatusHistory {
@@ -109,6 +119,17 @@ export interface VehiclePhoto {
   sort_order: number
   uploaded_by?: string
   uploaded_at: string
+}
+
+/**
+ * Consistent photo interface used across components
+ * Always use snake_case to match database schema
+ */
+export interface Photo {
+  id: string
+  url: string
+  is_primary: boolean
+  sort_order?: number
 }
 
 export interface Expense {

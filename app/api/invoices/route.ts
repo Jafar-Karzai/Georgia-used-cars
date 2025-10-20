@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { InvoiceService, type CreateInvoiceData, type InvoiceFilters, type InvoiceLineItem } from '@/lib/services/invoices'
 import { getCurrentUser, hasPermission } from '@/lib/auth'
+import { serializeToSnakeCase, serializeArrayToSnakeCase } from '@/lib/utils/serialization'
 
 // Helper function to sanitize error messages
 function sanitizeError(error: string): string {
@@ -224,7 +225,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: result.data,
+      data: serializeArrayToSnakeCase(result.data),
       pagination: result.pagination
     })
 
@@ -298,7 +299,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: true, data: result.data },
+      { success: true, data: serializeToSnakeCase(result.data) },
       { status: 201 }
     )
 

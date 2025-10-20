@@ -1,8 +1,9 @@
 'use client'
+// moved into (site) route group to use site layout
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { VehicleService } from '@/lib/services/vehicles'
+import { fetchVehicleStats, fetchVehicles } from '@/lib/api/vehicles-client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -42,11 +43,8 @@ export default function HomePage() {
 
   const loadFeaturedVehicles = async () => {
     try {
-      const response = await VehicleService.getPublic({}, 1, 3)
-      
-      if (response.success && response.data) {
-        setFeaturedVehicles(response.data.slice(0, 3))
-      }
+      const response = await fetchVehicles({ is_public: true }, 1, 3)
+      if (response.success && response.data) setFeaturedVehicles(response.data.slice(0, 3))
     } catch (error) {
       console.error('Failed to load featured vehicles:', error)
     } finally {
@@ -56,14 +54,12 @@ export default function HomePage() {
 
   const loadStats = async () => {
     try {
-      const response = await VehicleService.getStatistics()
-      if (response.success && response.data) {
-        setStats({
-          totalVehicles: response.data.total,
-          availableVehicles: response.data.byStatus.available || 0,
-          happyCustomers: Math.floor(response.data.total * 0.8) // Approximate based on total vehicles sold
-        })
-      }
+      const response = await fetchVehicleStats()
+      if (response.success && response.data) setStats({
+        totalVehicles: response.data.total,
+        availableVehicles: response.data.byStatus.available || 0,
+        happyCustomers: Math.floor(response.data.total * 0.8)
+      })
     } catch (error) {
       console.error('Failed to load stats:', error)
     }
@@ -129,9 +125,9 @@ export default function HomePage() {
                 <Card key={vehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
                   <Link href={`/inventory/${vehicle.id}`}>
                     <div className="relative h-48 bg-muted">
-                      {vehicle.photos?.[0] ? (
+                      {vehicle.vehicle_photos?.[0] ? (
                         <img 
-                          src={vehicle.photos[0]} 
+                          src={vehicle.vehicle_photos[0]} 
                           alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />

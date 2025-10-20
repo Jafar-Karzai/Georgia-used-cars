@@ -1,14 +1,11 @@
-import { Vehicle } from '@/types/database'
+import { Vehicle, Photo } from '@/types/database'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { CalendarDays, MapPin, DollarSign, Car, Wrench, ImageIcon, Globe, EyeOff } from 'lucide-react'
 
 interface VehicleWithPhotos extends Vehicle {
-  vehicle_photos?: Array<{
-    url: string
-    is_primary: boolean
-  }>
+  vehicle_photos?: Photo[]
 }
 
 interface VehicleCardProps {
@@ -38,10 +35,14 @@ export function VehicleCard({ vehicle, onEdit, onViewDetails, className }: Vehic
     ).join(' ')
   }
 
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
+  const formatPrice = (price: number | null | undefined, currency: string | null | undefined) => {
+    // Only show price if it exists and is greater than 0
+    if (!price || price <= 0) return 'Contact for Price'
+    return new Intl.NumberFormat('en-AE', {
       style: 'currency',
-      currency: currency || 'USD'
+      currency: currency || 'AED',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(price)
   }
 
@@ -121,7 +122,7 @@ export function VehicleCard({ vehicle, onEdit, onViewDetails, className }: Vehic
           
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span>{formatPrice(vehicle.purchase_price, vehicle.purchase_currency)}</span>
+            <span>{formatPrice(vehicle.sale_price, vehicle.sale_currency)}</span>
           </div>
           
           {vehicle.sale_date && (

@@ -1,4 +1,5 @@
 'use client'
+// moved into (site) route group to use site layout
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo, LogoFull, LogoCompact, LogoIcon, LogoAdmin } from '@/components/ui/logo'

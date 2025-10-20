@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import { VehicleService } from '@/lib/services/vehicles'
+import { fetchVehicleById, updateVehicle } from '@/lib/api/vehicles-client'
 import { StatusTracker } from '@/components/vehicles/status-tracker'
 import { PhotoUpload } from '@/components/vehicles/photo-upload'
 import { ExpenseForm } from '@/components/expenses/expense-form'
@@ -56,15 +56,13 @@ export default function VehicleDetailsPage() {
 
   const loadVehicle = useCallback(async () => {
     setLoading(true)
-    const result = await VehicleService.getById(vehicleId)
-    
-    if (result.success) {
-      setVehicle(result.data)
-    } else {
-      console.error('Failed to load vehicle:', result.error)
+    try {
+      const result = await fetchVehicleById(vehicleId)
+      if (result.success) setVehicle(result.data)
+      else console.error('Failed to load vehicle:', result.error)
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }, [vehicleId])
 
   useEffect(() => {
@@ -84,15 +82,12 @@ export default function VehicleDetailsPage() {
 
   const handleVisibilityToggle = async (isPublic: boolean) => {
     if (!user || !vehicle) return
-    
+
     setUpdatingVisibility(true)
     try {
-      const result = await VehicleService.update(
-        vehicle.id, 
-        { is_public: isPublic }, 
-        user.id
-      )
-      
+      // Send camelCase field name to match VehicleService.update expectations
+      const result = await updateVehicle(vehicle.id, { isPublic })
+
       if (result.success) {
         setVehicle(prev => prev ? { ...prev, is_public: isPublic } : null)
       } else {
@@ -470,19 +465,19 @@ export default function VehicleDetailsPage() {
                     </span>
                   </div>
                 )}
-                {vehicle.sale_price && (
+                {vehicle.sale_price && vehicle.sale_price > 0 && (
                   <>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Sale Price:</span>
                       <span className="font-medium">
-                        {formatPrice(vehicle.sale_price, vehicle.sale_currency)}
+                        {formatPrice(vehicle.sale_price, vehicle.sale_currency || 'AED')}
                       </span>
                     </div>
                     <div className="flex justify-between border-t pt-2">
                       <span className="font-medium">Profit/Loss:</span>
                       <span className={`font-medium ${
-                        vehicle.sale_price > (vehicle.purchase_price + totalExpenses) 
-                          ? 'text-green-600' 
+                        vehicle.sale_price > (vehicle.purchase_price + totalExpenses)
+                          ? 'text-green-600'
                           : 'text-red-600'
                       }`}>
                         {formatPrice(

@@ -25,22 +25,24 @@ export function VinInput({ value, onChange, onVinDecoded, disabled }: VinInputPr
   const handleVinChange = (newVin: string) => {
     const cleanVin = newVin.toUpperCase().replace(/[^A-Z0-9]/g, '')
     onChange(cleanVin)
-    
+
     // Reset states when VIN changes
     setDecodedData(null)
     setError('')
-    
-    // Validate format
-    if (cleanVin.length === 17) {
+
+    // Validate format (Issue 15: Allow 10-17 characters, not just 17)
+    if (cleanVin.length >= 10 && cleanVin.length <= 17) {
       setIsValid(VinDecoderService.validateVin(cleanVin))
+    } else if (cleanVin.length > 0) {
+      setIsValid(false)
     } else {
       setIsValid(null)
     }
   }
 
   const handleDecodeVin = async () => {
-    if (!value || value.length !== 17) {
-      setError('Please enter a complete 17-character VIN')
+    if (!value || value.length < 10 || value.length > 17) {
+      setError('Please enter a VIN between 10 and 17 characters')
       return
     }
 
@@ -67,7 +69,7 @@ export function VinInput({ value, onChange, onVinDecoded, disabled }: VinInputPr
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && value.length === 17 && !loading) {
+    if (e.key === 'Enter' && value.length >= 10 && value.length <= 17 && !loading) {
       handleDecodeVin()
     }
   }
@@ -106,7 +108,7 @@ export function VinInput({ value, onChange, onVinDecoded, disabled }: VinInputPr
             type="button"
             variant="outline"
             onClick={handleDecodeVin}
-            disabled={!value || value.length !== 17 || loading || disabled}
+            disabled={!value || value.length < 10 || value.length > 17 || loading || disabled}
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -119,8 +121,8 @@ export function VinInput({ value, onChange, onVinDecoded, disabled }: VinInputPr
         
         {/* Character counter */}
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>VIN must be exactly 17 characters</span>
-          <span className={value.length === 17 ? 'text-green-600' : ''}>
+          <span>VIN must be 10-17 characters</span>
+          <span className={value.length >= 10 && value.length <= 17 ? 'text-green-600' : ''}>
             {value.length}/17
           </span>
         </div>

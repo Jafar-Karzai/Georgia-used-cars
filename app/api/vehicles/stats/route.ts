@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { VehicleService } from '@/lib/services/vehicles'
-import { getCurrentUser, hasPermission } from '@/lib/auth'
+import { getCurrentUserFromRequest } from '@/lib/auth/server'
+import { hasPermission } from '@/lib/auth/permissions'
+import { serializeToSnakeCase } from '@/lib/utils/serialization'
 
 function sanitizeError(error: string): string {
   // Remove sensitive information from error messages
@@ -13,7 +15,7 @@ function sanitizeError(error: string): string {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const user = await getCurrentUser()
+    const user = await getCurrentUserFromRequest(request)
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permissions (read access required)
-    if (!hasPermission(user.role, 'vehicles', 'read')) {
+    if (!hasPermission(user.role, 'view_vehicles')) {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -42,7 +44,7 @@ export async function GET(request: NextRequest) {
     // Add cache headers for statistics endpoint
     const response = NextResponse.json({
       success: true,
-      data: result.data
+      data: serializeToSnakeCase(result.data)
     })
 
     // Cache for 5 minutes since statistics change relatively slowly

@@ -1,17 +1,19 @@
 'use client'
+// moved into (site) route group to use site layout
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import { VehicleService } from '@/lib/services/vehicles'
+import { fetchVehicleById, fetchVehicles } from '@/lib/api/vehicles-client'
+import { Vehicle, VehiclePhoto } from '@/types/database'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SiteNavbar } from '@/components/layout/site-navbar'
-import { Separator } from '@/components/ui/separator'
-import { 
-  Car, 
+import { getPublicStatusLabel, getPublicStatusBadgeStyle } from '@/lib/utils/vehicle-status'
+import {
+  Car,
   ChevronRight,
   ChevronLeft,
   Home,
@@ -24,102 +26,79 @@ import {
   FileText,
   Phone,
   Mail,
-  Share2,
-  Heart,
   Eye,
   ImageIcon,
   ArrowLeft,
   CheckCircle,
   AlertTriangle,
-  Clock
+  DollarSign
 } from 'lucide-react'
 
-interface Vehicle {
-  id: string
-  year: number
-  make: string
-  model: string
-  vin?: string
-  price: number
-  mileage?: number
-  engine_size?: string
-  fuel_type?: string
-  transmission?: string
-  body_type?: string
-  color?: string
-  status: string
-  photos: string[]
-  location?: string
-  auction_date?: string
-  auction_house?: string
-  lot_number?: string
+// Local interface for page-specific needs, extending the database Vehicle type
+interface PageVehicle extends Vehicle {
+  // Map legacy field names to database field names for backward compatibility
+  status?: string // maps to current_status
+  color?: string // maps to exterior_color
+  body_type?: string // maps to body_style
+  engine_size?: string // maps to engine
+  auction_date?: string // maps to sale_date
+  location?: string // maps to current_location
+  // Additional fields not in database
   grade?: string
-  keys?: boolean
-  title_status?: string
-  damage_description?: string
   condition_report?: string
   inspection_notes?: string
   features?: string[]
-  created_at: string
-  updated_at: string
 }
+
+type PublicVehicle = PageVehicle
 
 export default function VehicleDetailPage() {
   const params = useParams()
   const vehicleId = params.id as string
 
-  const [vehicle, setVehicle] = useState<Vehicle | null>(null)
+  const [vehicle, setVehicle] = useState<PageVehicle | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [relatedVehicles, setRelatedVehicles] = useState<Vehicle[]>([])
+  const [relatedVehicles, setRelatedVehicles] = useState<PageVehicle[]>([])
 
-  useEffect(() => {
-    if (vehicleId) {
-      loadVehicle()
-      loadRelatedVehicles()
-    }
-  }, [vehicleId])
-
-  const loadVehicle = async () => {
+  // Define functions with useCallback to provide stable dependencies
+  const loadVehicleImpl = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await VehicleService.getById(vehicleId)
-      if (response.success && response.data) {
-        setVehicle(response.data)
-      } else {
-        setError('Vehicle not found')
-      }
+      const response = await fetchVehicleById(vehicleId)
+      if (response.success && response.data) setVehicle(response.data)
+      else setError('Vehicle not found')
     } catch (err) {
       console.error('Failed to load vehicle:', err)
       setError('Failed to load vehicle details')
     } finally {
       setLoading(false)
     }
-  }
+  }, [vehicleId])
 
-  const loadRelatedVehicles = async () => {
+  const loadRelatedVehiclesImpl = useCallback(async () => {
     try {
-      const response = await VehicleService.getAll({ 
-        page: 1, 
-        limit: 4,
-        filters: { status: 'available' }
-      })
-      
-      if (response.success && response.data) {
-        // Filter out current vehicle and take first 3
-        const filtered = response.data.vehicles
-          .filter(v => v.id !== vehicleId)
-          .slice(0, 3)
-        setRelatedVehicles(filtered)
-      }
+      // get a few public vehicles as related
+      const response = await fetchVehicles({ is_public: true, status: 'ready_for_sale' }, 1, 4)
+      if (response.success && response.data) setRelatedVehicles((response.data || []).filter((v: PublicVehicle) => v.id !== vehicleId).slice(0,3))
     } catch (error) {
       console.error('Failed to load related vehicles:', error)
     }
-  }
+  }, [vehicleId])
 
-  const formatCurrency = (amount: number) => {
+  useEffect(() => {
+    if (vehicleId) {
+      loadVehicleImpl()
+      loadRelatedVehiclesImpl()
+    }
+  }, [vehicleId, loadVehicleImpl, loadRelatedVehiclesImpl])
+
+
+  const formatCurrency = (amount: number | null | undefined) => {
+    // Only show price if amount exists and is greater than 0
+    if (!amount || amount <= 0) return 'Contact for Price'
     return new Intl.NumberFormat('en-AE', {
       style: 'currency',
       currency: 'AED',
@@ -137,35 +116,21 @@ export default function VehicleDetailPage() {
   }
 
   const nextImage = () => {
-    if (vehicle?.photos && vehicle.photos.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === vehicle.photos.length - 1 ? 0 : prev + 1
+    if (vehicle?.vehicle_photos && vehicle.vehicle_photos.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === (vehicle.vehicle_photos?.length ?? 0) - 1 ? 0 : prev + 1
       )
     }
   }
 
   const previousImage = () => {
-    if (vehicle?.photos && vehicle.photos.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === 0 ? vehicle.photos.length - 1 : prev - 1
+    if (vehicle?.vehicle_photos && vehicle.vehicle_photos.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? (vehicle.vehicle_photos?.length ?? 0) - 1 : prev - 1
       )
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'available':
-        return 'bg-emerald-500 hover:bg-emerald-600'
-      case 'sold':
-        return 'bg-red-500 hover:bg-red-600'
-      case 'reserved':
-        return 'bg-amber-500 hover:bg-amber-600'
-      case 'in_transit':
-        return 'bg-blue-500 hover:bg-blue-600'
-      default:
-        return 'bg-muted'
-    }
-  }
 
   if (loading) {
     return (
@@ -196,7 +161,7 @@ export default function VehicleDetailPage() {
           <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Vehicle Not Found</h1>
           <p className="text-muted-foreground mb-4">
-            The vehicle you're looking for doesn't exist or has been removed.
+            The vehicle you are looking for does not exist or has been removed.
           </p>
           <Button asChild>
             <Link href="/inventory">
@@ -207,6 +172,33 @@ export default function VehicleDetailPage() {
         </div>
       </div>
     )
+  }
+
+  // Calculate display price based on sale type and location
+  const getDisplayPrice = () => {
+    // Only calculate display price if sale_price exists and is > 0
+    if (!vehicle.sale_price || vehicle.sale_price <= 0) return null
+
+    const basePrice = vehicle.sale_price
+    const saleType = vehicle.sale_type || 'local_and_export'
+    const includesVat = vehicle.sale_price_includes_vat ?? false
+
+    if (saleType === 'export_only') {
+      return basePrice
+    }
+
+    if (saleType === 'local_only') {
+      return includesVat ? basePrice : basePrice * 1.05
+    }
+
+    // For local_and_export, show with VAT (since we're on UAE site)
+    return includesVat ? basePrice : basePrice * 1.05
+  }
+
+  const getVatAmount = () => {
+    if (!vehicle.sale_price || vehicle.sale_price <= 0 || vehicle.sale_type === 'export_only') return 0
+    const includesVat = vehicle.sale_price_includes_vat ?? false
+    return includesVat ? 0 : vehicle.sale_price * 0.05
   }
 
   return (
@@ -247,14 +239,16 @@ export default function VehicleDetailPage() {
           {/* Image Gallery */}
           <div className="space-y-4">
             <div className="relative bg-muted rounded-lg overflow-hidden aspect-video">
-              {vehicle.photos && vehicle.photos.length > 0 ? (
+              {vehicle.vehicle_photos && vehicle.vehicle_photos.length > 0 ? (
                 <>
-                  <img 
-                    src={vehicle.photos[currentImageIndex]} 
+                  <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={vehicle.vehicle_photos[currentImageIndex].url}
                     alt={`${vehicle.year} ${vehicle.make} ${vehicle.model} - Image ${currentImageIndex + 1}`}
                     className="w-full h-full object-cover"
-                  />
-                  {vehicle.photos.length > 1 && (
+                  /></>
+                  {vehicle.vehicle_photos.length > 1 && (
                     <>
                       <Button
                         variant="outline"
@@ -273,7 +267,7 @@ export default function VehicleDetailPage() {
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-background/80 backdrop-blur rounded-full px-3 py-1 text-sm">
-                        {currentImageIndex + 1} / {vehicle.photos.length}
+                        {currentImageIndex + 1} / {vehicle.vehicle_photos.length}
                       </div>
                     </>
                   )}
@@ -286,20 +280,21 @@ export default function VehicleDetailPage() {
             </div>
 
             {/* Thumbnail Strip */}
-            {vehicle.photos && vehicle.photos.length > 1 && (
+            {vehicle.vehicle_photos && vehicle.vehicle_photos.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">
-                {vehicle.photos.map((photo, index) => (
+                {vehicle.vehicle_photos.map((photo: VehiclePhoto, index: number) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
                     className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                      index === currentImageIndex 
-                        ? 'border-primary ring-2 ring-primary/20' 
+                      index === currentImageIndex
+                        ? 'border-primary ring-2 ring-primary/20'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <img 
-                      src={photo} 
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.url}
                       alt={`Thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -319,9 +314,11 @@ export default function VehicleDetailPage() {
                     {vehicle.year} {vehicle.make} {vehicle.model}
                   </h1>
                   <div className="flex items-center gap-3">
-                    <Badge className={getStatusColor(vehicle.status)}>
-                      {vehicle.status.replace('_', ' ')}
-                    </Badge>
+                    {vehicle.current_status && getPublicStatusLabel(vehicle.current_status as any) && (
+                      <Badge className={`${getPublicStatusBadgeStyle(vehicle.current_status as any)} font-semibold`}>
+                        {getPublicStatusLabel(vehicle.current_status as any)}
+                      </Badge>
+                    )}
                     {vehicle.vin && (
                       <span className="text-sm text-muted-foreground">
                         VIN: {vehicle.vin}
@@ -331,11 +328,65 @@ export default function VehicleDetailPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-primary">
-                    {formatCurrency(vehicle.price)}
+                    {vehicle.sale_price && vehicle.sale_price > 0 && getDisplayPrice() ? formatCurrency(getDisplayPrice()!) : 'Contact for Price'}
                   </div>
+                  {vehicle.sale_price && vehicle.sale_price > 0 && getVatAmount() > 0 && (
+                    <div className="text-sm text-amber-600 font-medium">
+                      Includes 5% VAT
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* Price Breakdown Card */}
+            {vehicle.sale_price && vehicle.sale_price > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Price Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Base Price</p>
+                      <p className="text-xl font-bold">
+                        {formatCurrency(vehicle.sale_price)}
+                      </p>
+                    </div>
+                    {vehicle.sale_type !== 'export_only' && (
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <p className="text-sm text-amber-800 mb-1">5% VAT</p>
+                        <p className="text-xl font-bold text-amber-900">
+                          {formatCurrency((vehicle.sale_price || 0) * 0.05)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {vehicle.sale_type !== 'export_only' && (
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-800 mb-1">Total for UAE Customers</p>
+                      <p className="text-2xl font-bold text-blue-900">
+                        {formatCurrency(getDisplayPrice())}
+                      </p>
+                    </div>
+                  )}
+                  {vehicle.sale_type !== 'local_only' && (
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-200 col-span-2">
+                      <p className="text-sm text-green-800 mb-1">Price for Export (VAT Free)</p>
+                      <p className="text-2xl font-bold text-green-900">
+                        {formatCurrency(vehicle.sale_price)}
+                      </p>
+                    </div>
+                  )}
+                  <div className="text-sm text-muted-foreground italic pt-2 border-t">
+                    <p>Sales Type: {vehicle.sale_type === 'local_only' ? 'Local Market Only (5% VAT applies)' : vehicle.sale_type === 'export_only' ? 'Export Only (No VAT)' : 'Local & Export (5% VAT for UAE, No VAT for Export)'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Quick Specs */}
             <Card>
@@ -368,27 +419,27 @@ export default function VehicleDetailPage() {
                       </span>
                     </div>
                   )}
-                  {vehicle.color && (
+                  {(vehicle.exterior_color || vehicle.color) && (
                     <div className="flex items-center gap-2">
                       <Palette className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Color:</strong> {vehicle.color}
+                        <strong>Color:</strong> {vehicle.exterior_color || vehicle.color}
                       </span>
                     </div>
                   )}
-                  {vehicle.body_type && (
+                  {(vehicle.body_style || vehicle.body_type) && (
                     <div className="flex items-center gap-2">
                       <Car className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Body Type:</strong> {vehicle.body_type}
+                        <strong>Body Type:</strong> {vehicle.body_style || vehicle.body_type}
                       </span>
                     </div>
                   )}
-                  {vehicle.engine_size && (
+                  {(vehicle.engine || vehicle.engine_size) && (
                     <div className="flex items-center gap-2">
                       <Cog className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Engine:</strong> {vehicle.engine_size}
+                        <strong>Engine:</strong> {vehicle.engine || vehicle.engine_size}
                       </span>
                     </div>
                   )}
@@ -397,7 +448,7 @@ export default function VehicleDetailPage() {
             </Card>
 
             {/* Auction Information */}
-            {(vehicle.auction_house || vehicle.auction_date || vehicle.location) && (
+            {(vehicle.auction_house || vehicle.sale_date || vehicle.current_location || vehicle.auction_date || vehicle.location) && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Auction Information</CardTitle>
@@ -412,19 +463,19 @@ export default function VehicleDetailPage() {
                         </span>
                       </div>
                     )}
-                    {vehicle.auction_date && (
+                    {(vehicle.sale_date || vehicle.auction_date) && (
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm">
-                          <strong>Auction Date:</strong> {formatDate(vehicle.auction_date)}
+                          <strong>Auction Date:</strong> {formatDate((vehicle.sale_date || vehicle.auction_date) as string)}
                         </span>
                       </div>
                     )}
-                    {vehicle.location && (
+                    {(vehicle.current_location || vehicle.location) && (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm">
-                          <strong>Location:</strong> {vehicle.location}
+                          <strong>Location:</strong> {vehicle.current_location || vehicle.location}
                         </span>
                       </div>
                     )}
@@ -436,11 +487,11 @@ export default function VehicleDetailPage() {
                         </span>
                       </div>
                     )}
-                    {vehicle.grade && (
+                    {(vehicle as PageVehicle).grade && (
                       <div className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm">
-                          <strong>Grade:</strong> {vehicle.grade}
+                          <strong>Grade:</strong> {(vehicle as PageVehicle).grade}
                         </span>
                       </div>
                     )}
@@ -480,7 +531,7 @@ export default function VehicleDetailPage() {
         {/* Additional Information */}
         <div className="mt-12 space-y-8">
           {/* Condition & Damage Report */}
-          {(vehicle.damage_description || vehicle.condition_report || vehicle.inspection_notes) && (
+          {(vehicle.damage_description || (vehicle as PageVehicle).condition_report || (vehicle as PageVehicle).inspection_notes) && (
             <Card>
               <CardHeader>
                 <CardTitle>Condition Report</CardTitle>
@@ -495,22 +546,22 @@ export default function VehicleDetailPage() {
                     <p className="text-muted-foreground">{vehicle.damage_description}</p>
                   </div>
                 )}
-                {vehicle.condition_report && (
+                {(vehicle as PageVehicle).condition_report && (
                   <div>
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <Eye className="h-4 w-4 text-blue-500" />
                       Condition Report
                     </h4>
-                    <p className="text-muted-foreground">{vehicle.condition_report}</p>
+                    <p className="text-muted-foreground">{(vehicle as PageVehicle).condition_report}</p>
                   </div>
                 )}
-                {vehicle.inspection_notes && (
+                {(vehicle as PageVehicle).inspection_notes && (
                   <div>
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <FileText className="h-4 w-4 text-green-500" />
                       Inspection Notes
                     </h4>
-                    <p className="text-muted-foreground">{vehicle.inspection_notes}</p>
+                    <p className="text-muted-foreground">{(vehicle as PageVehicle).inspection_notes}</p>
                   </div>
                 )}
               </CardContent>
@@ -518,14 +569,14 @@ export default function VehicleDetailPage() {
           )}
 
           {/* Features */}
-          {vehicle.features && vehicle.features.length > 0 && (
+          {(vehicle as PageVehicle).features && ((vehicle as PageVehicle).features?.length ?? 0) > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Features & Equipment</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {vehicle.features.map((feature, index) => (
+                  {(vehicle as PageVehicle).features?.map((feature: string, index: number) => (
                     <div key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500" />
                       <span className="text-sm">{feature}</span>
@@ -546,9 +597,9 @@ export default function VehicleDetailPage() {
                 <Card key={relatedVehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
                   <Link href={`/inventory/${relatedVehicle.id}`}>
                     <div className="relative h-48 bg-muted">
-                      {relatedVehicle.photos?.[0] ? (
-                        <img 
-                          src={relatedVehicle.photos[0]} 
+                      {relatedVehicle.vehicle_photos?.[0] ? (
+                        <img
+                          src={relatedVehicle.vehicle_photos[0].url}
                           alt={`${relatedVehicle.year} ${relatedVehicle.make} ${relatedVehicle.model}`}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
@@ -557,9 +608,11 @@ export default function VehicleDetailPage() {
                           <Car className="h-16 w-16 text-muted-foreground" />
                         </div>
                       )}
-                      <Badge className="absolute top-3 right-3 bg-emerald-500 hover:bg-emerald-600">
-                        {relatedVehicle.status}
-                      </Badge>
+                      {relatedVehicle.current_status && getPublicStatusLabel(relatedVehicle.current_status as any) && (
+                        <Badge className={`absolute top-3 right-3 font-semibold ${getPublicStatusBadgeStyle(relatedVehicle.current_status as any)}`}>
+                          {getPublicStatusLabel(relatedVehicle.current_status as any)}
+                        </Badge>
+                      )}
                     </div>
                     <CardContent className="p-6">
                       <h3 className="text-lg font-semibold mb-2">
@@ -567,7 +620,7 @@ export default function VehicleDetailPage() {
                       </h3>
                       <div className="flex items-center justify-between">
                         <span className="text-xl font-bold text-primary">
-                          {formatCurrency(relatedVehicle.price)}
+                          {relatedVehicle.sale_price && relatedVehicle.sale_price > 0 ? formatCurrency(relatedVehicle.sale_price) : 'Contact for Price'}
                         </span>
                         <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>

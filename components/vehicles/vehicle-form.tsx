@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { VehicleService, CreateVehicleData, UpdateVehicleData } from '@/lib/services/vehicles'
-import { VinDecoderService, VinData } from '@/lib/services/vin-decoder'
+import { VinData } from '@/lib/services/vin-decoder'
 import { VinInput } from '@/components/vehicles/vin-input'
 import { PhotoUpload } from '@/components/vehicles/photo-upload'
 import { Button } from '@/components/ui/button'
@@ -41,15 +40,16 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth/context'
 import { Vehicle } from '@/types/database'
-import { 
-  Car, 
-  DollarSign, 
-  MapPin, 
-  AlertTriangle, 
+import { supabase } from '@/lib/supabase/client'
+import { serializeToCamelCase } from '@/lib/utils/serialization'
+import {
+  Car,
+  DollarSign,
+  MapPin,
+  AlertTriangle,
   Key,
   Settings,
   Image as ImageIcon,
@@ -61,7 +61,8 @@ import {
 
 const vehicleSchema = z.object({
   // Basic Information
-  vin: z.string().min(17, 'VIN must be exactly 17 characters').max(17, 'VIN must be exactly 17 characters'),
+  // Issue 15: Align with API validation which allows 10-17 characters
+  vin: z.string().min(10, 'VIN must be between 10 and 17 characters').max(17, 'VIN must be between 10 and 17 characters'),
   year: z.number().min(1900, 'Invalid year').max(new Date().getFullYear() + 2, 'Invalid year'),
   make: z.string().min(1, 'Make is required'),
   model: z.string().min(1, 'Model is required'),
@@ -73,6 +74,7 @@ const vehicleSchema = z.object({
   transmission: z.string().optional(),
   fuel_type: z.string().optional(),
   body_style: z.string().optional(),
+  drivetrain: z.string().optional(),
 
   // Auction Information
   auction_house: z.string().min(1, 'Auction house is required'),
@@ -86,7 +88,7 @@ const vehicleSchema = z.object({
   damage_description: z.string().optional(),
   damage_severity: z.enum(['minor', 'moderate', 'major', 'total_loss']).optional(),
   repair_estimate: z.number().min(0, 'Repair estimate cannot be negative').optional(),
-  
+
   // Title and Condition
   title_status: z.string().optional(),
   keys_available: z.boolean().optional(),
@@ -96,7 +98,11 @@ const vehicleSchema = z.object({
   purchase_price: z.number().min(0.01, 'Purchase price is required'),
   purchase_currency: z.enum(['USD', 'CAD', 'AED']),
   estimated_total_cost: z.number().min(0, 'Estimated cost cannot be negative').optional(),
-  
+  sale_price: z.number().min(0.01, 'Sale price must be positive').optional(),
+  sale_currency: z.enum(['USD', 'CAD', 'AED']).optional(),
+  sale_price_includes_vat: z.boolean().optional(),
+  sale_type: z.enum(['local_only', 'export_only', 'local_and_export']).optional(),
+
   // Visibility
   is_public: z.boolean().optional(),
 })
@@ -114,9 +120,17 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
   const [loading, setLoading] = useState(false)
   const [vinDecoding, setVinDecoding] = useState(false)
   const [activeTab, setActiveTab] = useState('basic')
-  const [vehiclePhotos, setVehiclePhotos] = useState<any[]>([])
-  
+
+  // Initialize photos from initialData if available
+  const [vehiclePhotos, setVehiclePhotos] = useState(
+    initialData?.vehicle_photos || []
+  )
+
   const { user } = useAuth()
+
+  // Transform API response data (snake_case) to camelCase for form compatibility
+  // Also handles Decimal to number conversion
+  const transformedData = initialData ? serializeToCamelCase(initialData) : undefined
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleSchema),
@@ -133,6 +147,7 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
       transmission: '',
       fuel_type: '',
       body_style: '',
+      drivetrain: '',
       auction_house: '',
       auction_location: '',
       sale_date: '',
@@ -149,7 +164,11 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
       purchase_price: 1,
       purchase_currency: 'USD',
       estimated_total_cost: 0,
-      ...initialData
+      sale_price: 0,
+      sale_currency: 'AED',
+      sale_price_includes_vat: false,
+      sale_type: 'local_and_export',
+      ...(transformedData && transformedData)
     }
   })
 
@@ -170,36 +189,96 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
   }
 
   const onSubmit = async (data: VehicleFormData) => {
+    setLoading(true)
+
     if (!user) {
       alert('User not authenticated. Please log in and try again.')
+      setLoading(false)
+      return
+    }
+
+    // Issue 17: Pre-flight validation to catch errors before API call
+    if (!data.vin || data.vin.length < 10 || data.vin.length > 17) {
+      alert('Please provide a valid VIN (10-17 characters)')
+      setLoading(false)
+      return
+    }
+
+    if (data.sale_price && data.sale_price > 0 && !data.sale_currency) {
+      alert('Sale currency is required when sale price is specified')
+      setLoading(false)
+      return
+    }
+
+    if (data.sale_type === 'local_only' && data.sale_currency && data.sale_currency !== 'AED') {
+      alert('Local sales must use AED currency')
+      setLoading(false)
+      return
+    }
+
+    // Issue 18: Client-side type validation before API submission
+    const typeErrors: string[] = []
+
+    if (typeof data.year !== 'number') typeErrors.push('Year must be a number')
+    if (typeof data.purchase_price !== 'number') typeErrors.push('Purchase price must be a number')
+    if (data.mileage !== undefined && typeof data.mileage !== 'number') typeErrors.push('Mileage must be a number')
+    if (data.sale_price !== undefined && typeof data.sale_price !== 'number') typeErrors.push('Sale price must be a number')
+    if (data.repair_estimate !== undefined && typeof data.repair_estimate !== 'number') typeErrors.push('Repair estimate must be a number')
+    if (data.estimated_total_cost !== undefined && typeof data.estimated_total_cost !== 'number') typeErrors.push('Estimated total cost must be a number')
+    if (typeof data.keys_available !== 'boolean') typeErrors.push('Keys available must be boolean')
+    if (typeof data.run_and_drive !== 'boolean') typeErrors.push('Run and drive must be boolean')
+    if (typeof data.is_public !== 'boolean') typeErrors.push('Is public must be boolean')
+    if (data.sale_price_includes_vat !== undefined && typeof data.sale_price_includes_vat !== 'boolean') typeErrors.push('Sale price includes VAT must be boolean')
+
+    if (typeErrors.length > 0) {
+      alert('Form validation errors:\n' + typeErrors.join('\n'))
+      setLoading(false)
       return
     }
 
     console.log('Submitting vehicle data:', data)
-    setLoading(true)
-    
+
     try {
       let result
 
+      // Get Supabase access token for Authorization header
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData?.session?.access_token
+
+      // Build headers with proper type safety
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`
+      }
+
       if (isEdit && initialData?.id) {
-        console.log('Updating vehicle with ID:', initialData.id)
-        const updateData: UpdateVehicleData = { ...data }
-        result = await VehicleService.update(initialData.id, updateData, user.id)
+        console.log('Updating vehicle via API with ID:', initialData.id)
+        const response = await fetch(`/api/vehicles/${initialData.id}`, {
+          method: 'PUT',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({ ...data })
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        result = await response.json()
       } else {
         console.log('Creating new vehicle via API')
-        
-        // Use API route instead of direct Supabase call
         const response = await fetch('/api/vehicles', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           credentials: 'include',
           body: JSON.stringify(data)
         })
 
         if (!response.ok) {
-          const errorData = await response.json()
+          const errorData = await response.json().catch(() => ({}))
           throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
         }
 
@@ -282,7 +361,7 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form id="vehicle-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs 
             value={activeTab} 
             onValueChange={setActiveTab} 
@@ -358,11 +437,11 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                         <FormItem>
                           <FormLabel>Year *</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              min="1900" 
+                            <Input
+                              type="number"
+                              min="1900"
                               max={new Date().getFullYear() + 2}
-                              {...field}
+                              value={field.value ?? new Date().getFullYear()}
                               onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             />
                           </FormControl>
@@ -422,11 +501,11 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                         <FormItem>
                           <FormLabel>Mileage</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              min="0" 
+                            <Input
+                              type="number"
+                              min="0"
                               placeholder="0"
-                              {...field}
+                              value={field.value ?? 0}
                               onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             />
                           </FormControl>
@@ -466,14 +545,14 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <FormField
                       control={form.control}
                       name="transmission"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Transmission</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select transmission" />
@@ -498,7 +577,7 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Fuel Type</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select fuel type" />
@@ -526,6 +605,30 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                           <FormControl>
                             <Input placeholder="e.g., Sedan, SUV, Hatchback" {...field} />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="drivetrain"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Drivetrain</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select drivetrain" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="FWD">FWD</SelectItem>
+                              <SelectItem value="RWD">RWD</SelectItem>
+                              <SelectItem value="AWD">AWD</SelectItem>
+                              <SelectItem value="four_WD">4WD</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -569,7 +672,7 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Auction House *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select auction house" />
@@ -704,7 +807,7 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Damage Severity</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select severity" />
@@ -729,12 +832,12 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                         <FormItem>
                           <FormLabel>Repair Estimate (USD)</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              min="0" 
+                            <Input
+                              type="number"
+                              min="0"
                               step="0.01"
                               placeholder="0.00"
-                              {...field}
+                              value={field.value ?? 0}
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             />
                           </FormControl>
@@ -750,7 +853,7 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Title Status</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select title status" />
@@ -868,12 +971,12 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                         <FormItem>
                           <FormLabel>Purchase Price *</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              min="0" 
+                            <Input
+                              type="number"
+                              min="0"
                               step="0.01"
                               placeholder="0.00"
-                              {...field}
+                              value={field.value ?? 0}
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             />
                           </FormControl>
@@ -888,7 +991,7 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Purchase Currency</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || 'USD'}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select currency" />
@@ -913,17 +1016,22 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                       <FormItem>
                         <FormLabel>Estimated Total Cost (USD)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            min="0" 
+                          <Input
+                            type="number"
+                            min="0"
                             step="0.01"
                             placeholder="0.00"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            value={field.value ?? 0}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value) || 0
+                              // Ensure only 2 decimal places
+                              const fixed = Math.round(value * 100) / 100
+                              field.onChange(fixed)
+                            }}
                           />
                         </FormControl>
                         <FormDescription>
-                          Include purchase price, shipping, taxes, repairs, and other costs
+                          Include purchase price, shipping, taxes, repairs, and other costs. Amount will be rounded to 2 decimal places.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -946,6 +1054,202 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Sale Information Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Sale Information
+                  </CardTitle>
+                  <CardDescription>
+                    Set sale price and market type for this vehicle
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Sale Type Selection */}
+                  <FormField
+                    control={form.control}
+                    name="sale_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base">Sale Type</FormLabel>
+                        <FormDescription className="mb-4">
+                          Choose which market(s) you want to sell this vehicle in
+                        </FormDescription>
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50"
+                            onClick={() => field.onChange('local_and_export')}>
+                            <input
+                              type="radio"
+                              id="local_export"
+                              name="sale_type"
+                              value="local_and_export"
+                              checked={field.value === 'local_and_export'}
+                              onChange={() => field.onChange('local_and_export')}
+                              className="w-4 h-4"
+                            />
+                            <label htmlFor="local_export" className="flex-1 cursor-pointer">
+                              <div className="font-medium">Local & Export (Default)</div>
+                              <div className="text-sm text-muted-foreground">Sell to both UAE customers and export buyers</div>
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50"
+                            onClick={() => field.onChange('local_only')}>
+                            <input
+                              type="radio"
+                              id="local_only"
+                              name="sale_type"
+                              value="local_only"
+                              checked={field.value === 'local_only'}
+                              onChange={() => field.onChange('local_only')}
+                              className="w-4 h-4"
+                            />
+                            <label htmlFor="local_only" className="flex-1 cursor-pointer">
+                              <div className="font-medium">Local Market Only</div>
+                              <div className="text-sm text-muted-foreground">Sell only to UAE customers (5% VAT applies)</div>
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50"
+                            onClick={() => field.onChange('export_only')}>
+                            <input
+                              type="radio"
+                              id="export_only"
+                              name="sale_type"
+                              value="export_only"
+                              checked={field.value === 'export_only'}
+                              onChange={() => field.onChange('export_only')}
+                              className="w-4 h-4"
+                            />
+                            <label htmlFor="export_only" className="flex-1 cursor-pointer">
+                              <div className="font-medium">Export Only</div>
+                              <div className="text-sm text-muted-foreground">Sell only for export (no VAT)</div>
+                            </label>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Separator />
+
+                  {/* Sale Price Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="sale_price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sale Price (Base Price)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={field.value ?? 0}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0
+                                // Ensure only 2 decimal places
+                                const fixed = Math.round(value * 100) / 100
+                                field.onChange(fixed)
+                              }}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Enter the price you want to sell this vehicle for. Amount will be rounded to 2 decimal places.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="sale_currency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sale Currency</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || 'AED'}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select currency" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="CAD">CAD</SelectItem>
+                              <SelectItem value="AED">AED</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* VAT Toggle */}
+                  <FormField
+                    control={form.control}
+                    name="sale_price_includes_vat"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Is VAT Included in Price?</FormLabel>
+                          <FormDescription>
+                            Check if the sale price already includes 5% VAT for local sales
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* VAT Calculation Display */}
+                  {(form.watch('sale_price') ?? 0) > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                      <div className="font-semibold text-blue-900 flex items-center gap-2">
+                        <Info className="h-4 w-4" />
+                        Price Breakdown
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Base Price:</span>
+                          <div className="font-semibold">AED {form.watch('sale_price')?.toFixed(2) || '0.00'}</div>
+                        </div>
+                        {form.watch('sale_type') !== 'export_only' && (
+                          <>
+                            <div>
+                              <span className="text-muted-foreground">5% VAT:</span>
+                              <div className="font-semibold">AED {((form.watch('sale_price') || 0) * 0.05).toFixed(2)}</div>
+                            </div>
+                            <div className="col-span-2 bg-blue-100 rounded p-2">
+                              <span className="text-muted-foreground">Total for Local (UAE) Customers:</span>
+                              <div className="font-bold text-lg text-blue-900">
+                                AED {((form.watch('sale_price') || 0) * (form.watch('sale_price_includes_vat') ? 1 : 1.05)).toFixed(2)}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        {form.watch('sale_type') !== 'local_only' && (
+                          <div className="col-span-2 bg-green-100 rounded p-2">
+                            <span className="text-muted-foreground">Total for Export Customers:</span>
+                            <div className="font-bold text-lg text-green-900">
+                              AED {form.watch('sale_price')?.toFixed(2) || '0.00'}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Photos Tab */}
@@ -962,12 +1266,22 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                 </CardHeader>
                 <CardContent>
                   {isEdit && initialData?.id ? (
-                    <PhotoUpload 
+                    <PhotoUpload
                       vehicleId={initialData.id}
                       photos={vehiclePhotos}
-                      onPhotosUpdate={() => {
-                        // Reload photos if needed
-                        // This can be enhanced to refetch photos
+                      onPhotosUpdate={async () => {
+                        // Refetch photos after upload
+                        try {
+                          const response = await fetch(`/api/vehicles/${initialData.id}`)
+                          if (response.ok) {
+                            const result = await response.json()
+                            if (result.data?.vehicle_photos) {
+                              setVehiclePhotos(result.data.vehicle_photos)
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Failed to refetch photos:', error)
+                        }
                       }}
                     />
                   ) : (
@@ -987,15 +1301,15 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
         </form>
       </Form>
 
-      {/* Form Actions - Outside the form to avoid conflicts */}
-      <div className="flex justify-between items-center pt-6 border-t">
+      {/* Form Actions - Always visible, outside tabs */}
+      <div className="flex justify-between items-center pt-6 border-t sticky bottom-0 bg-white z-10">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        
+
         <div className="flex gap-2">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             variant="outline"
             onClick={() => {
               const tabs = ['basic', 'auction', 'condition', 'financial', 'photos']
@@ -1006,66 +1320,42 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
             }}
             disabled={activeTab === 'basic'}
           >
-            Previous
+            ← Previous
           </Button>
-          
-          {activeTab !== 'photos' ? (
-            <Button 
-              type="button"
-              onClick={() => {
-                const tabs = ['basic', 'auction', 'condition', 'financial', 'photos']
-                const currentIndex = tabs.indexOf(activeTab)
-                if (currentIndex < tabs.length - 1) {
-                  setActiveTab(tabs[currentIndex + 1])
-                }
-              }}
-            >
-              Next
-            </Button>
-          ) : (
-            <Button 
-              type="button" 
-              onClick={async () => {
-                console.log('🚀 CREATE VEHICLE BUTTON CLICKED!')
-                console.log('Loading state:', loading)
-                console.log('User:', user)
-                console.log('Form valid:', form.formState.isValid)
-                console.log('Form errors:', form.formState.errors)
-                console.log('Form values:', form.getValues())
-                
-                // Force validation and get all errors
-                const isValid = await form.trigger()
-                console.log('Manual validation result:', isValid)
-                console.log('All form errors after validation:', form.formState.errors)
-                
-                // Reset loading state first
-                setLoading(false)
-                
-                if (!isValid) {
-                  console.error('❌ Form validation failed. Not submitting.')
-                  console.log('Detailed errors:', form.formState.errors)
-                  return
-                }
-                
-                // Try to submit directly
-                console.log('✅ Form is valid, calling onSubmit directly...')
-                await onSubmit(form.getValues())
-              }}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {isEdit ? 'Updating...' : 'Creating...'}
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {isEdit ? 'Update Vehicle' : 'Create Vehicle'}
-                </>
-              )}
-            </Button>
-          )}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const tabs = ['basic', 'auction', 'condition', 'financial', 'photos']
+              const currentIndex = tabs.indexOf(activeTab)
+              if (currentIndex < tabs.length - 1) {
+                setActiveTab(tabs[currentIndex + 1])
+              }
+            }}
+            disabled={activeTab === 'photos'}
+          >
+            Next →
+          </Button>
+
+          <Button
+            type="submit"
+            form="vehicle-form"
+            disabled={loading}
+            className="ml-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {isEdit ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {isEdit ? 'Update Vehicle' : 'Create Vehicle'}
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>

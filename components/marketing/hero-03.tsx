@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUpRight, CirclePlay, PhoneCall } from 'lucide-react'
+import { ArrowUpRight, PhoneCall } from 'lucide-react'
 
 export function Hero03() {
   return (

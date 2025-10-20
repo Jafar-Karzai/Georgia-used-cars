@@ -134,6 +134,13 @@ enum Drivetrain {
 
 }
 
+enum SaleType {
+  local_only
+  export_only
+  local_and_export
+
+}
+
 // Models
 model Profile {
   id        String    @id @db.Uuid
@@ -206,6 +213,8 @@ model Vehicle {
   estimatedTotalCost   Decimal?           @map("estimated_total_cost") @db.Decimal(10, 2)
   salePrice            Decimal?           @map("sale_price") @db.Decimal(10, 2)
   saleCurrency         CurrencyCode?      @default(AED) @map("sale_currency")
+  salePriceIncludesVat Boolean?           @default(false) @map("sale_price_includes_vat")
+  saleType             SaleType?          @default(local_and_export) @map("sale_type")
 
   // Visibility
   isPublic             Boolean?           @map("is_public")
@@ -218,7 +227,7 @@ model Vehicle {
 
   // Relations
   statusHistory        VehicleStatusHistory[]
-  photos               VehiclePhoto[]
+  vehiclePhotos        VehiclePhoto[]
   documents            VehicleDocument[]
   expenses             Expense[]
   inquiries            Inquiry[]

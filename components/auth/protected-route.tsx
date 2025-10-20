@@ -60,7 +60,7 @@ export function ProtectedRoute({
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive mb-4">Access Denied</h1>
           <p className="text-muted-foreground">
-            You don't have the required permissions to access this page.
+            You don&apos;t have the required permissions to access this page.
           </p>
         </div>
       </div>
@@ -74,7 +74,7 @@ export function ProtectedRoute({
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive mb-4">Access Denied</h1>
           <p className="text-muted-foreground">
-            You don't have the required permissions to access this page.
+            You don&apos;t have the required permissions to access this page.
           </p>
         </div>
       </div>

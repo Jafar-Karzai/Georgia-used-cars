@@ -20,7 +20,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.user) {
-          await fetchUserProfile(session.user)
+          const ok = await fetchUserProfile(session.user)
+          if (!ok) {
+            // Retry once shortly after, to wait for session cookie propagation
+            await new Promise(r => setTimeout(r, 300))
+            await fetchUserProfile(session.user)
+          }
         }
       } catch (error) {
         console.error('Error getting session:', error)
@@ -51,47 +56,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const fetchUserProfile = async (authUser: User) => {
+  const fetchUserProfile = async (authUser: User): Promise<boolean> => {
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
-
-      if (error) {
-        console.error('Error fetching profile:', error)
-        // Set user with minimal data if profile fetch fails
-        setUser({
-          id: authUser.id,
-          email: authUser.email || '',
-          full_name: authUser.email || 'Unknown User',
-          role: 'sales_agent', // Default role
-          is_active: true
-        })
-        return
+      // First, use server API that reads Prisma directly (robust to PostgREST grants)
+      // Pass access token to avoid server-side cookies() access in dev
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData?.session?.access_token
+      const res = await fetch('/api/auth/profile', {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      })
+      if (res.ok) {
+        const json = await res.json()
+        if (json?.success && json?.data) {
+          setUser({
+            id: json.data.id,
+            email: json.data.email,
+            full_name: json.data.full_name,
+            role: json.data.role,
+            is_active: json.data.is_active,
+          })
+          return true
+        }
       }
 
-      if (profile) {
-        setUser({
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.full_name,
-          role: profile.role,
-          is_active: profile.is_active
-        })
-      }
+      // No PostgREST fallback (DB grants may be restricted). Next auth event will retry.
     } catch (error) {
       console.error('Error in fetchUserProfile:', error)
-      // Set user with minimal data if there's an exception
-      setUser({
-        id: authUser.id,
-        email: authUser.email || '',
-        full_name: authUser.email || 'Unknown User',
-        role: 'sales_agent', // Default role
-        is_active: true
-      })
     }
+    // Do not downgrade to a fake Viewer; leave user as-is and let next auth event retry
+    return false
   }
 
   const signIn = async (email: string, password: string) => {

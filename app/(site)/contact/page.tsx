@@ -1,9 +1,10 @@
 'use client'
+// moved into (site) route group to use site layout
 
 import Link from 'next/link'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { VehicleService } from '@/lib/services/vehicles'
+import { fetchVehicleById } from '@/lib/api/vehicles-client'
 import { InquiryService } from '@/lib/services/inquiries'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -84,7 +85,7 @@ function ContactPageContent() {
     if (!vehicleId) return
     
     try {
-      const response = await VehicleService.getById(vehicleId)
+      const response = await fetchVehicleById(vehicleId)
       if (response.success && response.data) {
         setVehicle(response.data)
         setForm(prev => ({

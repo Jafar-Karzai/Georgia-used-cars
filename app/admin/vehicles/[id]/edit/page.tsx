@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { VehicleForm } from '@/components/vehicles/vehicle-form'
-import { VehicleService } from '@/lib/services/vehicles'
+import { fetchVehicleById } from '@/lib/api/vehicles-client'
 import { Vehicle } from '@/types/database'
 import { useAuth } from '@/lib/auth/context'
 import { Loader2 } from 'lucide-react'
@@ -43,13 +43,9 @@ export default function EditVehiclePage({ params: paramsPromise }: EditVehiclePa
     setError('')
     
     try {
-      const result = await VehicleService.getById(params.id)
-      
-      if (result.success && result.data) {
-        setVehicle(result.data)
-      } else {
-        setError(result.error || 'Vehicle not found')
-      }
+      const result = await fetchVehicleById(params.id)
+      if (result.success && result.data) setVehicle(result.data)
+      else setError(result.error || 'Vehicle not found')
     } catch (err: any) {
       setError(err.message || 'Failed to load vehicle')
     } finally {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { VehicleService } from '@/lib/services/vehicles'
+import { fetchVehicles, fetchVehicleStats } from '@/lib/api/vehicles-client'
 import { VehicleCard } from '@/components/vehicles/vehicle-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,10 +46,10 @@ export default function VehiclesPage() {
   }, [page, statusFilter, authLoading])
 
   const loadStatistics = async () => {
-    const result = await VehicleService.getStatistics()
-    if (result.success) {
-      setStatistics(result.data)
-    }
+    try {
+      const result = await fetchVehicleStats()
+      if (result.success) setStatistics(result.data)
+    } catch {}
   }
 
   const loadVehicles = async () => {
@@ -61,7 +61,14 @@ export default function VehiclesPage() {
         ...(searchTerm && { search: searchTerm })
       }
 
-      const result = await VehicleService.getAll(filters, page, 12)
+      const result = await fetchVehicles(
+        {
+          ...(statusFilter && statusFilter !== 'all' ? { status: statusFilter } : {}),
+          ...(searchTerm ? { search: searchTerm } : {}),
+        },
+        page,
+        12
+      )
       
       if (result.success) {
         setVehicles(result.data || [])

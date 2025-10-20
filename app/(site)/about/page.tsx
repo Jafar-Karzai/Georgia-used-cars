@@ -1,4 +1,5 @@
 'use client'
+// moved into (site) route group to use site layout
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
