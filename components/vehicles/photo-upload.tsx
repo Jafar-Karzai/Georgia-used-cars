@@ -8,16 +8,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import { Progress } from '@/components/ui/progress'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth/context'
-import { Upload, X, Star, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Upload, X, Star, Image as ImageIcon, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { optimizeImage, formatBytes, getSizeReduction } from '@/lib/utils/image-optimizer'
 
 interface VehiclePhoto {
   id: string
@@ -33,13 +35,22 @@ interface PhotoUploadProps {
   onPhotosUpdate: () => void
 }
 
+interface FileWithProgress {
+  file: File
+  preview: string
+  status: 'pending' | 'optimizing' | 'uploading' | 'success' | 'error'
+  progress: number
+  error?: string
+  originalSize?: number
+  optimizedSize?: number
+}
+
 export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [previews, setPreviews] = useState<string[]>([])
+  const [filesWithProgress, setFilesWithProgress] = useState<FileWithProgress[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   const { user } = useAuth()
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,89 +61,222 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
     const validFiles = files.filter(file => {
       const isValidType = file.type.startsWith('image/')
       const isValidSize = file.size <= 10 * 1024 * 1024 // 10MB
+      if (!isValidType) {
+        console.warn(`Skipping ${file.name}: not an image file`)
+      }
+      if (!isValidSize) {
+        console.warn(`Skipping ${file.name}: exceeds 10MB limit`)
+      }
       return isValidType && isValidSize
     })
 
-    setSelectedFiles(validFiles)
+    if (validFiles.length === 0) {
+      alert('No valid image files selected. Please select images under 10MB.')
+      return
+    }
 
-    // Create previews
-    const newPreviews = validFiles.map(file => URL.createObjectURL(file))
-    setPreviews(prev => {
+    // Create file entries with progress tracking
+    const newFilesWithProgress: FileWithProgress[] = validFiles.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      status: 'pending' as const,
+      progress: 0,
+      originalSize: file.size
+    }))
+
+    setFilesWithProgress(prev => {
       // Clean up old previews
-      prev.forEach(url => URL.revokeObjectURL(url))
-      return newPreviews
+      prev.forEach(f => URL.revokeObjectURL(f.preview))
+      return newFilesWithProgress
     })
   }
 
   const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
-    setPreviews(prev => {
-      const newPreviews = prev.filter((_, i) => i !== index)
+    setFilesWithProgress(prev => {
+      const newFiles = prev.filter((_, i) => i !== index)
       // Clean up removed preview
-      URL.revokeObjectURL(prev[index])
-      return newPreviews
+      URL.revokeObjectURL(prev[index].preview)
+      return newFiles
     })
   }
 
   const handleUpload = async () => {
-    if (!user || selectedFiles.length === 0) return
+    if (!user || filesWithProgress.length === 0) return
 
     setUploading(true)
+
     try {
       const { data: sessionData } = await supabase.auth.getSession()
       const accessToken = sessionData?.session?.access_token
 
-      const uploadPromises = selectedFiles.map(async (file, index) => {
-        const result = await StorageClient.uploadVehicleImage(vehicleId, file, user.id)
+      // Step 1: Optimize images
+      console.log(`📸 Optimizing ${filesWithProgress.length} image(s)...`)
+      const optimizedFiles = await Promise.all(
+        filesWithProgress.map(async (fileItem, index) => {
+          try {
+            // Update status to optimizing
+            setFilesWithProgress(prev =>
+              prev.map((f, i) =>
+                i === index ? { ...f, status: 'optimizing' as const, progress: 10 } : f
+              )
+            )
 
-        if (result.success && result.url) {
-          // Save to database
-          console.log('🖼️ Inserting photo to database:', {
-            vehicle_id: vehicleId,
-            url: result.url,
-            is_primary: photos.length === 0 && index === 0,
-            sort_order: photos.length + index,
-            uploaded_by: user.id
-          })
-
-          const headers: HeadersInit = { 'Content-Type': 'application/json' }
-          if (accessToken) {
-            headers['Authorization'] = `Bearer ${accessToken}`
-          }
-
-          const res = await fetch(`/api/vehicles/${vehicleId}/photos`, {
-            method: 'POST',
-            headers,
-            credentials: 'include',
-            body: JSON.stringify({
-              url: result.url,
-              is_primary: photos.length === 0 && index === 0,
-              sort_order: photos.length + index,
+            const optimizedFile = await optimizeImage(fileItem.file, {
+              maxWidth: 2000,
+              maxHeight: 2000,
+              quality: 0.85,
+              outputFormat: 'jpeg'
             })
-          })
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            console.error('❌ Photo DB insert API error:', err)
-            return { success: false, error: err?.error || `HTTP ${res.status}` }
+
+            const reduction = getSizeReduction(fileItem.file.size, optimizedFile.size)
+            console.log(`✓ Optimized ${fileItem.file.name}: ${formatBytes(fileItem.file.size)} → ${formatBytes(optimizedFile.size)} (${reduction}% reduction)`)
+
+            setFilesWithProgress(prev =>
+              prev.map((f, i) =>
+                i === index
+                  ? {
+                      ...f,
+                      file: optimizedFile,
+                      optimizedSize: optimizedFile.size,
+                      progress: 30
+                    }
+                  : f
+              )
+            )
+
+            return { index, optimizedFile, originalItem: fileItem }
+          } catch (error: any) {
+            console.error(`Failed to optimize ${fileItem.file.name}:`, error)
+            setFilesWithProgress(prev =>
+              prev.map((f, i) =>
+                i === index
+                  ? { ...f, status: 'error' as const, error: `Optimization failed: ${error.message}` }
+                  : f
+              )
+            )
+            return null
           }
-          console.log('✅ Photo saved to database via API')
-        }
-        return result
+        })
+      )
+
+      const validOptimizedFiles = optimizedFiles.filter(
+        (f): f is { index: number; optimizedFile: File; originalItem: FileWithProgress } => f !== null
+      )
+
+      if (validOptimizedFiles.length === 0) {
+        alert('Failed to optimize any images. Please try again.')
+        setUploading(false)
+        return
+      }
+
+      // Step 2: Upload to storage
+      console.log(`☁️ Uploading ${validOptimizedFiles.length} optimized image(s) to storage...`)
+      const uploadResults = await Promise.all(
+        validOptimizedFiles.map(async ({ index, optimizedFile }) => {
+          try {
+            setFilesWithProgress(prev =>
+              prev.map((f, i) =>
+                i === index ? { ...f, status: 'uploading' as const, progress: 50 } : f
+              )
+            )
+
+            const result = await StorageClient.uploadVehicleImage(vehicleId, optimizedFile, user.id)
+
+            if (result.success && result.url) {
+              setFilesWithProgress(prev =>
+                prev.map((f, i) =>
+                  i === index ? { ...f, progress: 80 } : f
+                )
+              )
+              return { index, url: result.url, success: true }
+            } else {
+              setFilesWithProgress(prev =>
+                prev.map((f, i) =>
+                  i === index
+                    ? { ...f, status: 'error' as const, error: result.error || 'Upload failed' }
+                    : f
+                )
+              )
+              return { index, success: false, error: result.error }
+            }
+          } catch (error: any) {
+            setFilesWithProgress(prev =>
+              prev.map((f, i) =>
+                i === index
+                  ? { ...f, status: 'error' as const, error: error.message }
+                  : f
+              )
+            )
+            return { index, success: false, error: error.message }
+          }
+        })
+      )
+
+      const successfulUploads = uploadResults.filter(
+        (r): r is { index: number; url: string; success: true } => r.success
+      )
+
+      if (successfulUploads.length === 0) {
+        alert('Failed to upload any images to storage. Please try again.')
+        setUploading(false)
+        return
+      }
+
+      // Step 3: Batch insert to database
+      console.log(`💾 Saving ${successfulUploads.length} photo(s) to database...`)
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`
+      }
+
+      const photosData = successfulUploads.map((upload, idx) => ({
+        url: upload.url,
+        is_primary: photos.length === 0 && idx === 0,
+        sort_order: photos.length + idx
+      }))
+
+      const res = await fetch(`/api/vehicles/${vehicleId}/photos`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ photos: photosData })
       })
 
-      const results = await Promise.all(uploadPromises)
-      const failed = results.filter(r => !r.success)
-      
-      if (failed.length === 0) {
-        setIsOpen(false)
-        setSelectedFiles([])
-        setPreviews([])
-        onPhotosUpdate()
-      } else {
-        console.error('Some uploads failed:', failed)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        console.error('❌ Batch photo insert API error:', err)
+        alert(`Failed to save photos to database: ${err.error || 'Unknown error'}`)
+        setUploading(false)
+        return
       }
-    } catch (error) {
-      console.error('Upload error:', error)
+
+      const dbResult = await res.json()
+      console.log('✅ Batch insert successful:', dbResult)
+
+      // Mark all successful uploads as complete
+      successfulUploads.forEach(({ index }) => {
+        setFilesWithProgress(prev =>
+          prev.map((f, i) =>
+            i === index ? { ...f, status: 'success' as const, progress: 100 } : f
+          )
+        )
+      })
+
+      // Show success message
+      const failedCount = filesWithProgress.length - successfulUploads.length
+      if (failedCount > 0) {
+        alert(`Successfully uploaded ${successfulUploads.length} photo(s). ${failedCount} failed.`)
+      }
+
+      // Close dialog and refresh if all succeeded
+      setTimeout(() => {
+        setIsOpen(false)
+        setFilesWithProgress([])
+        onPhotosUpdate()
+      }, 1000)
+    } catch (error: any) {
+      console.error('Unexpected upload error:', error)
+      alert(`An unexpected error occurred: ${error.message}`)
     } finally {
       setUploading(false)
     }
@@ -235,30 +379,86 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
                 </p>
               </div>
 
-              {/* Preview selected files */}
-              {previews.length > 0 && (
+              {/* Preview selected files with progress */}
+              {filesWithProgress.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Preview ({selectedFiles.length} selected)</Label>
-                  <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                    {previews.map((preview, index) => (
-                      <div key={index} className="relative group">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-24 object-cover rounded border"
-                        />
-                        <button
-                          onClick={() => removeFile(index)}
-                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                        {index === 0 && (
-                          <Badge className="absolute bottom-1 left-1 text-xs">
-                            Primary
-                          </Badge>
-                        )}
+                  <Label>Preview ({filesWithProgress.length} selected)</Label>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {filesWithProgress.map((fileItem, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex gap-2">
+                          {/* Thumbnail */}
+                          <div className="relative flex-shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={fileItem.preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded border"
+                            />
+                            {!uploading && (
+                              <button
+                                onClick={() => removeFile(index)}
+                                className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md hover:bg-destructive/90"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                            {index === 0 && (
+                              <Badge className="absolute bottom-1 left-1 text-xs">
+                                Primary
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* File info and progress */}
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-medium truncate">{fileItem.file.name}</p>
+                              {fileItem.status === 'success' && (
+                                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                              )}
+                              {fileItem.status === 'error' && (
+                                <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                              )}
+                              {fileItem.status === 'optimizing' && (
+                                <Loader2 className="h-4 w-4 animate-spin text-blue-600 flex-shrink-0" />
+                              )}
+                              {fileItem.status === 'uploading' && (
+                                <Loader2 className="h-4 w-4 animate-spin text-primary flex-shrink-0" />
+                              )}
+                            </div>
+
+                            {/* File size info */}
+                            <div className="text-xs text-muted-foreground">
+                              {fileItem.optimizedSize && fileItem.originalSize ? (
+                                <>
+                                  {formatBytes(fileItem.optimizedSize)}
+                                  <span className="text-green-600 ml-1">
+                                    (-{getSizeReduction(fileItem.originalSize, fileItem.optimizedSize)}%)
+                                  </span>
+                                </>
+                              ) : (
+                                formatBytes(fileItem.file.size)
+                              )}
+                            </div>
+
+                            {/* Progress bar */}
+                            {(uploading || fileItem.status === 'success') && (
+                              <div className="space-y-1">
+                                <Progress value={fileItem.progress} className="h-1.5" />
+                                <p className="text-xs text-muted-foreground">
+                                  {fileItem.status === 'pending' && 'Waiting...'}
+                                  {fileItem.status === 'optimizing' && 'Optimizing image...'}
+                                  {fileItem.status === 'uploading' && 'Uploading to storage...'}
+                                  {fileItem.status === 'success' && 'Upload complete!'}
+                                  {fileItem.status === 'error' && (
+                                    <span className="text-destructive">{fileItem.error}</span>
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -266,12 +466,12 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
               )}
 
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsOpen(false)}>
+                <Button variant="outline" onClick={() => setIsOpen(false)} disabled={uploading}>
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleUpload} 
-                  disabled={uploading || selectedFiles.length === 0}
+                <Button
+                  onClick={handleUpload}
+                  disabled={uploading || filesWithProgress.length === 0}
                 >
                   {uploading ? (
                     <>
@@ -279,7 +479,7 @@ export function PhotoUpload({ vehicleId, photos, onPhotosUpdate }: PhotoUploadPr
                       Uploading...
                     </>
                   ) : (
-                    `Upload ${selectedFiles.length} Photo${selectedFiles.length !== 1 ? 's' : ''}`
+                    `Upload ${filesWithProgress.length} Photo${filesWithProgress.length !== 1 ? 's' : ''}`
                   )}
                 </Button>
               </div>

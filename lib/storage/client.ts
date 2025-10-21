@@ -10,13 +10,16 @@ export interface UploadResult {
 export class StorageClient {
   // Upload vehicle image
   static async uploadVehicleImage(
-    vehicleId: string, 
-    file: File, 
+    vehicleId: string,
+    file: File,
     userId: string
   ): Promise<UploadResult> {
     try {
       const fileExt = file.name.split('.').pop()
-      const fileName = `${vehicleId}/${Date.now()}.${fileExt}`
+      // Generate unique filename using timestamp + random string to prevent collisions
+      // when uploading multiple files in parallel
+      const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+      const fileName = `${vehicleId}/${uniqueId}.${fileExt}`
       const filePath = `vehicles/${fileName}`
 
       const { data, error } = await supabase.storage
@@ -27,9 +30,11 @@ export class StorageClient {
         })
 
       if (error) {
+        console.error('Storage upload error:', error.message)
         return { success: false, error: error.message }
       }
 
+      // Only get public URL if upload succeeded
       const { data: { publicUrl } } = supabase.storage
         .from('vehicle-images')
         .getPublicUrl(filePath)
@@ -40,6 +45,7 @@ export class StorageClient {
         path: filePath
       }
     } catch (error: any) {
+      console.error('Unexpected upload error:', error)
       return { success: false, error: error.message }
     }
   }
@@ -52,7 +58,9 @@ export class StorageClient {
   ): Promise<UploadResult> {
     try {
       const fileExt = file.name.split('.').pop()
-      const fileName = `${documentType}_${Date.now()}.${fileExt}`
+      // Generate unique filename to prevent collisions
+      const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+      const fileName = `${documentType}_${uniqueId}.${fileExt}`
       const filePath = `vehicles/${vehicleId}/${fileName}`
 
       const { data, error } = await supabase.storage
@@ -63,6 +71,7 @@ export class StorageClient {
         })
 
       if (error) {
+        console.error('Document upload error:', error.message)
         return { success: false, error: error.message }
       }
 
@@ -76,6 +85,7 @@ export class StorageClient {
         path: filePath
       }
     } catch (error: any) {
+      console.error('Unexpected document upload error:', error)
       return { success: false, error: error.message }
     }
   }
@@ -87,7 +97,9 @@ export class StorageClient {
   ): Promise<UploadResult> {
     try {
       const fileExt = file.name.split('.').pop()
-      const fileName = `receipt_${Date.now()}.${fileExt}`
+      // Generate unique filename to prevent collisions
+      const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+      const fileName = `receipt_${uniqueId}.${fileExt}`
       const filePath = `expenses/${expenseId}/${fileName}`
 
       const { data, error } = await supabase.storage
@@ -98,6 +110,7 @@ export class StorageClient {
         })
 
       if (error) {
+        console.error('Receipt upload error:', error.message)
         return { success: false, error: error.message }
       }
 
@@ -111,6 +124,7 @@ export class StorageClient {
         path: filePath
       }
     } catch (error: any) {
+      console.error('Unexpected receipt upload error:', error)
       return { success: false, error: error.message }
     }
   }

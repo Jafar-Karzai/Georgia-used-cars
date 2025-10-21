@@ -11,39 +11,37 @@ export interface CreateVehicleData {
   trim?: string
   engine?: string
   mileage?: number
-  exteriorColor?: string
-  interiorColor?: string
+  exterior_color?: string
+  interior_color?: string
   transmission?: string
-  fuelType?: string
-  bodyStyle?: string
+  fuel_type?: string
+  body_style?: string
   drivetrain?: string
-  auctionHouse: string
-  auctionLocation?: string
-  saleDate?: Date
-  lotNumber?: string
-  primaryDamage?: string
-  secondaryDamage?: string
-  damageDescription?: string
-  damageSeverity?: 'minor' | 'moderate' | 'major' | 'total_loss'
-  repairEstimate?: number | string
-  titleStatus?: string
-  keysAvailable?: boolean
-  runAndDrive?: boolean
-  purchasePrice: number | string
-  purchaseCurrency?: 'USD' | 'CAD' | 'AED'
-  estimatedTotalCost?: number | string
-  salePrice?: number | string
-  saleCurrency?: 'USD' | 'CAD' | 'AED'
-  salePriceIncludesVat?: boolean
-  saleType?: 'local_only' | 'export_only' | 'local_and_export'
-  isPublic?: boolean
+  auction_house: string
+  auction_location?: string
+  sale_date?: Date | string
+  lot_number?: string
+  primary_damage?: string
+  secondary_damage?: string
+  damage_description?: string
+  damage_severity?: 'minor' | 'moderate' | 'major' | 'total_loss'
+  repair_estimate?: number | string
+  title_status?: string
+  keys_available?: boolean
+  run_and_drive?: boolean
+  purchase_price: number | string
+  purchase_currency?: 'USD' | 'CAD' | 'AED'
+  estimated_total_cost?: number | string
+  sale_price?: number | string
+  sale_currency?: 'USD' | 'CAD' | 'AED'
+  sale_price_includes_vat?: boolean
+  sale_type?: 'local_only' | 'export_only' | 'local_and_export'
+  is_public?: boolean
 }
 
 export interface UpdateVehicleData extends Partial<CreateVehicleData> {
-  currentStatus?: 'auction_won' | 'payment_processing' | 'pickup_scheduled' | 'in_transit_to_port' | 'at_port' | 'shipped' | 'in_transit' | 'at_uae_port' | 'customs_clearance' | 'released_from_customs' | 'in_transit_to_yard' | 'at_yard' | 'under_enhancement' | 'ready_for_sale' | 'reserved' | 'sold' | 'delivered'
-  currentLocation?: string
-  salePrice?: number | string
-  saleCurrency?: 'USD' | 'CAD' | 'AED'
+  current_status?: 'auction_won' | 'payment_processing' | 'pickup_scheduled' | 'in_transit_to_port' | 'at_port' | 'shipped' | 'in_transit' | 'at_uae_port' | 'customs_clearance' | 'released_from_customs' | 'in_transit_to_yard' | 'at_yard' | 'under_enhancement' | 'ready_for_sale' | 'reserved' | 'sold' | 'delivered'
+  current_location?: string
 }
 
 export interface VehicleFilters {
@@ -72,82 +70,45 @@ export class VehicleService {
       console.log('VehicleService.create called with:', vehicleData)
       console.log('User ID:', userId)
 
-      // Normalize snake_case input to camelCase expected by Prisma
-      const src = vehicleData as unknown as Record<string, unknown>
-      const normalized = {
-        vin: src.vin,
-        year: src.year,
-        make: src.make,
-        model: src.model,
-        trim: src.trim,
-        engine: src.engine,
-        mileage: src.mileage,
-        exteriorColor: src.exteriorColor ?? src.exterior_color,
-        interiorColor: src.interiorColor ?? src.interior_color,
-        transmission: src.transmission,
-        fuelType: src.fuelType ?? src.fuel_type,
-        bodyStyle: src.bodyStyle ?? src.body_style,
-        drivetrain: src.drivetrain ?? src.drivetrain,
-        auctionHouse: src.auctionHouse ?? src.auction_house,
-        auctionLocation: src.auctionLocation ?? src.auction_location,
-        saleDate: src.saleDate ?? (src.sale_date && typeof src.sale_date === 'string' ? new Date(src.sale_date) : undefined),
-        lotNumber: src.lotNumber ?? src.lot_number,
-        primaryDamage: src.primaryDamage ?? src.primary_damage,
-        secondaryDamage: src.secondaryDamage ?? src.secondary_damage,
-        damageDescription: src.damageDescription ?? src.damage_description,
-        damageSeverity: src.damageSeverity ?? src.damage_severity,
-        repairEstimate: src.repairEstimate ?? src.repair_estimate,
-        titleStatus: src.titleStatus ?? src.title_status,
-        keysAvailable: src.keysAvailable ?? src.keys_available ?? false,
-        runAndDrive: src.runAndDrive ?? src.run_and_drive ?? false,
-        purchasePrice: src.purchasePrice ?? src.purchase_price,
-        purchaseCurrency: src.purchaseCurrency ?? src.purchase_currency ?? 'USD',
-        estimatedTotalCost: src.estimatedTotalCost ?? src.estimated_total_cost,
-        salePrice: src.salePrice ?? src.sale_price,
-        saleCurrency: src.saleCurrency ?? src.sale_currency ?? 'AED',
-        salePriceIncludesVat: src.salePriceIncludesVat ?? src.sale_price_includes_vat ?? false,
-        saleType: src.saleType ?? src.sale_type ?? 'local_and_export',
-        isPublic: src.isPublic ?? src.is_public,
-      } as CreateVehicleData
-
+      // Convert snake_case input to camelCase for Prisma
       const createData: Prisma.VehicleCreateInput = {
-        vin: normalized.vin,
-        year: normalized.year,
-        make: normalized.make,
-        model: normalized.model,
-        trim: normalized.trim,
-        engine: normalized.engine,
-        mileage: normalized.mileage,
-        exteriorColor: normalized.exteriorColor,
-        interiorColor: normalized.interiorColor,
-        transmission: normalized.transmission,
-        fuelType: normalized.fuelType,
-        bodyStyle: normalized.bodyStyle,
+        vin: vehicleData.vin,
+        year: vehicleData.year,
+        make: vehicleData.make,
+        model: vehicleData.model,
+        trim: vehicleData.trim,
+        engine: vehicleData.engine,
+        mileage: vehicleData.mileage,
+        exteriorColor: vehicleData.exterior_color,
+        interiorColor: vehicleData.interior_color,
+        transmission: vehicleData.transmission,
+        fuelType: vehicleData.fuel_type,
+        bodyStyle: vehicleData.body_style,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        drivetrain: normalized.drivetrain as any,
-        auctionHouse: normalized.auctionHouse!,
-        auctionLocation: normalized.auctionLocation,
+        drivetrain: vehicleData.drivetrain as any,
+        auctionHouse: vehicleData.auction_house,
+        auctionLocation: vehicleData.auction_location,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        saleDate: normalized.saleDate as any,
-        lotNumber: normalized.lotNumber,
-        primaryDamage: normalized.primaryDamage,
-        secondaryDamage: normalized.secondaryDamage,
-        damageDescription: normalized.damageDescription,
+        saleDate: vehicleData.sale_date ? (typeof vehicleData.sale_date === 'string' ? new Date(vehicleData.sale_date) : vehicleData.sale_date) as any : undefined,
+        lotNumber: vehicleData.lot_number,
+        primaryDamage: vehicleData.primary_damage,
+        secondaryDamage: vehicleData.secondary_damage,
+        damageDescription: vehicleData.damage_description,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        damageSeverity: normalized.damageSeverity as any,
-        repairEstimate: normalized.repairEstimate ? new Prisma.Decimal(normalized.repairEstimate.toString()) : undefined,
-        titleStatus: normalized.titleStatus,
-        keysAvailable: normalized.keysAvailable ?? false,
-        runAndDrive: normalized.runAndDrive ?? false,
-        purchasePrice: new Prisma.Decimal(normalized.purchasePrice!.toString()),
-        purchaseCurrency: normalized.purchaseCurrency ?? 'USD',
-        estimatedTotalCost: normalized.estimatedTotalCost ? new Prisma.Decimal(normalized.estimatedTotalCost.toString()) : undefined,
-        salePrice: normalized.salePrice ? new Prisma.Decimal(normalized.salePrice.toString()) : undefined,
-        saleCurrency: normalized.saleCurrency ?? 'AED',
-        salePriceIncludesVat: normalized.salePriceIncludesVat ?? false,
+        damageSeverity: vehicleData.damage_severity as any,
+        repairEstimate: vehicleData.repair_estimate ? new Prisma.Decimal(vehicleData.repair_estimate.toString()) : undefined,
+        titleStatus: vehicleData.title_status,
+        keysAvailable: vehicleData.keys_available ?? false,
+        runAndDrive: vehicleData.run_and_drive ?? false,
+        purchasePrice: new Prisma.Decimal(vehicleData.purchase_price.toString()),
+        purchaseCurrency: vehicleData.purchase_currency ?? 'USD',
+        estimatedTotalCost: vehicleData.estimated_total_cost ? new Prisma.Decimal(vehicleData.estimated_total_cost.toString()) : undefined,
+        salePrice: vehicleData.sale_price ? new Prisma.Decimal(vehicleData.sale_price.toString()) : undefined,
+        saleCurrency: vehicleData.sale_currency ?? 'AED',
+        salePriceIncludesVat: vehicleData.sale_price_includes_vat ?? false,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        saleType: (normalized.saleType as any) ?? 'local_and_export',
-        isPublic: normalized.isPublic,
+        saleType: (vehicleData.sale_type as any) ?? 'local_and_export',
+        isPublic: vehicleData.is_public,
         currentStatus: 'auction_won',
         createdByProfile: {
           connect: { id: userId }
@@ -170,42 +131,41 @@ export class VehicleService {
       try {
         const admin = this.getAdmin()
         if (!admin) throw error
-        const src = vehicleData as unknown as Record<string, unknown>
         const nowIso = new Date().toISOString()
         const insert = {
-          vin: src.vin,
-          year: src.year,
-          make: src.make,
-          model: src.model,
-          trim: src.trim,
-          engine: src.engine,
-          mileage: src.mileage,
-          exterior_color: src.exterior_color ?? src.exteriorColor,
-          interior_color: src.interior_color ?? src.interiorColor,
-          transmission: src.transmission,
-          fuel_type: src.fuel_type ?? src.fuelType,
-          body_style: src.body_style ?? src.bodyStyle,
-          drivetrain: src.drivetrain ?? src.drivetrain,
-          auction_house: src.auction_house ?? src.auctionHouse,
-          auction_location: src.auction_location ?? src.auctionLocation,
-          sale_date: src.sale_date ?? (src.saleDate && (typeof src.saleDate === 'string' || src.saleDate instanceof Date) ? new Date(src.saleDate).toISOString().slice(0,10) : null),
-          lot_number: src.lot_number ?? src.lotNumber,
-          primary_damage: src.primary_damage ?? src.primaryDamage,
-          secondary_damage: src.secondary_damage ?? src.secondaryDamage,
-          damage_description: src.damage_description ?? src.damageDescription,
-          damage_severity: src.damage_severity ?? src.damageSeverity,
-          repair_estimate: src.repair_estimate ?? src.repairEstimate,
-          title_status: src.title_status ?? src.titleStatus,
-          keys_available: src.keys_available ?? src.keysAvailable ?? false,
-          run_and_drive: src.run_and_drive ?? src.runAndDrive ?? false,
-          purchase_price: src.purchase_price ?? src.purchasePrice,
-          purchase_currency: src.purchase_currency ?? src.purchaseCurrency ?? 'USD',
-          estimated_total_cost: src.estimated_total_cost ?? src.estimatedTotalCost,
-          sale_price: src.sale_price ?? src.salePrice,
-          sale_currency: src.sale_currency ?? src.saleCurrency ?? 'AED',
-          sale_price_includes_vat: src.sale_price_includes_vat ?? src.salePriceIncludesVat ?? false,
-          sale_type: src.sale_type ?? src.saleType ?? 'local_and_export',
-          is_public: src.is_public ?? src.isPublic ?? false,
+          vin: vehicleData.vin,
+          year: vehicleData.year,
+          make: vehicleData.make,
+          model: vehicleData.model,
+          trim: vehicleData.trim,
+          engine: vehicleData.engine,
+          mileage: vehicleData.mileage,
+          exterior_color: vehicleData.exterior_color,
+          interior_color: vehicleData.interior_color,
+          transmission: vehicleData.transmission,
+          fuel_type: vehicleData.fuel_type,
+          body_style: vehicleData.body_style,
+          drivetrain: vehicleData.drivetrain,
+          auction_house: vehicleData.auction_house,
+          auction_location: vehicleData.auction_location,
+          sale_date: vehicleData.sale_date ? (typeof vehicleData.sale_date === 'string' ? vehicleData.sale_date : vehicleData.sale_date instanceof Date ? vehicleData.sale_date.toISOString().slice(0,10) : null) : null,
+          lot_number: vehicleData.lot_number,
+          primary_damage: vehicleData.primary_damage,
+          secondary_damage: vehicleData.secondary_damage,
+          damage_description: vehicleData.damage_description,
+          damage_severity: vehicleData.damage_severity,
+          repair_estimate: vehicleData.repair_estimate,
+          title_status: vehicleData.title_status,
+          keys_available: vehicleData.keys_available ?? false,
+          run_and_drive: vehicleData.run_and_drive ?? false,
+          purchase_price: vehicleData.purchase_price,
+          purchase_currency: vehicleData.purchase_currency ?? 'USD',
+          estimated_total_cost: vehicleData.estimated_total_cost,
+          sale_price: vehicleData.sale_price,
+          sale_currency: vehicleData.sale_currency ?? 'AED',
+          sale_price_includes_vat: vehicleData.sale_price_includes_vat ?? false,
+          sale_type: vehicleData.sale_type ?? 'local_and_export',
+          is_public: vehicleData.is_public ?? false,
           current_status: 'auction_won',
           created_by: userId,
           created_at: nowIso,
@@ -571,9 +531,6 @@ export class VehicleService {
   // Update vehicle
   static async update(id: string, updateData: UpdateVehicleData, userId: string) {
     try {
-      // Normalize input to camelCase (form sends camelCase)
-      const src = updateData as Record<string, unknown>
-
       // Helper to safely convert to Decimal for numeric fields
       const toDecimal = (value: unknown): Prisma.Decimal | undefined => {
         if (value === null || value === undefined) return undefined
@@ -584,48 +541,49 @@ export class VehicleService {
 
       const updateInput: Prisma.VehicleUpdateInput = {}
 
-      // Build update input for string fields
-      if (src.trim !== undefined) updateInput.trim = src.trim
-      if (src.engine !== undefined) updateInput.engine = src.engine
-      if (src.mileage !== undefined) updateInput.mileage = src.mileage
-      if (src.exteriorColor !== undefined) updateInput.exteriorColor = src.exteriorColor
-      if (src.interiorColor !== undefined) updateInput.interiorColor = src.interiorColor
-      if (src.transmission !== undefined) updateInput.transmission = src.transmission
-      if (src.fuelType !== undefined) updateInput.fuelType = src.fuelType
-      if (src.bodyStyle !== undefined) updateInput.bodyStyle = src.bodyStyle
-      if (src.drivetrain !== undefined) updateInput.drivetrain = src.drivetrain
-      if (src.auctionLocation !== undefined) updateInput.auctionLocation = src.auctionLocation
-      if (src.lotNumber !== undefined) updateInput.lotNumber = src.lotNumber
-      if (src.primaryDamage !== undefined) updateInput.primaryDamage = src.primaryDamage
-      if (src.secondaryDamage !== undefined) updateInput.secondaryDamage = src.secondaryDamage
-      if (src.damageDescription !== undefined) updateInput.damageDescription = src.damageDescription
+      // Build update input for string fields (convert snake_case to camelCase for Prisma)
+      if (updateData.trim !== undefined) updateInput.trim = updateData.trim
+      if (updateData.engine !== undefined) updateInput.engine = updateData.engine
+      if (updateData.mileage !== undefined) updateInput.mileage = updateData.mileage
+      if (updateData.exterior_color !== undefined) updateInput.exteriorColor = updateData.exterior_color
+      if (updateData.interior_color !== undefined) updateInput.interiorColor = updateData.interior_color
+      if (updateData.transmission !== undefined) updateInput.transmission = updateData.transmission
+      if (updateData.fuel_type !== undefined) updateInput.fuelType = updateData.fuel_type
+      if (updateData.body_style !== undefined) updateInput.bodyStyle = updateData.body_style
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (src.damageSeverity !== undefined) updateInput.damageSeverity = src.damageSeverity as any
-      if (src.titleStatus !== undefined) updateInput.titleStatus = src.titleStatus
-      if (src.currentStatus !== undefined) updateInput.currentStatus = src.currentStatus as VehicleStatus
-      if (src.currentLocation !== undefined) updateInput.currentLocation = src.currentLocation as string
-      if (src.saleCurrency !== undefined) updateInput.saleCurrency = src.saleCurrency as CurrencyCode
+      if (updateData.drivetrain !== undefined) updateInput.drivetrain = updateData.drivetrain as any
+      if (updateData.auction_location !== undefined) updateInput.auctionLocation = updateData.auction_location
+      if (updateData.lot_number !== undefined) updateInput.lotNumber = updateData.lot_number
+      if (updateData.primary_damage !== undefined) updateInput.primaryDamage = updateData.primary_damage
+      if (updateData.secondary_damage !== undefined) updateInput.secondaryDamage = updateData.secondary_damage
+      if (updateData.damage_description !== undefined) updateInput.damageDescription = updateData.damage_description
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (src.saleType !== undefined) updateInput.saleType = src.saleType as any
-      if (src.purchaseCurrency !== undefined) updateInput.purchaseCurrency = src.purchaseCurrency as CurrencyCode
-      if (src.auctionHouse !== undefined && typeof src.auctionHouse === 'string') updateInput.auctionHouse = src.auctionHouse
+      if (updateData.damage_severity !== undefined) updateInput.damageSeverity = updateData.damage_severity as any
+      if (updateData.title_status !== undefined) updateInput.titleStatus = updateData.title_status
+      if (updateData.current_status !== undefined) updateInput.currentStatus = updateData.current_status as VehicleStatus
+      if (updateData.current_location !== undefined) updateInput.currentLocation = updateData.current_location as string
+      if (updateData.sale_currency !== undefined) updateInput.saleCurrency = updateData.sale_currency as CurrencyCode
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (updateData.sale_type !== undefined) updateInput.saleType = updateData.sale_type as any
+      if (updateData.purchase_currency !== undefined) updateInput.purchaseCurrency = updateData.purchase_currency as CurrencyCode
+      if (updateData.auction_house !== undefined && typeof updateData.auction_house === 'string') updateInput.auctionHouse = updateData.auction_house
 
       // Build update input for boolean fields
-      if (src.keysAvailable !== undefined && typeof src.keysAvailable === 'boolean') updateInput.keysAvailable = src.keysAvailable
-      if (src.runAndDrive !== undefined && typeof src.runAndDrive === 'boolean') updateInput.runAndDrive = src.runAndDrive
-      if (src.isPublic !== undefined && typeof src.is_public === 'boolean') updateInput.isPublic = src.is_public
-      if (src.salePriceIncludesVat !== undefined && typeof src.salePriceIncludesVat === 'boolean') updateInput.salePriceIncludesVat = src.salePriceIncludesVat
+      if (updateData.keys_available !== undefined && typeof updateData.keys_available === 'boolean') updateInput.keysAvailable = updateData.keys_available
+      if (updateData.run_and_drive !== undefined && typeof updateData.run_and_drive === 'boolean') updateInput.runAndDrive = updateData.run_and_drive
+      if (updateData.is_public !== undefined && typeof updateData.is_public === 'boolean') updateInput.isPublic = updateData.is_public
+      if (updateData.sale_price_includes_vat !== undefined && typeof updateData.sale_price_includes_vat === 'boolean') updateInput.salePriceIncludesVat = updateData.sale_price_includes_vat
 
       // Handle Date field
-      if (src.saleDate !== undefined) {
-        updateInput.saleDate = typeof src.sale_date === 'string' ? new Date(src.sale_date) : src.saleDate
+      if (updateData.sale_date !== undefined) {
+        updateInput.saleDate = typeof updateData.sale_date === 'string' ? new Date(updateData.sale_date) : updateData.sale_date
       }
 
       // Handle Decimal fields (prices, costs, estimates)
-      if (src.repairEstimate !== undefined) updateInput.repairEstimate = toDecimal(src.repairEstimate)
-      if (src.estimatedTotalCost !== undefined) updateInput.estimatedTotalCost = toDecimal(src.estimatedTotalCost)
-      if (src.salePrice !== undefined) updateInput.salePrice = toDecimal(src.salePrice)
-      if (src.purchasePrice !== undefined) updateInput.purchasePrice = toDecimal(src.purchasePrice)
+      if (updateData.repair_estimate !== undefined) updateInput.repairEstimate = toDecimal(updateData.repair_estimate)
+      if (updateData.estimated_total_cost !== undefined) updateInput.estimatedTotalCost = toDecimal(updateData.estimated_total_cost)
+      if (updateData.sale_price !== undefined) updateInput.salePrice = toDecimal(updateData.sale_price)
+      if (updateData.purchase_price !== undefined) updateInput.purchasePrice = toDecimal(updateData.purchase_price)
 
       // Execute the update
       const data = await prisma.vehicle.update({
@@ -634,11 +592,11 @@ export class VehicleService {
       })
 
       // If status changed, add to history
-      if (src.currentStatus && typeof src.currentStatus === 'string') {
+      if (updateData.current_status && typeof updateData.current_status === 'string') {
         await this.addStatusHistory(
           id,
-          src.currentStatus as VehicleStatus,
-          src.currentLocation && typeof src.currentLocation === 'string' ? `Location: ${src.currentLocation}` : undefined,
+          updateData.current_status as VehicleStatus,
+          updateData.current_location && typeof updateData.current_location === 'string' ? `Location: ${updateData.current_location}` : undefined,
           userId
         )
       }
@@ -653,42 +611,41 @@ export class VehicleService {
         const admin = this.getAdmin()
         if (!admin) throw error
 
-        // Convert camelCase to snake_case for Supabase
-        const src = updateData as Record<string, unknown>
+        // Build snake_case update object for Supabase
         const snakeCaseUpdate: Record<string, unknown> = {}
 
-        // Map camelCase fields to snake_case
-        if (src.isPublic !== undefined) snakeCaseUpdate.is_public = src.isPublic
-        if (src.trim !== undefined) snakeCaseUpdate.trim = src.trim
-        if (src.engine !== undefined) snakeCaseUpdate.engine = src.engine
-        if (src.mileage !== undefined) snakeCaseUpdate.mileage = src.mileage
-        if (src.exteriorColor !== undefined) snakeCaseUpdate.exterior_color = src.exteriorColor
-        if (src.interiorColor !== undefined) snakeCaseUpdate.interior_color = src.interiorColor
-        if (src.transmission !== undefined) snakeCaseUpdate.transmission = src.transmission
-        if (src.fuelType !== undefined) snakeCaseUpdate.fuel_type = src.fuelType
-        if (src.bodyStyle !== undefined) snakeCaseUpdate.body_style = src.bodyStyle
-        if (src.drivetrain !== undefined) snakeCaseUpdate.drivetrain = src.drivetrain
-        if (src.auctionLocation !== undefined) snakeCaseUpdate.auction_location = src.auctionLocation
-        if (src.lotNumber !== undefined) snakeCaseUpdate.lot_number = src.lotNumber
-        if (src.primaryDamage !== undefined) snakeCaseUpdate.primary_damage = src.primaryDamage
-        if (src.secondaryDamage !== undefined) snakeCaseUpdate.secondary_damage = src.secondaryDamage
-        if (src.damageDescription !== undefined) snakeCaseUpdate.damage_description = src.damageDescription
-        if (src.damageSeverity !== undefined) snakeCaseUpdate.damage_severity = src.damageSeverity
-        if (src.titleStatus !== undefined) snakeCaseUpdate.title_status = src.titleStatus
-        if (src.currentStatus !== undefined) snakeCaseUpdate.current_status = src.currentStatus
-        if (src.currentLocation !== undefined) snakeCaseUpdate.current_location = src.currentLocation
-        if (src.saleCurrency !== undefined) snakeCaseUpdate.sale_currency = src.saleCurrency
-        if (src.saleType !== undefined) snakeCaseUpdate.sale_type = src.saleType
-        if (src.purchaseCurrency !== undefined) snakeCaseUpdate.purchase_currency = src.purchaseCurrency
-        if (src.auctionHouse !== undefined) snakeCaseUpdate.auction_house = src.auctionHouse
-        if (src.keysAvailable !== undefined) snakeCaseUpdate.keys_available = src.keysAvailable
-        if (src.runAndDrive !== undefined) snakeCaseUpdate.run_and_drive = src.runAndDrive
-        if (src.salePriceIncludesVat !== undefined) snakeCaseUpdate.sale_price_includes_vat = src.salePriceIncludesVat
-        if (src.saleDate !== undefined) snakeCaseUpdate.sale_date = typeof src.saleDate === 'string' ? new Date(src.saleDate).toISOString().slice(0, 10) : src.saleDate
-        if (src.repairEstimate !== undefined) snakeCaseUpdate.repair_estimate = src.repairEstimate
-        if (src.estimatedTotalCost !== undefined) snakeCaseUpdate.estimated_total_cost = src.estimatedTotalCost
-        if (src.salePrice !== undefined) snakeCaseUpdate.sale_price = src.salePrice
-        if (src.purchasePrice !== undefined) snakeCaseUpdate.purchase_price = src.purchasePrice
+        // Map snake_case fields directly
+        if (updateData.is_public !== undefined) snakeCaseUpdate.is_public = updateData.is_public
+        if (updateData.trim !== undefined) snakeCaseUpdate.trim = updateData.trim
+        if (updateData.engine !== undefined) snakeCaseUpdate.engine = updateData.engine
+        if (updateData.mileage !== undefined) snakeCaseUpdate.mileage = updateData.mileage
+        if (updateData.exterior_color !== undefined) snakeCaseUpdate.exterior_color = updateData.exterior_color
+        if (updateData.interior_color !== undefined) snakeCaseUpdate.interior_color = updateData.interior_color
+        if (updateData.transmission !== undefined) snakeCaseUpdate.transmission = updateData.transmission
+        if (updateData.fuel_type !== undefined) snakeCaseUpdate.fuel_type = updateData.fuel_type
+        if (updateData.body_style !== undefined) snakeCaseUpdate.body_style = updateData.body_style
+        if (updateData.drivetrain !== undefined) snakeCaseUpdate.drivetrain = updateData.drivetrain
+        if (updateData.auction_location !== undefined) snakeCaseUpdate.auction_location = updateData.auction_location
+        if (updateData.lot_number !== undefined) snakeCaseUpdate.lot_number = updateData.lot_number
+        if (updateData.primary_damage !== undefined) snakeCaseUpdate.primary_damage = updateData.primary_damage
+        if (updateData.secondary_damage !== undefined) snakeCaseUpdate.secondary_damage = updateData.secondary_damage
+        if (updateData.damage_description !== undefined) snakeCaseUpdate.damage_description = updateData.damage_description
+        if (updateData.damage_severity !== undefined) snakeCaseUpdate.damage_severity = updateData.damage_severity
+        if (updateData.title_status !== undefined) snakeCaseUpdate.title_status = updateData.title_status
+        if (updateData.current_status !== undefined) snakeCaseUpdate.current_status = updateData.current_status
+        if (updateData.current_location !== undefined) snakeCaseUpdate.current_location = updateData.current_location
+        if (updateData.sale_currency !== undefined) snakeCaseUpdate.sale_currency = updateData.sale_currency
+        if (updateData.sale_type !== undefined) snakeCaseUpdate.sale_type = updateData.sale_type
+        if (updateData.purchase_currency !== undefined) snakeCaseUpdate.purchase_currency = updateData.purchase_currency
+        if (updateData.auction_house !== undefined) snakeCaseUpdate.auction_house = updateData.auction_house
+        if (updateData.keys_available !== undefined) snakeCaseUpdate.keys_available = updateData.keys_available
+        if (updateData.run_and_drive !== undefined) snakeCaseUpdate.run_and_drive = updateData.run_and_drive
+        if (updateData.sale_price_includes_vat !== undefined) snakeCaseUpdate.sale_price_includes_vat = updateData.sale_price_includes_vat
+        if (updateData.sale_date !== undefined) snakeCaseUpdate.sale_date = typeof updateData.sale_date === 'string' ? updateData.sale_date : updateData.sale_date instanceof Date ? updateData.sale_date.toISOString().slice(0, 10) : null
+        if (updateData.repair_estimate !== undefined) snakeCaseUpdate.repair_estimate = updateData.repair_estimate
+        if (updateData.estimated_total_cost !== undefined) snakeCaseUpdate.estimated_total_cost = updateData.estimated_total_cost
+        if (updateData.sale_price !== undefined) snakeCaseUpdate.sale_price = updateData.sale_price
+        if (updateData.purchase_price !== undefined) snakeCaseUpdate.purchase_price = updateData.purchase_price
 
         // Add updated_at timestamp
         snakeCaseUpdate.updated_at = new Date().toISOString()
@@ -705,11 +662,11 @@ export class VehicleService {
         if (updateError) throw updateError
 
         // If status changed, add to history
-        if (src.currentStatus && typeof src.currentStatus === 'string') {
+        if (updateData.current_status && typeof updateData.current_status === 'string') {
           await admin.from('vehicle_status_history').insert({
             vehicle_id: id,
-            status: src.currentStatus,
-            notes: src.currentLocation && typeof src.currentLocation === 'string' ? `Location: ${src.currentLocation}` : undefined,
+            status: updateData.current_status,
+            notes: updateData.current_location && typeof updateData.current_location === 'string' ? `Location: ${updateData.current_location}` : undefined,
             changed_by: userId
           })
         }

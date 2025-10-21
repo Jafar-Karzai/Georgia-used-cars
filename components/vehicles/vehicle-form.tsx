@@ -43,8 +43,6 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth/context'
 import { Vehicle } from '@/types/database'
-import { supabase } from '@/lib/supabase/client'
-import { serializeToCamelCase } from '@/lib/utils/serialization'
 import {
   Car,
   DollarSign,
@@ -128,9 +126,17 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
 
   const { user } = useAuth()
 
-  // Transform API response data (snake_case) to camelCase for form compatibility
-  // Also handles Decimal to number conversion
-  const transformedData = initialData ? serializeToCamelCase(initialData) : undefined
+  // Convert Decimal fields to numbers for form compatibility
+  // Keep data in snake_case format to match form schema
+  const transformedData = initialData ? {
+    ...initialData,
+    // Convert Decimal types to numbers
+    purchase_price: initialData.purchase_price ? Number(initialData.purchase_price) : 0,
+    sale_price: initialData.sale_price ? Number(initialData.sale_price) : 0,
+    estimated_total_cost: initialData.estimated_total_cost ? Number(initialData.estimated_total_cost) : 0,
+    repair_estimate: initialData.repair_estimate ? Number(initialData.repair_estimate) : 0,
+    mileage: initialData.mileage ? Number(initialData.mileage) : 0,
+  } : undefined
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleSchema),
@@ -241,48 +247,94 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
     try {
       let result
 
-      // Get Supabase access token for Authorization header
-      const { data: sessionData } = await supabase.auth.getSession()
-      const accessToken = sessionData?.session?.access_token
-
-      // Build headers with proper type safety
+      // Get access token with timeout to prevent hanging
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       }
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`
+
+      try {
+        // Use the new @supabase/ssr package for client-side auth
+        const { createBrowserClient } = await import('@supabase/ssr')
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+
+        // Get session without network request (reads from local storage)
+        const { data: { session } } = await supabase.auth.getSession()
+        const accessToken = session?.access_token
+
+        if (accessToken) {
+          headers.Authorization = `Bearer ${accessToken}`
+          console.log('✓ Got access token for API request')
+        } else {
+          console.log('No access token, will use cookie authentication')
+        }
+      } catch (sessionError) {
+        console.warn('Session token retrieval failed, will rely on cookies:', sessionError)
+        // Continue without Authorization header - API will fall back to cookies
       }
 
       if (isEdit && initialData?.id) {
         console.log('Updating vehicle via API with ID:', initialData.id)
-        const response = await fetch(`/api/vehicles/${initialData.id}`, {
-          method: 'PUT',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify({ ...data })
-        })
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+        try {
+          const response = await fetch(`/api/vehicles/${initialData.id}`, {
+            method: 'PUT',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({ ...data }),
+            signal: controller.signal
+          })
+
+          clearTimeout(timeout)
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            console.error('API Error Response:', errorData)
+            throw new Error(errorData.details || errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+          }
+
+          result = await response.json()
+        } catch (error) {
+          clearTimeout(timeout)
+          if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Request timed out after 30 seconds. Please check your connection and try again.')
+          }
+          throw error
         }
-
-        result = await response.json()
       } else {
         console.log('Creating new vehicle via API')
-        const response = await fetch('/api/vehicles', {
-          method: 'POST',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify(data)
-        })
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+        try {
+          const response = await fetch('/api/vehicles', {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify(data),
+            signal: controller.signal
+          })
+
+          clearTimeout(timeout)
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            console.error('API Error Response:', errorData)
+            throw new Error(errorData.details || errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+          }
+
+          result = await response.json()
+        } catch (error) {
+          clearTimeout(timeout)
+          if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Request timed out after 30 seconds. Please check your connection and try again.')
+          }
+          throw error
         }
-
-        result = await response.json()
       }
 
       console.log('Vehicle service result:', result)

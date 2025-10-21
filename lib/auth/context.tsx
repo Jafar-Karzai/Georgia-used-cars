@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client'
 import { AuthContextType, AuthUser, Permission, ROLE_PERMISSIONS } from '@/types/auth'
 import { UserRole } from '@/types/database'
 import type { User } from '@supabase/supabase-js'
+import { clearLegacySupabaseCookies } from '@/lib/auth/cookie-migration'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -18,7 +19,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        // Only clear cookies if Supabase explicitly reports a parse error
+        if (error) {
+          console.error('Auth session error:', error.message)
+          if (error.message?.includes('parse') || error.message?.includes('JSON')) {
+            console.log('⚠️ Cookie parse error detected, clearing corrupted cookies...')
+            clearLegacySupabaseCookies()
+            await supabase.auth.signOut()
+          }
+          setLoading(false)
+          return
+        }
+
         if (session?.user) {
           const ok = await fetchUserProfile(session.user)
           if (!ok) {
@@ -27,8 +41,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await fetchUserProfile(session.user)
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error getting session:', error)
+        // Only clear on actual parse/cookie errors from Supabase
+        if (error?.message?.includes('parse') || error?.message?.includes('JSON')) {
+          console.log('⚠️ Auth error detected, clearing corrupted cookies...')
+          clearLegacySupabaseCookies()
+          await supabase.auth.signOut()
+        }
       } finally {
         setLoading(false)
       }
@@ -101,12 +121,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      throw error
+    try {
+      // Sign out from Supabase (handles cookie cleanup automatically)
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Sign out error:', error)
+      }
+
+      setUser(null)
+      router.push('/auth/login')
+    } catch (error) {
+      console.error('Error during sign out:', error)
+      setUser(null)
+      router.push('/auth/login')
     }
-    setUser(null)
-    router.push('/auth/login')
   }
 
   const hasPermission = (permission: Permission): boolean => {
