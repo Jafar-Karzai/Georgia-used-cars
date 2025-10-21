@@ -2,43 +2,41 @@
 // moved into (site) route group to use site layout
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { fetchVehicleStats, fetchVehicles } from '@/lib/api/vehicles-client'
+import { fetchVehicles } from '@/lib/api/vehicles-client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Car, Users, Star, Shield, Phone, Mail, MapPin, ChevronRight, Search, Filter, TrendingUp, Award, CheckCircle } from 'lucide-react'
+import { Car, Shield, Phone, Mail, MapPin, ChevronRight, Award, CheckCircle } from 'lucide-react'
 import { SiteNavbar } from '@/components/layout/site-navbar'
 import { Hero03 } from '@/components/marketing/hero-03'
+import { getPublicStatusLabel, getPublicStatusBadgeStyle } from '@/lib/utils/vehicle-status'
+import type { VehicleStatus } from '@/types/database'
 
 interface FeaturedVehicle {
   id: string
   year: number
   make: string
   model: string
-  price: number
-  photos: string[]
-  status: string
+  purchase_price: number
+  sale_price?: number
+  vehicle_photos?: Array<{
+    url: string
+    is_primary: boolean
+  }>
+  current_status: string
   mileage?: number
+  run_and_drive: boolean
 }
 
 export default function HomePage() {
   const [featuredVehicles, setFeaturedVehicles] = useState<FeaturedVehicle[]>([])
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<{
-    totalVehicles: number
-    availableVehicles: number
-    happyCustomers: number
-  }>({
-    totalVehicles: 0,
-    availableVehicles: 0,
-    happyCustomers: 0
-  })
 
   useEffect(() => {
     loadFeaturedVehicles()
-    loadStats()
   }, [])
 
   const loadFeaturedVehicles = async () => {
@@ -52,18 +50,6 @@ export default function HomePage() {
     }
   }
 
-  const loadStats = async () => {
-    try {
-      const response = await fetchVehicleStats()
-      if (response.success && response.data) setStats({
-        totalVehicles: response.data.total,
-        availableVehicles: response.data.byStatus.available || 0,
-        happyCustomers: Math.floor(response.data.total * 0.8)
-      })
-    } catch (error) {
-      console.error('Failed to load stats:', error)
-    }
-  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-AE', {
@@ -80,26 +66,6 @@ export default function HomePage() {
 
       <Hero03 />
 
-      {/* Stats Strip */}
-      <section className="py-10 bg-gradient-to-b from-background to-muted/40">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-primary">{stats.totalVehicles}+</div>
-              <div className="text-sm text-muted-foreground">Vehicles Imported</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-primary">{stats.availableVehicles}</div>
-              <div className="text-sm text-muted-foreground">Available Now</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-primary">{stats.happyCustomers}+</div>
-              <div className="text-sm text-muted-foreground">Happy Customers</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Featured Vehicles */}
       <section className="py-20">
         <div className="container mx-auto px-4">
@@ -112,7 +78,7 @@ export default function HomePage() {
             {loading ? (
               [...Array(3)].map((_, i) => (
                 <Card key={i} className="overflow-hidden">
-                  <Skeleton className="h-48 w-full" />
+                  <Skeleton className="h-60 w-full" />
                   <CardContent className="p-6">
                     <Skeleton className="h-6 w-3/4 mb-2" />
                     <Skeleton className="h-4 w-1/2 mb-4" />
@@ -124,22 +90,26 @@ export default function HomePage() {
               featuredVehicles.map((vehicle) => (
                 <Card key={vehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
                   <Link href={`/inventory/${vehicle.id}`}>
-                    <div className="relative h-48 bg-muted">
-                      {vehicle.vehicle_photos?.[0] ? (
-                        <img 
-                          src={vehicle.vehicle_photos[0]} 
+                    <div className="relative h-60 bg-muted overflow-hidden">
+                      {vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url ? (
+                        <Image
+                          src={vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url || ''}
                           alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Car className="h-16 w-16 text-muted-foreground" />
                         </div>
                       )}
-                      <Badge className="absolute top-3 right-3 bg-emerald-500 hover:bg-emerald-600">
-                        {vehicle.status}
-                      </Badge>
-                      {vehicle.price && vehicle.price < 50000 && (
+                      {getPublicStatusLabel(vehicle.current_status as VehicleStatus) && (
+                        <Badge className={`absolute top-3 right-3 border font-semibold shadow-sm ${getPublicStatusBadgeStyle(vehicle.current_status as VehicleStatus)}`}>
+                          {getPublicStatusLabel(vehicle.current_status as VehicleStatus)}
+                        </Badge>
+                      )}
+                      {(vehicle.sale_price && vehicle.sale_price < 50000) && (
                         <Badge className="absolute top-3 left-3 bg-brand-red-500 text-white">
                           Great Deal
                         </Badge>
@@ -149,14 +119,21 @@ export default function HomePage() {
                       <h3 className="text-xl font-semibold mb-2">
                         {vehicle.year} {vehicle.make} {vehicle.model}
                       </h3>
-                      {vehicle.mileage && (
-                        <p className="text-muted-foreground mb-4">
-                          {vehicle.mileage.toLocaleString()} miles
-                        </p>
-                      )}
+                      <div className="flex items-center gap-2 mb-3">
+                        {vehicle.mileage && (
+                          <p className="text-muted-foreground text-sm">
+                            {vehicle.mileage.toLocaleString()} miles
+                          </p>
+                        )}
+                        {vehicle.run_and_drive && (
+                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium">
+                            Run & Drive
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-2xl font-bold text-primary">
-                          {formatCurrency(vehicle.price)}
+                          {vehicle.sale_price ? formatCurrency(vehicle.sale_price) : 'Contact for Price'}
                         </span>
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
