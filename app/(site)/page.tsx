@@ -20,7 +20,7 @@ interface FeaturedVehicle {
   year: number
   make: string
   model: string
-  purchase_price: number
+  // purchase_price and purchase_currency removed - dealer private information
   sale_price?: number
   vehicle_photos?: Array<{
     url: string

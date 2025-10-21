@@ -290,7 +290,7 @@ export class VehicleService {
         let query = admin
           .from('vehicles')
           .select(
-            'id, vin, year, make, model, trim, current_status, current_location, purchase_price, purchase_currency, sale_price, sale_currency, sale_date, auction_house, primary_damage, secondary_damage, damage_severity, is_public, vehicle_photos:vehicle_photos(id,url,caption,is_primary,sort_order)'
+            'id, vin, year, make, model, trim, mileage, transmission, fuel_type, body_style, run_and_drive, current_status, current_location, purchase_price, purchase_currency, sale_price, sale_currency, sale_price_includes_vat, sale_type, sale_date, auction_house, primary_damage, secondary_damage, damage_severity, is_public, vehicle_photos:vehicle_photos(id,url,caption,is_primary,sort_order)'
             , { count: 'exact' }
           )
 
@@ -368,9 +368,9 @@ export class VehicleService {
       }
 
       if (publicFilters.priceMin || publicFilters.priceMax) {
-        where.purchasePrice = {}
-        if (publicFilters.priceMin) where.purchasePrice.gte = new Prisma.Decimal(publicFilters.priceMin.toString())
-        if (publicFilters.priceMax) where.purchasePrice.lte = new Prisma.Decimal(publicFilters.priceMax.toString())
+        where.salePrice = {}
+        if (publicFilters.priceMin) where.salePrice.gte = new Prisma.Decimal(publicFilters.priceMin.toString())
+        if (publicFilters.priceMax) where.salePrice.lte = new Prisma.Decimal(publicFilters.priceMax.toString())
       }
 
       if (publicFilters.auctionHouse) {
@@ -388,11 +388,36 @@ export class VehicleService {
       // Get total count for pagination
       const total = await prisma.vehicle.count({ where })
 
-      // Get paginated data
+      // Get paginated data - explicitly exclude sensitive dealer information
       const skip = (page - 1) * limit
       const data = await prisma.vehicle.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          vin: true,
+          year: true,
+          make: true,
+          model: true,
+          trim: true,
+          mileage: true,
+          transmission: true,
+          fuelType: true,
+          bodyStyle: true,
+          runAndDrive: true,
+          currentStatus: true,
+          currentLocation: true,
+          // Exclude purchase_price and purchase_currency - dealer private info
+          salePrice: true,
+          saleCurrency: true,
+          salePriceIncludesVat: true,
+          saleType: true,
+          saleDate: true,
+          auctionHouse: true,
+          primaryDamage: true,
+          secondaryDamage: true,
+          damageSeverity: true,
+          isPublic: true,
+          createdAt: true,
           vehiclePhotos: {
             select: {
               id: true,
@@ -405,8 +430,7 @@ export class VehicleService {
               { isPrimary: 'desc' },
               { sortOrder: 'asc' }
             ]
-          },
-          expenses: { select: { id: true, category: true, description: true, amount: true, currency: true, date: true } }
+          }
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -434,7 +458,7 @@ export class VehicleService {
         let query = admin
           .from('vehicles')
           .select(
-            'id, vin, year, make, model, trim, current_status, current_location, purchase_price, purchase_currency, sale_price, sale_currency, sale_date, auction_house, primary_damage, secondary_damage, damage_severity, is_public, vehicle_photos:vehicle_photos(id,url,caption,is_primary,sort_order)',
+            'id, vin, year, make, model, trim, mileage, transmission, fuel_type, body_style, run_and_drive, current_status, current_location, sale_price, sale_currency, sale_price_includes_vat, sale_type, sale_date, auction_house, primary_damage, secondary_damage, damage_severity, is_public, created_at, vehicle_photos:vehicle_photos(id,url,caption,is_primary,sort_order)',
             { count: 'exact' }
           )
           .eq('is_public', true)
@@ -447,8 +471,8 @@ export class VehicleService {
         if (filters?.auctionHouse) query = query.eq('auction_house', filters.auctionHouse)
         if (filters?.yearMin) query = query.gte('year', filters.yearMin)
         if (filters?.yearMax) query = query.lte('year', filters.yearMax)
-        if (filters?.priceMin) query = query.gte('purchase_price', filters.priceMin)
-        if (filters?.priceMax) query = query.lte('purchase_price', filters.priceMax)
+        if (filters?.priceMin) query = query.gte('sale_price', filters.priceMin)
+        if (filters?.priceMax) query = query.lte('sale_price', filters.priceMax)
         if (filters?.search) {
           query = query.or(`vin.ilike.%${filters.search}%,make.ilike.%${filters.search}%,model.ilike.%${filters.search}%`)
         }

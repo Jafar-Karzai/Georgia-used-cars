@@ -39,8 +39,7 @@ interface PublicVehicle {
   body_style?: string
   exterior_color?: string
   current_status: string
-  purchase_price: number
-  purchase_currency: string
+  // purchase_price and purchase_currency removed - dealer private information
   sale_price?: number
   sale_currency?: string
   sale_type?: string
