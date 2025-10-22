@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { SiteNavbar } from '@/components/layout/site-navbar'
 import { getPublicStatusLabel, getPublicStatusBadgeStyle } from '@/lib/utils/vehicle-status'
+import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
 import type { VehicleStatus } from '@/types/database'
 
 interface PublicVehicle {
@@ -46,6 +47,8 @@ interface PublicVehicle {
   sale_price_includes_vat?: boolean
   current_location?: string
   sale_date?: string
+  expected_arrival_date?: string
+  actual_arrival_date?: string
   created_at: string
   vehicle_photos?: Array<{
     url: string
@@ -476,11 +479,20 @@ export default function InventoryPage() {
                         <Car className="h-16 w-16 text-muted-foreground/50" />
                       </div>
                     )}
-                    {getPublicStatusLabel(vehicle.current_status as VehicleStatus) && (
-                      <Badge className={`absolute top-3 right-3 border font-semibold shadow-sm ${getPublicStatusBadgeStyle(vehicle.current_status as VehicleStatus)}`}>
-                        {getPublicStatusLabel(vehicle.current_status as VehicleStatus)}
-                      </Badge>
-                    )}
+                    <div className="absolute top-3 right-3 left-3 flex flex-wrap gap-2 justify-end">
+                      {getPublicStatusLabel(vehicle.current_status as VehicleStatus) && (
+                        <Badge className={`border font-semibold shadow-sm ${getPublicStatusBadgeStyle(vehicle.current_status as VehicleStatus)}`}>
+                          {getPublicStatusLabel(vehicle.current_status as VehicleStatus)}
+                        </Badge>
+                      )}
+                      {vehicle.expected_arrival_date && (
+                        <ArrivalCountdown
+                          expectedDate={vehicle.expected_arrival_date}
+                          actualDate={vehicle.actual_arrival_date}
+                          variant="badge"
+                        />
+                      )}
+                    </div>
                   </div>
 
                   {/* Card Content with proper spacing */}

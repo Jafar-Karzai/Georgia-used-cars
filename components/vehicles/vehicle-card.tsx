@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { CalendarDays, MapPin, DollarSign, Car, Wrench, ImageIcon, Globe, EyeOff } from 'lucide-react'
+import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
 
 interface VehicleWithPhotos extends Vehicle {
   vehicle_photos?: Photo[]
@@ -70,11 +71,11 @@ export function VehicleCard({ vehicle, onEdit, onViewDetails, className }: Vehic
         )}
         
         {/* Status badge overlay */}
-        <div className="absolute top-2 right-2 flex gap-2">
+        <div className="absolute top-2 right-2 left-2 flex flex-wrap gap-2 justify-end">
           <Badge className={getStatusColor(vehicle.current_status)}>
             {formatStatus(vehicle.current_status)}
           </Badge>
-          
+
           {/* Visibility indicator - only show if is_public field exists */}
           {vehicle.is_public !== undefined && (
             vehicle.is_public ? (
@@ -88,6 +89,15 @@ export function VehicleCard({ vehicle, onEdit, onViewDetails, className }: Vehic
                 Private
               </Badge>
             )
+          )}
+
+          {/* Arrival countdown badge */}
+          {vehicle.expected_arrival_date && (
+            <ArrivalCountdown
+              expectedDate={vehicle.expected_arrival_date}
+              actualDate={vehicle.actual_arrival_date}
+              variant="badge"
+            />
           )}
         </div>
       </div>

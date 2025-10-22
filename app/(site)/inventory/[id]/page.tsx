@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SiteNavbar } from '@/components/layout/site-navbar'
 import { getPublicStatusLabel, getPublicStatusBadgeStyle } from '@/lib/utils/vehicle-status'
+import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
 import {
   Car,
   ChevronRight,
@@ -338,6 +339,15 @@ export default function VehicleDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* Arrival Countdown */}
+            {vehicle.expected_arrival_date && (
+              <ArrivalCountdown
+                expectedDate={vehicle.expected_arrival_date}
+                actualDate={vehicle.actual_arrival_date}
+                variant="full"
+              />
+            )}
 
             {/* Price Breakdown Card */}
             {vehicle.sale_price && vehicle.sale_price > 0 && (

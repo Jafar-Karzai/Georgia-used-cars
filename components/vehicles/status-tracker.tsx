@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { VehicleStatus } from '@/types/database'
-import { VehicleService } from '@/lib/services/vehicles'
 import { Button } from '@/components/ui/button'
 import { 
   Dialog, 
@@ -81,16 +80,22 @@ export function StatusTracker({
 
   const handleUpdateStatus = async () => {
     if (!user) return
-    
+
     setLoading(true)
     try {
-      const result = await VehicleService.updateStatus(
-        vehicleId,
-        newStatus,
-        location || undefined,
-        notes || undefined,
-        user.id
-      )
+      const response = await fetch(`/api/vehicles/${vehicleId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          location: location || undefined,
+          notes: notes || undefined,
+        }),
+      })
+
+      const result = await response.json()
 
       if (result.success) {
         setIsOpen(false)

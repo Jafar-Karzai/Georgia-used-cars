@@ -21,6 +21,8 @@ export interface CreateVehicleData {
   auction_location?: string
   sale_date?: Date | string
   lot_number?: string
+  expected_arrival_date?: Date | string
+  actual_arrival_date?: Date | string
   primary_damage?: string
   secondary_damage?: string
   damage_description?: string
@@ -91,6 +93,10 @@ export class VehicleService {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         saleDate: vehicleData.sale_date ? (typeof vehicleData.sale_date === 'string' ? new Date(vehicleData.sale_date) : vehicleData.sale_date) as any : undefined,
         lotNumber: vehicleData.lot_number,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expectedArrivalDate: vehicleData.expected_arrival_date ? (typeof vehicleData.expected_arrival_date === 'string' ? new Date(vehicleData.expected_arrival_date) : vehicleData.expected_arrival_date) as any : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        actualArrivalDate: vehicleData.actual_arrival_date ? (typeof vehicleData.actual_arrival_date === 'string' ? new Date(vehicleData.actual_arrival_date) : vehicleData.actual_arrival_date) as any : undefined,
         primaryDamage: vehicleData.primary_damage,
         secondaryDamage: vehicleData.secondary_damage,
         damageDescription: vehicleData.damage_description,
@@ -150,6 +156,8 @@ export class VehicleService {
           auction_location: vehicleData.auction_location,
           sale_date: vehicleData.sale_date ? (typeof vehicleData.sale_date === 'string' ? vehicleData.sale_date : vehicleData.sale_date instanceof Date ? vehicleData.sale_date.toISOString().slice(0,10) : null) : null,
           lot_number: vehicleData.lot_number,
+          expected_arrival_date: vehicleData.expected_arrival_date ? (typeof vehicleData.expected_arrival_date === 'string' ? vehicleData.expected_arrival_date : vehicleData.expected_arrival_date instanceof Date ? vehicleData.expected_arrival_date.toISOString().slice(0,10) : null) : null,
+          actual_arrival_date: vehicleData.actual_arrival_date ? (typeof vehicleData.actual_arrival_date === 'string' ? vehicleData.actual_arrival_date : vehicleData.actual_arrival_date instanceof Date ? vehicleData.actual_arrival_date.toISOString().slice(0,10) : null) : null,
           primary_damage: vehicleData.primary_damage,
           secondary_damage: vehicleData.secondary_damage,
           damage_description: vehicleData.damage_description,
@@ -598,9 +606,15 @@ export class VehicleService {
       if (updateData.is_public !== undefined && typeof updateData.is_public === 'boolean') updateInput.isPublic = updateData.is_public
       if (updateData.sale_price_includes_vat !== undefined && typeof updateData.sale_price_includes_vat === 'boolean') updateInput.salePriceIncludesVat = updateData.sale_price_includes_vat
 
-      // Handle Date field
+      // Handle Date fields
       if (updateData.sale_date !== undefined) {
         updateInput.saleDate = typeof updateData.sale_date === 'string' ? new Date(updateData.sale_date) : updateData.sale_date
+      }
+      if (updateData.expected_arrival_date !== undefined) {
+        updateInput.expectedArrivalDate = typeof updateData.expected_arrival_date === 'string' ? new Date(updateData.expected_arrival_date) : updateData.expected_arrival_date
+      }
+      if (updateData.actual_arrival_date !== undefined) {
+        updateInput.actualArrivalDate = typeof updateData.actual_arrival_date === 'string' ? new Date(updateData.actual_arrival_date) : updateData.actual_arrival_date
       }
 
       // Handle Decimal fields (prices, costs, estimates)
@@ -666,6 +680,8 @@ export class VehicleService {
         if (updateData.run_and_drive !== undefined) snakeCaseUpdate.run_and_drive = updateData.run_and_drive
         if (updateData.sale_price_includes_vat !== undefined) snakeCaseUpdate.sale_price_includes_vat = updateData.sale_price_includes_vat
         if (updateData.sale_date !== undefined) snakeCaseUpdate.sale_date = typeof updateData.sale_date === 'string' ? updateData.sale_date : updateData.sale_date instanceof Date ? updateData.sale_date.toISOString().slice(0, 10) : null
+        if (updateData.expected_arrival_date !== undefined) snakeCaseUpdate.expected_arrival_date = typeof updateData.expected_arrival_date === 'string' ? updateData.expected_arrival_date : updateData.expected_arrival_date instanceof Date ? updateData.expected_arrival_date.toISOString().slice(0, 10) : null
+        if (updateData.actual_arrival_date !== undefined) snakeCaseUpdate.actual_arrival_date = typeof updateData.actual_arrival_date === 'string' ? updateData.actual_arrival_date : updateData.actual_arrival_date instanceof Date ? updateData.actual_arrival_date.toISOString().slice(0, 10) : null
         if (updateData.repair_estimate !== undefined) snakeCaseUpdate.repair_estimate = updateData.repair_estimate
         if (updateData.estimated_total_cost !== undefined) snakeCaseUpdate.estimated_total_cost = updateData.estimated_total_cost
         if (updateData.sale_price !== undefined) snakeCaseUpdate.sale_price = updateData.sale_price
@@ -721,13 +737,32 @@ export class VehicleService {
   // Update vehicle status
   static async updateStatus(id: string, status: string, location?: string, notes?: string, userId?: string) {
     try {
+      // Auto-populate actualArrivalDate when vehicle arrives at yard
+      const arrivalStatuses = ['at_yard', 'released_from_customs', 'in_transit_to_yard']
+      const shouldSetArrivalDate = arrivalStatuses.includes(status)
+
+      // Only set actualArrivalDate if it hasn't been set yet
+      const updateData: { currentStatus: VehicleStatus; currentLocation?: string; actualArrivalDate?: Date } = {
+        currentStatus: status as VehicleStatus,
+        currentLocation: location
+      }
+
+      if (shouldSetArrivalDate) {
+        // Check if actualArrivalDate is already set
+        const vehicle = await prisma.vehicle.findUnique({
+          where: { id },
+          select: { actualArrivalDate: true }
+        })
+
+        if (vehicle && !vehicle.actualArrivalDate) {
+          updateData.actualArrivalDate = new Date()
+        }
+      }
+
       // Update vehicle status
       await prisma.vehicle.update({
         where: { id },
-        data: {
-          currentStatus: status as VehicleStatus,
-          currentLocation: location
-        }
+        data: updateData
       })
 
       // Add to status history

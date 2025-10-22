@@ -6,13 +6,14 @@ import { fetchVehicleById, updateVehicle } from '@/lib/api/vehicles-client'
 import { StatusTracker } from '@/components/vehicles/status-tracker'
 import { PhotoUpload } from '@/components/vehicles/photo-upload'
 import { ExpenseForm } from '@/components/expenses/expense-form'
+import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Vehicle } from '@/types/database'
-import { ArrowLeft, Car, DollarSign, Calendar, MapPin, Wrench, FileText, Plus, Globe, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Car, DollarSign, Calendar, MapPin, Wrench, FileText, Plus, Globe, Eye, EyeOff, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/context'
 
@@ -437,6 +438,69 @@ export default function VehicleDetailsPage() {
               />
             </CardContent>
           </Card>
+
+          {/* Arrival Tracking */}
+          {(vehicle.expected_arrival_date || vehicle.actual_arrival_date) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Arrival Tracking
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ArrivalCountdown
+                  expectedDate={vehicle.expected_arrival_date}
+                  actualDate={vehicle.actual_arrival_date}
+                  variant="card"
+                />
+
+                {vehicle.actual_arrival_date && (
+                  <div className="border-t pt-4 space-y-2">
+                    <h4 className="font-semibold text-sm">Inventory Metrics</h4>
+                    <div className="grid gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Days in Yard:</span>
+                        <span className="font-medium">
+                          {(() => {
+                            const today = new Date()
+                            const actualDate = new Date(vehicle.actual_arrival_date)
+                            const days = Math.floor((today.getTime() - actualDate.getTime()) / (1000 * 60 * 60 * 24))
+                            return `${days} day${days === 1 ? '' : 's'}`
+                          })()}
+                        </span>
+                      </div>
+                      {vehicle.expected_arrival_date && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Delivery Variance:</span>
+                          <span className={`font-medium ${
+                            (() => {
+                              const expected = new Date(vehicle.expected_arrival_date)
+                              const actual = new Date(vehicle.actual_arrival_date)
+                              expected.setHours(0, 0, 0, 0)
+                              actual.setHours(0, 0, 0, 0)
+                              const variance = Math.ceil((actual.getTime() - expected.getTime()) / (1000 * 60 * 60 * 24))
+                              return variance > 0 ? 'text-orange-600' : variance < 0 ? 'text-green-600' : ''
+                            })()
+                          }`}>
+                            {(() => {
+                              const expected = new Date(vehicle.expected_arrival_date)
+                              const actual = new Date(vehicle.actual_arrival_date)
+                              expected.setHours(0, 0, 0, 0)
+                              actual.setHours(0, 0, 0, 0)
+                              const variance = Math.ceil((actual.getTime() - expected.getTime()) / (1000 * 60 * 60 * 24))
+                              if (variance === 0) return 'On Time'
+                              return `${variance > 0 ? '+' : ''}${variance} day${Math.abs(variance) === 1 ? '' : 's'}`
+                            })()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Financial Summary */}
           <Card>

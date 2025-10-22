@@ -201,6 +201,8 @@ model Vehicle {
   // Status tracking
   currentStatus        VehicleStatus      @default(auction_won) @map("current_status")
   currentLocation      String?            @map("current_location")
+  expectedArrivalDate  DateTime?          @map("expected_arrival_date") @db.Date
+  actualArrivalDate    DateTime?          @map("actual_arrival_date") @db.Date
 
   // Documentation
   titleStatus          String?            @map("title_status")

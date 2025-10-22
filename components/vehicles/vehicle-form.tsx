@@ -59,8 +59,8 @@ import {
 
 const vehicleSchema = z.object({
   // Basic Information
-  // Issue 15: Align with API validation which allows 10-17 characters
-  vin: z.string().min(10, 'VIN must be between 10 and 17 characters').max(17, 'VIN must be between 10 and 17 characters'),
+  // VIN must be exactly 17 characters to match backend API validation
+  vin: z.string().length(17, 'VIN must be exactly 17 characters'),
   year: z.number().min(1900, 'Invalid year').max(new Date().getFullYear() + 2, 'Invalid year'),
   make: z.string().min(1, 'Make is required'),
   model: z.string().min(1, 'Model is required'),
@@ -79,6 +79,7 @@ const vehicleSchema = z.object({
   auction_location: z.string().optional(),
   sale_date: z.string().optional(),
   lot_number: z.string().optional(),
+  expected_arrival_date: z.string().optional(),
 
   // Damage Information
   primary_damage: z.string().optional(),
@@ -136,6 +137,12 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
     estimated_total_cost: initialData.estimated_total_cost ? Number(initialData.estimated_total_cost) : 0,
     repair_estimate: initialData.repair_estimate ? Number(initialData.repair_estimate) : 0,
     mileage: initialData.mileage ? Number(initialData.mileage) : 0,
+    // Convert Date to string for date inputs (YYYY-MM-DD format)
+    expected_arrival_date: initialData.expected_arrival_date
+      ? (initialData.expected_arrival_date instanceof Date
+        ? initialData.expected_arrival_date.toISOString().slice(0, 10)
+        : new Date(initialData.expected_arrival_date).toISOString().slice(0, 10))
+      : '',
   } : undefined
 
   const form = useForm<VehicleFormData>({
@@ -158,6 +165,7 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
       auction_location: '',
       sale_date: '',
       lot_number: '',
+      expected_arrival_date: '',
       primary_damage: '',
       secondary_damage: '',
       damage_description: '',
@@ -204,8 +212,8 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
     }
 
     // Issue 17: Pre-flight validation to catch errors before API call
-    if (!data.vin || data.vin.length < 10 || data.vin.length > 17) {
-      alert('Please provide a valid VIN (10-17 characters)')
+    if (!data.vin || data.vin.length !== 17) {
+      alert('Please provide a valid VIN (exactly 17 characters)')
       setLoading(false)
       return
     }
@@ -231,9 +239,9 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
     if (data.sale_price !== undefined && typeof data.sale_price !== 'number') typeErrors.push('Sale price must be a number')
     if (data.repair_estimate !== undefined && typeof data.repair_estimate !== 'number') typeErrors.push('Repair estimate must be a number')
     if (data.estimated_total_cost !== undefined && typeof data.estimated_total_cost !== 'number') typeErrors.push('Estimated total cost must be a number')
-    if (typeof data.keys_available !== 'boolean') typeErrors.push('Keys available must be boolean')
-    if (typeof data.run_and_drive !== 'boolean') typeErrors.push('Run and drive must be boolean')
-    if (typeof data.is_public !== 'boolean') typeErrors.push('Is public must be boolean')
+    if (data.keys_available !== undefined && typeof data.keys_available !== 'boolean') typeErrors.push('Keys available must be boolean')
+    if (data.run_and_drive !== undefined && typeof data.run_and_drive !== 'boolean') typeErrors.push('Run and drive must be boolean')
+    if (data.is_public !== undefined && typeof data.is_public !== 'boolean') typeErrors.push('Is public must be boolean')
     if (data.sale_price_includes_vat !== undefined && typeof data.sale_price_includes_vat !== 'boolean') typeErrors.push('Sale price includes VAT must be boolean')
 
     if (typeErrors.length > 0) {
@@ -247,33 +255,13 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
     try {
       let result
 
-      // Get access token with timeout to prevent hanging
+      // Use cookie-based authentication (best practice for Next.js)
+      // The API route will automatically validate session via httpOnly cookies
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       }
 
-      try {
-        // Use the new @supabase/ssr package for client-side auth
-        const { createBrowserClient } = await import('@supabase/ssr')
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-
-        // Get session without network request (reads from local storage)
-        const { data: { session } } = await supabase.auth.getSession()
-        const accessToken = session?.access_token
-
-        if (accessToken) {
-          headers.Authorization = `Bearer ${accessToken}`
-          console.log('✓ Got access token for API request')
-        } else {
-          console.log('No access token, will use cookie authentication')
-        }
-      } catch (sessionError) {
-        console.warn('Session token retrieval failed, will rely on cookies:', sessionError)
-        // Continue without Authorization header - API will fall back to cookies
-      }
+      console.log('Sending request with cookie authentication')
 
       if (isEdit && initialData?.id) {
         console.log('Updating vehicle via API with ID:', initialData.id)
@@ -787,6 +775,25 @@ export function VehicleForm({ initialData, isEdit = false, onSuccess, onCancel }
                       )}
                     />
                   </div>
+
+                  <Separator />
+
+                  <FormField
+                    control={form.control}
+                    name="expected_arrival_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Expected Arrival Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Set an expected arrival date for vehicles in transit to show countdown on public site
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
