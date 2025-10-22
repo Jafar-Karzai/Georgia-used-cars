@@ -407,13 +407,24 @@ export class VehicleService {
           make: true,
           model: true,
           trim: true,
+          engine: true,
           mileage: true,
+          exteriorColor: true,
+          interiorColor: true,
           transmission: true,
           fuelType: true,
           bodyStyle: true,
+          drivetrain: true,
           runAndDrive: true,
           currentStatus: true,
           currentLocation: true,
+          expectedArrivalDate: true,
+          actualArrivalDate: true,
+          titleStatus: true,
+          keysAvailable: true,
+          lotNumber: true,
+          auctionLocation: true,
+          damageDescription: true,
           // Exclude purchase_price and purchase_currency - dealer private info
           salePrice: true,
           saleCurrency: true,
@@ -466,7 +477,7 @@ export class VehicleService {
         let query = admin
           .from('vehicles')
           .select(
-            'id, vin, year, make, model, trim, mileage, transmission, fuel_type, body_style, run_and_drive, current_status, current_location, sale_price, sale_currency, sale_price_includes_vat, sale_type, sale_date, auction_house, primary_damage, secondary_damage, damage_severity, is_public, created_at, vehicle_photos:vehicle_photos(id,url,caption,is_primary,sort_order)',
+            'id, vin, year, make, model, trim, engine, mileage, exterior_color, interior_color, transmission, fuel_type, body_style, drivetrain, run_and_drive, current_status, current_location, expected_arrival_date, actual_arrival_date, title_status, keys_available, lot_number, auction_location, damage_description, sale_price, sale_currency, sale_price_includes_vat, sale_type, sale_date, auction_house, primary_damage, secondary_damage, damage_severity, is_public, created_at, vehicle_photos:vehicle_photos(id,url,caption,is_primary,sort_order)',
             { count: 'exact' }
           )
           .eq('is_public', true)

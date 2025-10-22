@@ -3,6 +3,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -24,8 +25,9 @@ import {
   Home
 } from 'lucide-react'
 import { SiteNavbar } from '@/components/layout/site-navbar'
-import { getPublicStatusLabel, getPublicStatusBadgeStyle } from '@/lib/utils/vehicle-status'
+import { getPublicStatusLabel, getPublicStatusBadgeStyle, type StatusGroup, getStatusesForGroup } from '@/lib/utils/vehicle-status'
 import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
+import { StatusFilterTabs } from '@/components/vehicles/status-filter-tabs'
 import type { VehicleStatus } from '@/types/database'
 
 interface PublicVehicle {
@@ -49,6 +51,7 @@ interface PublicVehicle {
   sale_date?: string
   expected_arrival_date?: string
   actual_arrival_date?: string
+  run_and_drive?: boolean
   created_at: string
   vehicle_photos?: Array<{
     url: string
@@ -75,6 +78,7 @@ const FUEL_TYPES = ['Gasoline', 'Diesel', 'Hybrid', 'Electric']
 const TRANSMISSIONS = ['Automatic', 'Manual', 'CVT']
 
 export default function InventoryPage() {
+  const searchParams = useSearchParams()
   const [vehicles, setVehicles] = useState<PublicVehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -85,8 +89,16 @@ export default function InventoryPage() {
   const [totalVehicles, setTotalVehicles] = useState(0)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [isUAE, setIsUAE] = useState<boolean | null>(null)
+  const [statusCounts, setStatusCounts] = useState<{ all: number; arrived: number; arriving_soon: number }>({
+    all: 0,
+    arrived: 0,
+    arriving_soon: 0
+  })
 
   const itemsPerPage = 12
+
+  // Get current status group from URL
+  const currentStatusGroup: StatusGroup = (searchParams?.get('statusGroup') as StatusGroup) || 'all'
 
   // Detect if user is in UAE
   useEffect(() => {
@@ -116,7 +128,8 @@ export default function InventoryPage() {
 
   useEffect(() => {
     loadVehicles()
-  }, [currentPage, filters, searchQuery])
+    loadVehicleCounts()
+  }, [currentPage, filters, searchQuery, currentStatusGroup])
 
   const loadVehicles = async () => {
     setLoading(true)
@@ -142,14 +155,55 @@ export default function InventoryPage() {
       const data = await response.json()
 
       if (data.success && data.data) {
-        setVehicles(data.data)
+        // Filter vehicles by status group on client side
+        let filteredVehicles = data.data
+        if (currentStatusGroup !== 'all') {
+          const statusesForGroup = getStatusesForGroup(currentStatusGroup)
+          filteredVehicles = data.data.filter((v: PublicVehicle) =>
+            statusesForGroup.includes(v.current_status as VehicleStatus)
+          )
+        }
+
+        setVehicles(filteredVehicles)
         setTotalPages(data.pagination?.pages || 1)
-        setTotalVehicles(data.pagination?.total || 0)
+        setTotalVehicles(filteredVehicles.length)
       }
     } catch (error) {
       console.error('Failed to load vehicles:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadVehicleCounts = async () => {
+    try {
+      // Fetch all public vehicles to count them by status group
+      const params = new URLSearchParams()
+      params.set('is_public', 'true')
+      params.set('limit', '1000') // Get all vehicles for counting
+
+      const response = await fetch(`/api/vehicles?${params.toString()}`)
+      const data = await response.json()
+
+      if (data.success && data.data) {
+        const allVehicles = data.data
+        const arrivedStatuses = getStatusesForGroup('arrived')
+        const arrivingSoonStatuses = getStatusesForGroup('arriving_soon')
+
+        const counts = {
+          all: allVehicles.length,
+          arrived: allVehicles.filter((v: PublicVehicle) =>
+            arrivedStatuses.includes(v.current_status as VehicleStatus)
+          ).length,
+          arriving_soon: allVehicles.filter((v: PublicVehicle) =>
+            arrivingSoonStatuses.includes(v.current_status as VehicleStatus)
+          ).length
+        }
+
+        setStatusCounts(counts)
+      }
+    } catch (error) {
+      console.error('Failed to load vehicle counts:', error)
     }
   }
 
@@ -259,6 +313,14 @@ export default function InventoryPage() {
           <p className="text-muted-foreground">
             Browse our collection of premium salvage vehicles imported from US and Canada auctions
           </p>
+        </div>
+
+        {/* Status Filter Tabs */}
+        <div className="mb-6">
+          <StatusFilterTabs
+            counts={statusCounts}
+            currentGroup={currentStatusGroup}
+          />
         </div>
 
         {/* Search and Filters */}
@@ -485,13 +547,6 @@ export default function InventoryPage() {
                           {getPublicStatusLabel(vehicle.current_status as VehicleStatus)}
                         </Badge>
                       )}
-                      {vehicle.expected_arrival_date && (
-                        <ArrivalCountdown
-                          expectedDate={vehicle.expected_arrival_date}
-                          actualDate={vehicle.actual_arrival_date}
-                          variant="badge"
-                        />
-                      )}
                     </div>
                   </div>
 
@@ -501,6 +556,24 @@ export default function InventoryPage() {
                     <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
                       {vehicle.year} {vehicle.make} {vehicle.model}
                     </h3>
+
+                    {/* Badges Section - Arrival & Run & Drive */}
+                    {(vehicle.expected_arrival_date || vehicle.run_and_drive) && (
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        {vehicle.expected_arrival_date && (
+                          <ArrivalCountdown
+                            expectedDate={vehicle.expected_arrival_date}
+                            actualDate={vehicle.actual_arrival_date}
+                            variant="badge"
+                          />
+                        )}
+                        {vehicle.run_and_drive && (
+                          <Badge className="bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-colors text-xs font-semibold">
+                            Run & Drive
+                          </Badge>
+                        )}
+                      </div>
+                    )}
 
                     {/* Specs Section */}
                     <div className="grid grid-cols-2 gap-2.5 py-3 mb-3 border-y border-border/40">

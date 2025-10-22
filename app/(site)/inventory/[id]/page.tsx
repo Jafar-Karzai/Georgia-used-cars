@@ -32,7 +32,10 @@ import {
   ArrowLeft,
   CheckCircle,
   AlertTriangle,
-  DollarSign
+  DollarSign,
+  Key,
+  Settings2,
+  Circle
 } from 'lucide-react'
 
 // Local interface for page-specific needs, extending the database Vehicle type
@@ -44,6 +47,18 @@ interface PageVehicle extends Vehicle {
   engine_size?: string // maps to engine
   auction_date?: string // maps to sale_date
   location?: string // maps to current_location
+  // Additional fields from public API
+  engine?: string
+  exterior_color?: string
+  interior_color?: string
+  drivetrain?: string
+  title_status?: string
+  keys_available?: boolean
+  lot_number?: string
+  auction_location?: string
+  damage_description?: string
+  expected_arrival_date?: string
+  actual_arrival_date?: string
   // Additional fields not in database
   grade?: string
   condition_report?: string
@@ -202,6 +217,31 @@ export default function VehicleDetailPage() {
     return includesVat ? 0 : vehicle.sale_price * 0.05
   }
 
+  const getDamageSeverityBadge = (severity: string | undefined) => {
+    if (!severity) return null
+
+    const severityMap: Record<string, { label: string; className: string }> = {
+      'minor': {
+        label: 'Minor Damage',
+        className: 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-colors'
+      },
+      'moderate': {
+        label: 'Moderate Damage',
+        className: 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 hover:border-amber-400 transition-colors'
+      },
+      'major': {
+        label: 'Major Damage',
+        className: 'bg-orange-50 text-orange-900 border-orange-300 hover:bg-orange-100 hover:border-orange-400 transition-colors'
+      },
+      'total_loss': {
+        label: 'Total Loss',
+        className: 'bg-red-50 text-red-900 border-red-300 hover:bg-red-100 hover:border-red-400 transition-colors'
+      }
+    }
+
+    return severityMap[severity] || null
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNavbar />
@@ -340,6 +380,30 @@ export default function VehicleDetailPage() {
               </div>
             </div>
 
+            {/* Important Info Badges */}
+            {(vehicle.run_and_drive || vehicle.keys_available || vehicle.title_status) && (
+              <div className="flex flex-wrap items-center gap-2 pb-4 border-b">
+                {vehicle.run_and_drive && (
+                  <Badge className="bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-colors text-sm font-semibold px-3 py-1.5">
+                    <CheckCircle className="h-4 w-4 mr-1.5" />
+                    Run & Drive
+                  </Badge>
+                )}
+                {vehicle.keys_available && (
+                  <Badge className="bg-blue-50 text-blue-900 border-blue-300 hover:bg-blue-100 hover:border-blue-400 transition-colors text-sm font-semibold px-3 py-1.5">
+                    <Key className="h-4 w-4 mr-1.5" />
+                    Keys Available
+                  </Badge>
+                )}
+                {vehicle.title_status && (
+                  <Badge className="bg-purple-50 text-purple-900 border-purple-300 hover:bg-purple-100 hover:border-purple-400 transition-colors text-sm font-semibold px-3 py-1.5">
+                    <FileText className="h-4 w-4 mr-1.5" />
+                    {vehicle.title_status}
+                  </Badge>
+                )}
+              </div>
+            )}
+
             {/* Arrival Countdown */}
             {vehicle.expected_arrival_date && (
               <ArrivalCountdown
@@ -413,27 +477,35 @@ export default function VehicleDetailPage() {
                       </span>
                     </div>
                   )}
-                  {vehicle.fuel_type && (
+                  {(vehicle.engine || vehicle.engine_size) && (
                     <div className="flex items-center gap-2">
-                      <Fuel className="h-4 w-4 text-muted-foreground" />
+                      <Cog className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Fuel:</strong> {vehicle.fuel_type}
+                        <strong>Engine:</strong> {vehicle.engine || vehicle.engine_size}
                       </span>
                     </div>
                   )}
                   {vehicle.transmission && (
                     <div className="flex items-center gap-2">
-                      <Cog className="h-4 w-4 text-muted-foreground" />
+                      <Settings2 className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
                         <strong>Transmission:</strong> {vehicle.transmission}
                       </span>
                     </div>
                   )}
-                  {(vehicle.exterior_color || vehicle.color) && (
+                  {vehicle.drivetrain && (
                     <div className="flex items-center gap-2">
-                      <Palette className="h-4 w-4 text-muted-foreground" />
+                      <Cog className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Color:</strong> {vehicle.exterior_color || vehicle.color}
+                        <strong>Drivetrain:</strong> {vehicle.drivetrain}
+                      </span>
+                    </div>
+                  )}
+                  {vehicle.fuel_type && (
+                    <div className="flex items-center gap-2">
+                      <Fuel className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        <strong>Fuel:</strong> {vehicle.fuel_type}
                       </span>
                     </div>
                   )}
@@ -445,11 +517,19 @@ export default function VehicleDetailPage() {
                       </span>
                     </div>
                   )}
-                  {(vehicle.engine || vehicle.engine_size) && (
+                  {(vehicle.exterior_color || vehicle.color) && (
                     <div className="flex items-center gap-2">
-                      <Cog className="h-4 w-4 text-muted-foreground" />
+                      <Palette className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Engine:</strong> {vehicle.engine || vehicle.engine_size}
+                        <strong>Exterior Color:</strong> {vehicle.exterior_color || vehicle.color}
+                      </span>
+                    </div>
+                  )}
+                  {vehicle.interior_color && (
+                    <div className="flex items-center gap-2">
+                      <Circle className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        <strong>Interior Color:</strong> {vehicle.interior_color}
                       </span>
                     </div>
                   )}
@@ -458,7 +538,7 @@ export default function VehicleDetailPage() {
             </Card>
 
             {/* Auction Information */}
-            {(vehicle.auction_house || vehicle.sale_date || vehicle.current_location || vehicle.auction_date || vehicle.location) && (
+            {(vehicle.auction_house || vehicle.sale_date || vehicle.auction_location || vehicle.current_location || vehicle.auction_date || vehicle.location || vehicle.lot_number) && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Auction Information</CardTitle>
@@ -481,11 +561,19 @@ export default function VehicleDetailPage() {
                         </span>
                       </div>
                     )}
+                    {vehicle.auction_location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">
+                          <strong>Auction Location:</strong> {vehicle.auction_location}
+                        </span>
+                      </div>
+                    )}
                     {(vehicle.current_location || vehicle.location) && (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm">
-                          <strong>Location:</strong> {vehicle.current_location || vehicle.location}
+                          <strong>Current Location:</strong> {vehicle.current_location || vehicle.location}
                         </span>
                       </div>
                     )}
@@ -541,10 +629,18 @@ export default function VehicleDetailPage() {
         {/* Additional Information */}
         <div className="mt-12 space-y-8">
           {/* Condition & Damage Report */}
-          {(vehicle.damage_description || (vehicle as PageVehicle).condition_report || (vehicle as PageVehicle).inspection_notes) && (
+          {(vehicle.damage_severity || vehicle.damage_description || (vehicle as PageVehicle).condition_report || (vehicle as PageVehicle).inspection_notes) && (
             <Card>
               <CardHeader>
-                <CardTitle>Condition Report</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Condition Report</span>
+                  {vehicle.damage_severity && getDamageSeverityBadge(vehicle.damage_severity) && (
+                    <Badge className={`${getDamageSeverityBadge(vehicle.damage_severity)?.className} text-sm font-semibold px-3 py-1.5`}>
+                      <AlertTriangle className="h-4 w-4 mr-1.5" />
+                      {getDamageSeverityBadge(vehicle.damage_severity)?.label}
+                    </Badge>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {vehicle.damage_description && (

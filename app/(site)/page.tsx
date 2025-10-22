@@ -126,7 +126,7 @@ export default function HomePage() {
                           </p>
                         )}
                         {vehicle.run_and_drive && (
-                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium">
+                          <Badge className="bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-colors text-xs font-semibold">
                             Run & Drive
                           </Badge>
                         )}
