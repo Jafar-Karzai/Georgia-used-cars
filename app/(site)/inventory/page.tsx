@@ -2,7 +2,7 @@
 // moved into (site) route group to use site layout
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -77,7 +77,7 @@ const BODY_TYPES = ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Truck', 'Convertible'
 const FUEL_TYPES = ['Gasoline', 'Diesel', 'Hybrid', 'Electric']
 const TRANSMISSIONS = ['Automatic', 'Manual', 'CVT']
 
-export default function InventoryPage() {
+function InventoryContent() {
   const searchParams = useSearchParams()
   const [vehicles, setVehicles] = useState<PublicVehicle[]>([])
   const [loading, setLoading] = useState(true)
@@ -698,5 +698,48 @@ export default function InventoryPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function InventoryPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <SiteNavbar />
+        <div className="border-b bg-muted/30">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Link href="/" className="hover:text-foreground transition-colors">
+                <Home className="h-4 w-4" />
+              </Link>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-foreground font-medium">Vehicle Inventory</span>
+            </div>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Vehicle Inventory</h1>
+            <p className="text-muted-foreground">
+              Browse our collection of premium salvage vehicles imported from US and Canada auctions
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {[...Array(12)].map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <Skeleton className="h-60 w-full" />
+                <CardContent className="p-5">
+                  <Skeleton className="h-6 w-3/4 mb-3" />
+                  <Skeleton className="h-20 w-full mb-3" />
+                  <Skeleton className="h-10 w-2/3" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <InventoryContent />
+    </Suspense>
   )
 }
