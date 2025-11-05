@@ -45,55 +45,55 @@ export function ArrivalCountdown({
   let bgColorClass: string
 
   if (actual) {
-    // Vehicle has arrived - Green with high contrast
+    // Vehicle has arrived
     icon = <CheckCircle2 className="h-4 w-4" />
     message = `Arrived ${formatDate(actual)}`
-    colorClass = 'text-emerald-900'
-    bgColorClass = 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-colors'
+    colorClass = 'text-primary'
+    bgColorClass = 'bg-muted/50 text-foreground border'
   } else if (daysRemaining < 0) {
-    // Expected date has passed but vehicle hasn't arrived - Orange/red with high contrast
+    // Expected date has passed but vehicle hasn't arrived
     const daysOverdue = Math.abs(daysRemaining)
     icon = <CalendarClock className="h-4 w-4" />
     message = `Expected ${formatDate(expected)} (${daysOverdue} day${daysOverdue === 1 ? '' : 's'} overdue)`
-    colorClass = 'text-red-900'
-    bgColorClass = 'bg-red-50 text-red-900 border-red-300 hover:bg-red-100 hover:border-red-400 transition-colors'
+    colorClass = 'text-foreground'
+    bgColorClass = 'bg-muted/50 text-foreground border'
   } else if (daysRemaining === 0) {
-    // Arriving today - Bright blue with animation
+    // Arriving today
     icon = <Truck className="h-4 w-4 animate-pulse" />
     message = 'Arriving Today!'
-    colorClass = 'text-blue-900'
-    bgColorClass = 'bg-blue-50 text-blue-900 border-blue-300 hover:bg-blue-100 hover:border-blue-400 transition-colors'
+    colorClass = 'text-primary'
+    bgColorClass = 'bg-muted/50 text-foreground border'
   } else if (daysRemaining <= 3) {
-    // Arriving very soon (1-3 days) - Vibrant blue
+    // Arriving very soon (1-3 days)
     icon = <Truck className="h-4 w-4" />
     message = `Arriving in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}`
-    colorClass = 'text-blue-900'
-    bgColorClass = 'bg-blue-50 text-blue-900 border-blue-300 hover:bg-blue-100 hover:border-blue-400 transition-colors'
+    colorClass = 'text-primary'
+    bgColorClass = 'bg-muted/50 text-foreground border'
   } else if (daysRemaining <= 7) {
-    // Arriving soon (4-7 days) - Purple
+    // Arriving soon (4-7 days)
     icon = <Clock className="h-4 w-4" />
     message = `Arriving in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}`
-    colorClass = 'text-purple-900'
-    bgColorClass = 'bg-purple-50 text-purple-900 border-purple-300 hover:bg-purple-100 hover:border-purple-400 transition-colors'
+    colorClass = 'text-primary'
+    bgColorClass = 'bg-muted/50 text-foreground border'
   } else if (daysRemaining <= 30) {
-    // Arriving in 1-4 weeks - Indigo
+    // Arriving in 1-4 weeks
     icon = <Clock className="h-4 w-4" />
     message = `Arriving in ${daysRemaining} days`
-    colorClass = 'text-indigo-900'
-    bgColorClass = 'bg-indigo-50 text-indigo-900 border-indigo-300 hover:bg-indigo-100 hover:border-indigo-400 transition-colors'
+    colorClass = 'text-muted-foreground'
+    bgColorClass = 'bg-muted/50 text-foreground border'
   } else if (daysRemaining <= 90) {
-    // Arriving in 1-3 months - Slate
+    // Arriving in 1-3 months
     icon = <Clock className="h-4 w-4" />
     message = `Arriving in ${daysRemaining} days`
-    colorClass = 'text-slate-900'
-    bgColorClass = 'bg-slate-50 text-slate-900 border-slate-300 hover:bg-slate-100 hover:border-slate-400 transition-colors'
+    colorClass = 'text-muted-foreground'
+    bgColorClass = 'bg-muted/50 text-foreground border'
   } else {
-    // Arriving later (3+ months) - Gray
+    // Arriving later (3+ months)
     icon = <Clock className="h-4 w-4" />
     const months = Math.floor(daysRemaining / 30)
     message = `Arriving in ${months} month${months === 1 ? '' : 's'} (${daysRemaining} days)`
-    colorClass = 'text-gray-900'
-    bgColorClass = 'bg-gray-50 text-gray-900 border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-colors'
+    colorClass = 'text-muted-foreground'
+    bgColorClass = 'bg-muted/50 text-foreground border'
   }
 
   // Render based on variant
@@ -137,8 +137,8 @@ export function ArrivalCountdown({
   return (
     <div className={cn('rounded-lg border p-6', className)}>
       <div className="flex items-start gap-4">
-        <div className={cn('rounded-full p-3 mt-1', bgColorClass.replace('text-', 'text-').replace('border-', 'border-'))}>
-          <div className="h-6 w-6">{icon}</div>
+        <div className={cn('rounded-full p-3 bg-muted/50 flex items-center justify-center')}>
+          <div className={cn('h-6 w-6 flex items-center justify-center', colorClass)}>{icon}</div>
         </div>
         <div className="flex-1 space-y-2">
           <h3 className="font-semibold text-lg">

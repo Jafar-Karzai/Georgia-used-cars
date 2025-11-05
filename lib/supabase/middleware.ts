@@ -60,9 +60,17 @@ export async function middleware(req: NextRequest) {
   )
 
   // Refresh session if expired - this is important for keeping the session alive
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  let session = null
+  try {
+    const { data, error } = await supabase.auth.getSession()
+    if (!error) {
+      session = data.session
+    }
+  } catch (error) {
+    // Silently handle Supabase connection errors (e.g., network issues)
+    // This prevents middleware from blocking all requests when Supabase is unreachable
+    console.warn('Supabase auth check failed:', error instanceof Error ? error.message : 'Unknown error')
+  }
 
   // Protect admin routes
   if (req.nextUrl.pathname.startsWith('/admin')) {
