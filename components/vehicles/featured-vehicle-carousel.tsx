@@ -194,8 +194,12 @@ export function FeaturedVehicleCarousel({ vehicles, isUAE = null }: FeaturedVehi
                           alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
                           fill
                           priority={index === 0}
+                          loading={index === 0 ? 'eager' : 'lazy'}
+                          quality={85}
                           className="object-cover object-center transition-transform duration-500 group-hover/card:scale-105"
                           sizes="(max-width: 768px) 85vw, 70vw"
+                          placeholder="blur"
+                          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiLz4="
                         />
                         {/* Gradient overlay for text legibility - Bottom left for info card */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/20 to-transparent pointer-events-none" />

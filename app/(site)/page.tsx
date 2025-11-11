@@ -91,26 +91,27 @@ export default function NewHomePage() {
 
   const loadAllVehicles = async () => {
     try {
-      // Load featured vehicles
-      const featured = await fetchVehicles({ is_public: true }, 1, 3)
-      if (featured.success && featured.data) {
-        setFeaturedVehicles(featured.data.slice(0, 3))
-      }
+      // Make a single optimized API call to fetch enough vehicles for all sections
+      // Requesting 20 vehicles to ensure we have enough for filtering into 3 sections
+      const response = await fetchVehicles({ is_public: true }, 1, 20)
 
-      // Load arrived vehicles (have actual_arrival_date)
-      const arrived = await fetchVehicles({ is_public: true }, 1, 6)
-      if (arrived.success && arrived.data) {
-        const arrivedFiltered = arrived.data.filter(v => v.actual_arrival_date).slice(0, 6)
-        setArrivedVehicles(arrivedFiltered)
-      }
+      if (response.success && response.data) {
+        const allVehicles = response.data
 
-      // Load arriving soon vehicles (have expected_arrival_date but no actual)
-      const arriving = await fetchVehicles({ is_public: true }, 1, 6)
-      if (arriving.success && arriving.data) {
-        const arrivingFiltered = arriving.data.filter(
+        // Split vehicles into sections based on arrival status
+        const arrived = allVehicles.filter(v => v.actual_arrival_date).slice(0, 6)
+        const arriving = allVehicles.filter(
           v => v.expected_arrival_date && !v.actual_arrival_date
         ).slice(0, 6)
-        setArrivingSoonVehicles(arrivingFiltered)
+
+        // Featured: prioritize vehicles with photos, mix of arrived and arriving
+        const featured = allVehicles
+          .filter(v => v.vehicle_photos && v.vehicle_photos.length > 0)
+          .slice(0, 3)
+
+        setFeaturedVehicles(featured)
+        setArrivedVehicles(arrived)
+        setArrivingSoonVehicles(arriving)
       }
     } catch (error) {
       console.error('Failed to load vehicles:', error)
