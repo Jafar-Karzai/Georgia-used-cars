@@ -35,6 +35,8 @@ import { Hero03 } from '@/components/marketing/hero-03'
 import { PublicVehicleCard } from '@/components/vehicles/public-vehicle-card'
 import { FeaturedVehicleCarousel } from '@/components/vehicles/featured-vehicle-carousel'
 import { CategoryCard } from '@/components/vehicles/category-card'
+import { getStatusesForGroup } from '@/lib/utils/vehicle-status'
+import type { VehicleStatus } from '@/types/database'
 
 interface FeaturedVehicle {
   id: string
@@ -98,10 +100,17 @@ export default function NewHomePage() {
       if (response.success && response.data) {
         const allVehicles = response.data
 
-        // Split vehicles into sections based on arrival status
-        const arrived = allVehicles.filter(v => v.actual_arrival_date).slice(0, 6)
-        const arriving = allVehicles.filter(
-          v => v.expected_arrival_date && !v.actual_arrival_date
+        // Get status groups - matches inventory page logic exactly
+        const arrivedStatuses = getStatusesForGroup('arrived')
+        const arrivingSoonStatuses = getStatusesForGroup('arriving_soon')
+
+        // Split vehicles into sections based on current_status (not dates)
+        const arrived = allVehicles.filter(v =>
+          arrivedStatuses.includes(v.current_status as VehicleStatus)
+        ).slice(0, 6)
+
+        const arriving = allVehicles.filter(v =>
+          arrivingSoonStatuses.includes(v.current_status as VehicleStatus)
         ).slice(0, 6)
 
         // Featured: prioritize vehicles with photos, mix of arrived and arriving
