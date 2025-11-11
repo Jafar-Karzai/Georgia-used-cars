@@ -57,7 +57,7 @@ export function HeroSearchCard() {
   }
 
   return (
-    <Card className="w-full shadow-sm border border-border/40 backdrop-blur-md bg-background/95 relative z-20 rounded-xl ring-8 ring-white/90">
+    <Card className="w-full shadow-sm border border-border/50 backdrop-blur-md bg-background/85 relative z-20 rounded-xl ring-8 ring-background/95">
       <CardContent className="p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Make Select */}
