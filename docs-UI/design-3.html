@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Used Cars | Salvage Direct</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #E63946;
+            --primary-blue: #1D3557;
+            --accent-blue: #457B9D;
+            --tech-cyan: #A8DADC;
+            --background: #0B0E14;
+            --surface: #151921;
+            --grid-line: rgba(69, 123, 157, 0.15);
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--background);
+            color: #f1faee;
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Schematic Overlay */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, var(--background) 85%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        header {
+            position: relative;
+            z-index: 10;
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--grid-line);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.5rem;
+            letter-spacing: -1px;
+            display: flex;
+            flex-direction: column;
+            line-height: 0.9;
+        }
+
+        .logo span:first-child { color: var(--primary-red); }
+        .logo span:last-child { 
+            font-family: var(--font-mono); 
+            font-size: 0.7rem; 
+            letter-spacing: 4px; 
+            color: var(--accent-blue);
+            margin-top: 4px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .nav-links a {
+            color: #f1faee;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-red);
+        }
+
+        main {
+            position: relative;
+            z-index: 5;
+            padding: 4rem 5%;
+        }
+
+        .hero-title {
+            margin-bottom: 4rem;
+        }
+
+        .hero-title h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            line-height: 0.85;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title p {
+            font-family: var(--font-mono);
+            color: var(--accent-blue);
+            max-width: 600px;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 2.5rem;
+        }
+
+        /* THE SCHEMATIC CARD */
+        .card {
+            background: var(--surface);
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-blue);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        /* Technical Corners */
+        .card::before, .card::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            z-index: 3;
+        }
+
+        .card::before {
+            top: 0; left: 0;
+            border-top: 2px solid var(--primary-red);
+            border-left: 2px solid var(--primary-red);
+        }
+
+        .card::after {
+            bottom: 0; right: 0;
+            border-bottom: 2px solid var(--accent-blue);
+            border-right: 2px solid var(--accent-blue);
+        }
+
+        .image-container {
+            width: 100%;
+            height: 260px;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+            transition: var(--transition);
+            filter: grayscale(40%) contrast(110%);
+        }
+
+        .card:hover .card-img {
+            opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.05);
+        }
+
+        .auction-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--primary-red);
+            padding: 4px 10px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 4;
+        }
+
+        .status-tag {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background: rgba(29, 53, 87, 0.9);
+            padding: 8px 15px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            border-top-right-radius: 4px;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .car-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            border-top: 1px solid var(--grid-line);
+            padding-top: 1rem;
+        }
+
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spec-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .spec-value {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .damage-report {
+            margin-top: 1.5rem;
+            padding: 10px;
+            background: rgba(230, 57, 70, 0.05);
+            border-left: 3px solid var(--primary-red);
+        }
+
+        .damage-title {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--primary-red);
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        .damage-desc {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .price-footer {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .price {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .price span {
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--accent-blue);
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-action:hover {
+            background: var(--accent-blue);
+            color: var(--background);
+        }
+
+        /* Chassis Schematic Overlay Effect */
+        .schematic-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.3;
+            background-image: 
+                radial-gradient(var(--accent-blue) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 0;
+        }
+
+        .ticker-wrap {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: var(--primary-blue);
+            padding: 10px 0;
+            z-index: 100;
+            border-top: 2px solid var(--primary-red);
+        }
+
+        .ticker {
+            display: flex;
+            white-space: nowrap;
+            animation: ticker 30s linear infinite;
+        }
+
+        .ticker-item {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            margin-right: 50px;
+            color: var(--tech-cyan);
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        @media (max-width: 768px) {
+            .inventory-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <span>GEORGIA</span>
+            <span>USED CARS</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#">Inventory</a>
+            <a href="#">Auctions</a>
+            <a href="#">Shipping</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="hero-title">
+            <h1>SHARJAH <br> <span style="color: var(--accent-blue);">SALVAGE</span> HUB</h1>
+            <p>Direct from USA & Canada auctions. Premium accident vehicles imported for UAE specialists. Raw condition. Transparent history.</p>
+        </div>
+
+        <div class="inventory-grid">
+            <!-- Card 1 -->
+            <article class="card">
+                <div class="image-container">
+                    <div class="auction-badge">AUCTION: COPART</div>
+                    <div class="status-tag">STATUS: AS IS</div>
+                    <!-- Placeholder image with a car silhouette feel -->
+                    <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=800" alt="2022 Mustang" class="card-img">
+                    <div class="schematic-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <h2 class="car-title">2022 FORD MUSTANG GT</h2>
+                    <div class="specs-grid">
+                        <div class="spec-item">
+                            <span class="spec-label">VIN Number</span>
+                            <span class="spec-value">1FA6P8CF9N5...</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Engine</span>
+                            <span class="spec-value">5.0L V8 Shell</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Origin</span>
+                            <span class="spec-value">Miami, USA</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Odometer</span>
+                            <span class="spec-value">14,200 mi</span>
+                        </div>
+                    </div>
+                    <div class="damage-report">
+                        <div class="damage-title">STRUCTURAL NOTES //</div>
+                        <div class="damage-desc">Front-end collision. Chassis rails intact. Airbags deployed. Engine starts.</div>
+                    </div>
+                    <div class="price-footer">
+                        <div class="price"><span>AED</span> 42,500</div>
+                        <button class="btn-action">VIEW SCHEMATIC</button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 2 -->
+            <article class="card">
+                <div class="image-container">
+                    <div class="auction-badge">AUCTION: IAAI</div>
+                    <div class="status-tag">STATUS: UNREPAIRED</div>
+                    <img src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=800" alt="2023 BMW M4" class="card-img">
+                    <div class="schematic-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <h2 class="car-title">2023 BMW M4 COMPETITION</h2>
+                    <div class="specs-grid">
+                        <div class="spec-item">
+                            <span class="spec-label">VIN Number</span>
+                            <span class="spec-value">WBS53AY06P8...</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Engine</span>
+                            <span class="spec-value">3.0L L6 Twin Turbo</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Origin</span>
+                            <span class="spec-value">Toronto, CAN</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Odometer</span>
+                            <span class="spec-value">2,800 km</span>
+                        </div>
+                    </div>
+                    <div class="damage-report">
+                        <div class="damage-title">STRUCTURAL NOTES //</div>
+                        <div class="damage-desc">Rear-quarter impact. Subframe alignment required. Clean interior.</div>
+                    </div>
+                    <div class="price-footer">
+                        <div class="price"><span>AED</span> 158,000</div>
+                        <button class="btn-action">VIEW SCHEMATIC</button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 3 -->
+            <article class="card">
+                <div class="image-container">
+                    <div class="auction-badge">AUCTION: COPART</div>
+                    <div class="status-tag">STATUS: AS IS</div>
+                    <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" alt="2021 Porsche 911" class="card-img">
+                    <div class="schematic-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <h2 class="car-title">2021 PORSCHE 911 CARRERA</h2>
+                    <div class="specs-grid">
+                        <div class="spec-item">
+                            <span class="spec-label">VIN Number</span>
+                            <span class="spec-value">WP0AB2A90MS...</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Engine</span>
+                            <span class="spec-value">3.0L H6 Turbo</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Origin</span>
+                            <span class="spec-value">Texas, USA</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Odometer</span>
+                            <span class="spec-value">8,900 mi</span>
+                        </div>
+                    </div>
+                    <div class="damage-report">
+                        <div class="damage-title">STRUCTURAL NOTES //</div>
+                        <div class="damage-desc">Flood damage level 1 (Fresh water). Mechanical electrical verification needed.</div>
+                    </div>
+                    <div class="price-footer">
+                        <div class="price"><span>AED</span> 185,000</div>
+                        <button class="btn-action">VIEW SCHEMATIC</button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <div class="ticker-wrap">
+        <div class="ticker">
+            <span class="ticker-item">NEW ARRIVAL: 2024 TOYOTA CAMRY [SALVAGE] - $12,400</span>
+            <span class="ticker-item">SHIPMENT IN TRANSIT: SAVANNAH PORT -> JEBEL ALI</span>
+            <span class="ticker-item">AUCTION UPDATE: 45 NEW UNITS SECURED FROM IAAI CHICAGO</span>
+            <span class="ticker-item">GEORGIA USED CARS - SHARJAH INDUSTRIAL AREA 4</span>
+            <span class="ticker-item">NEW ARRIVAL: 2024 TOYOTA CAMRY [SALVAGE] - $12,400</span>
+            <span class="ticker-item">SHIPMENT IN TRANSIT: SAVANNAH PORT -> JEBEL ALI</span>
+        </div>
+    </div>
+
+    <script>
+        // Subtle hover interaction for technical feel
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body>
+</html>

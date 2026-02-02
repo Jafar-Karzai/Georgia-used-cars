@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Used Cars | Sharjah Salvage Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cinnabar: #E23D28;
+            --azure-deep: #0F172A;
+            --map-grid: #E2E8F0;
+            --motion-ease: cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FBFBFE;
+            color: var(--azure-deep);
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 2px 2px, var(--map-grid) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Kinetic Cartography Elements */
+        .carto-line {
+            position: absolute;
+            background: var(--cinnabar);
+            opacity: 0.15;
+            transition: all 0.6s var(--motion-ease);
+        }
+
+        .kinetic-card {
+            background: white;
+            border: 1px solid var(--map-grid);
+            transition: all 0.5s var(--motion-ease);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kinetic-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--cinnabar);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s var(--motion-ease);
+        }
+
+        .kinetic-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.12);
+            border-color: var(--cinnabar);
+        }
+
+        .kinetic-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .image-overlay {
+            background: linear-gradient(0deg, rgba(15, 23, 42, 0.6) 0%, transparent 100%);
+        }
+
+        .status-badge {
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+            padding: 4px 16px;
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0; width: 0; height: 2px;
+            background: var(--cinnabar);
+            transition: width 0.3s var(--motion-ease);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .currency-toggle {
+            border: 1px solid var(--map-grid);
+            border-radius: 20px;
+            padding: 2px;
+            display: flex;
+            background: #F1F5F9;
+        }
+
+        .currency-btn {
+            padding: 4px 12px;
+            border-radius: 18px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .currency-btn.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            color: var(--cinnabar);
+        }
+
+        .custom-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23E23D28'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .scanner::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(transparent, rgba(226, 61, 40, 0.1), transparent);
+            animation: scanline 3s linear infinite;
+            pointer-events: none;
+        }
+
+        .reserve-btn {
+            background: var(--azure-deep);
+            color: white;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            transition: color 0.3s ease;
+        }
+
+        .reserve-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: var(--cinnabar);
+            transition: left 0.4s var(--motion-ease);
+            z-index: -1;
+        }
+
+        .reserve-btn:hover::before {
+            left: 0;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-red-600 flex items-center justify-center rounded-sm">
+                    <span class="text-white font-black text-xl italic">G</span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg leading-none tracking-tighter uppercase">Georgia <span class="text-red-600">Used Cars</span></h1>
+                    <p class="text-[10px] mono text-slate-500 tracking-widest uppercase">Sharjah Yard • 25.3463° N, 55.4209° E</p>
+                </div>
+            </div>
+
+            <nav class="hidden md:flex items-center gap-8 font-semibold text-sm uppercase tracking-wider">
+                <a href="#" class="nav-link text-red-600">Inventory</a>
+                <a href="#" class="nav-link">In-Transit</a>
+                <a href="#" class="nav-link">Auctions</a>
+                <a href="#" class="nav-link">Contact</a>
+            </nav>
+
+            <div class="flex items-center gap-6">
+                <div class="currency-toggle" id="currencyToggle">
+                    <button onclick="setCurrency('AED')" class="currency-btn active" id="btn-AED">AED</button>
+                    <button onclick="setCurrency('USD')" class="currency-btn" id="btn-USD">USD</button>
+                </div>
+                <div class="w-px h-6 bg-slate-200"></div>
+                <button class="text-sm font-bold border-2 border-slate-900 px-5 py-2 hover:bg-slate-900 hover:text-white transition-all uppercase tracking-tighter">
+                    Login
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Search & Filter Map -->
+        <section class="mb-16">
+            <div class="flex flex-col md:flex-row gap-4 p-6 bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="relative">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Make</label>
+                        <select class="custom-select w-full border border-slate-200 p-3 text-sm focus:outline-none focus:border-red-500 mono">
+                            <option>All Makes</option>
+                            <option>Toyota</option>
+                            <option>Ford</option>
+                            <option>Lexus</option>
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Model</label>
+                        <select class="custom-select w-full border border-slate-200 p-3 text-sm focus:outline-none focus:border-red-500 mono">
+                            <option>Any Model</option>
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Year</label>
+                        <select class="custom-select w-full border border-slate-200 p-3 text-sm focus:outline-none focus:border-red-500 mono">
+                            <option>2018 - 2024</option>
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Price Range</label>
+                        <select class="custom-select w-full border border-slate-200 p-3 text-sm focus:outline-none focus:border-red-500 mono">
+                            <option>Any Price</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="bg-red-600 text-white px-8 flex items-center justify-center hover:bg-red-700 transition-colors uppercase font-bold tracking-tighter">
+                    Apply Filters
+                </button>
+            </div>
+            <div class="mt-4 flex gap-4 text-[11px] mono text-slate-400">
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span> 42 Vehicles in Sharjah Yard</span>
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 18 Vehicles In-Transit</span>
+            </div>
+        </section>
+
+        <!-- Vehicle Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- Card 1: In Yard -->
+            <div class="kinetic-card group">
+                <div class="relative h-64 overflow-hidden bg-slate-100">
+                    <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-700" alt="Mustang">
+                    <div class="image-overlay absolute inset-0"></div>
+                    <div class="absolute top-4 left-4 flex gap-2">
+                        <span class="status-badge bg-green-600 text-white text-[10px] font-bold uppercase tracking-widest">In Yard</span>
+                        <span class="status-badge bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest">Ready for Repair</span>
+                    </div>
+                    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                        <div class="text-white">
+                            <p class="mono text-[10px] opacity-80">VIN: 1FA6P8CF4H5...</p>
+                            <h3 class="font-black text-2xl leading-none">2021 FORD MUSTANG</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="border-l-2 border-slate-100 pl-3">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Damage</p>
+                            <p class="text-sm font-semibold">Front End</p>
+                        </div>
+                        <div class="border-l-2 border-slate-100 pl-3">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Odometer</p>
+                            <p class="text-sm font-semibold">12,450 mi</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Fixed Price</p>
+                            <p class="text-2xl font-black text-slate-900 currency-val" data-aed="78500">78,500 AED</p>
+                        </div>
+                        <button class="reserve-btn px-6 py-3 font-bold text-xs uppercase tracking-tighter">Reserve Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: In Transit -->
+            <div class="kinetic-card group scanner">
+                <div class="relative h-64 overflow-hidden bg-slate-100">
+                    <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-700" alt="BMW">
+                    <div class="image-overlay absolute inset-0"></div>
+                    <div class="absolute top-4 left-4 flex gap-2">
+                        <span class="status-badge bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest">In-Transit</span>
+                        <span class="status-badge bg-white text-slate-900 text-[10px] font-bold uppercase tracking-widest">ETA: 12 Days</span>
+                    </div>
+                    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                        <div class="text-white">
+                            <p class="mono text-[10px] opacity-80">VIN: WBA53AG04L5...</p>
+                            <h3 class="font-black text-2xl leading-none">2022 BMW 540I</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="border-l-2 border-slate-100 pl-3">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Damage</p>
+                            <p class="text-sm font-semibold">Rear End</p>
+                        </div>
+                        <div class="border-l-2 border-slate-100 pl-3">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Source</p>
+                            <p class="text-sm font-semibold italic">Copart USA</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Pre-Arrival Price</p>
+                            <p class="text-2xl font-black text-slate-900 currency-val" data-aed="112000">112,000 AED</p>
+                        </div>
+                        <button class="reserve-btn px-6 py-3 font-bold text-xs uppercase tracking-tighter">Reserve Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: In Yard (Lexus) -->
+            <div class="kinetic-card group">
+                <div class="relative h-64 overflow-hidden bg-slate-100">
+                    <img src="https://images.unsplash.com/photo-1617469767053-d3b523a0b982?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-700" alt="Lexus">
+                    <div class="image-overlay absolute inset-0"></div>
+                    <div class="absolute top-4 left-4 flex gap-2">
+                        <span class="status-badge bg-green-600 text-white text-[10px] font-bold uppercase tracking-widest">In Yard</span>
+                    </div>
+                    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                        <div class="text-white">
+                            <p class="mono text-[10px] opacity-80">VIN: JTHBZ1BC2K2...</p>
+                            <h3 class="font-black text-2xl leading-none">2020 LEXUS ES 350</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="border-l-2 border-slate-100 pl-3">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Damage</p>
+                            <p class="text-sm font-semibold">Side Swipe</p>
+                        </div>
+                        <div class="border-l-2 border-slate-100 pl-3">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Odometer</p>
+                            <p class="text-sm font-semibold">34,100 mi</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Fixed Price</p>
+                            <p class="text-2xl font-black text-slate-900 currency-val" data-aed="94000">94,000 AED</p>
+                        </div>
+                        <button class="reserve-btn px-6 py-3 font-bold text-xs uppercase tracking-tighter">Reserve Now</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Pagination Cartography -->
+        <div class="mt-16 flex flex-col items-center">
+            <div class="h-px w-full bg-slate-200 mb-8 relative">
+                <div class="absolute left-1/2 -translate-x-1/2 -top-1 w-2 h-2 bg-red-600 rotate-45"></div>
+            </div>
+            <div class="flex gap-4">
+                <button class="w-12 h-12 flex items-center justify-center border border-slate-200 hover:bg-slate-900 hover:text-white transition-all mono text-xs">01</button>
+                <button class="w-12 h-12 flex items-center justify-center border border-slate-900 bg-slate-900 text-white mono text-xs">02</button>
+                <button class="w-12 h-12 flex items-center justify-center border border-slate-200 hover:bg-slate-900 hover:text-white transition-all mono text-xs">03</button>
+                <button class="w-12 h-12 flex items-center justify-center border border-slate-200 hover:bg-slate-900 hover:text-white transition-all mono text-xs">NEXT</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 text-white py-16 mt-20 relative overflow-hidden">
+        <div class="carto-line h-px w-full top-10"></div>
+        <div class="carto-line w-px h-full left-[20%]"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
+            <div class="col-span-2">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="w-8 h-8 bg-red-600 flex items-center justify-center rounded-sm">
+                        <span class="text-white font-black text-md italic">G</span>
+                    </div>
+                    <h2 class="font-extrabold text-xl tracking-tighter uppercase">Georgia <span class="text-red-500">Used Cars</span></h2>
+                </div>
+                <p class="text-slate-400 text-sm max-w-sm mb-6 leading-relaxed">
+                    Direct importers of salvage and project vehicles from North American auctions to the heart of Sharjah's industrial hub. Precision sourcing for repair specialists.
+                </p>
+                <p class="mono text-[10px] text-red-500 uppercase tracking-widest">Registered Dealer #77412-SHJ</p>
+            </div>
+            
+            <div>
+                <h4 class="font-bold text-xs uppercase tracking-[0.2em] mb-6 text-slate-500">Locations</h4>
+                <ul class="text-sm space-y-4">
+                    <li class="flex flex-col">
+                        <span class="font-bold text-slate-200">Main Yard</span>
+                        <span class="text-slate-400">Industrial Area 4, Sharjah</span>
+                    </li>
+                    <li class="flex flex-col">
+                        <span class="font-bold text-slate-200">Shipping Hub</span>
+                        <span class="text-slate-400">Port of Savannah, GA, USA</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold text-xs uppercase tracking-[0.2em] mb-6 text-slate-500">Quick Links</h4>
+                <ul class="text-sm space-y-3">
+                    <li><a href="#" class="text-slate-400 hover:text-red-500 transition-colors">How to Reserve</a></li>
+                    <li><a href="#" class="text-slate-400 hover:text-red-500 transition-colors">Auction Support</a></li>
+                    <li><a href="#" class="text-slate-400 hover:text-red-500 transition-colors">Customs & Clearance</a></li>
+                    <li><a href="#" class="text-slate-400 hover:text-red-500 transition-colors">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-slate-800 flex justify-between items-center text-[10px] mono text-slate-500">
+            <p>© 2024 GEORGIA USED CARS FZC. ALL RIGHTS RESERVED.</p>
+            <div class="flex gap-6">
+                <span>INSTAGRAM</span>
+                <span>WHATSAPP</span>
+                <span>FACEBOOK</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const EXCHANGE_RATE = 0.272; // 1 AED to USD
+
+        function setCurrency(cur) {
+            const btns = document.querySelectorAll('.currency-btn');
+            const prices = document.querySelectorAll('.currency-val');
+            
+            btns.forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${cur}`).classList.add('active');
+
+            prices.forEach(p => {
+                const aedVal = parseInt(p.getAttribute('data-aed'));
+                if (cur === 'USD') {
+                    const usdVal = (aedVal * EXCHANGE_RATE).toLocaleString(undefined, {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+                    p.innerText = `${usdVal} USD`;
+                } else {
+                    p.innerText = `${aedVal.toLocaleString()} AED`;
+                }
+            });
+
+            // Kinetic effect feedback
+            document.body.style.opacity = '0.9';
+            setTimeout(() => document.body.style.opacity = '1', 100);
+        }
+
+        // Add coordinate tracking for subtle motion
+        document.addEventListener('mousemove', (e) => {
+            const xPercent = (e.clientX / window.innerWidth) * 100;
+            const yPercent = (e.clientY / window.innerHeight) * 100;
+            // You can use these values for parallax or grid shifts
+        });
+    </script>
+</body>
+</html>

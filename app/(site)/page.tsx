@@ -4,8 +4,6 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { fetchVehicles } from '@/lib/api/vehicles-client'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Car,
@@ -13,7 +11,6 @@ import {
   Mail,
   MapPin,
   ChevronRight,
-  Sparkles,
   Truck,
   Gem,
   Zap,
@@ -23,7 +20,6 @@ import {
   Wrench,
   Factory,
   Users,
-  AlertTriangle,
   BadgeDollarSign,
   Network,
   Globe2,
@@ -33,12 +29,11 @@ import {
 import { SiteNavbar } from '@/components/layout/site-navbar'
 import { Hero03 } from '@/components/marketing/hero-03'
 import { PublicVehicleCard } from '@/components/vehicles/public-vehicle-card'
-import { FeaturedVehicleCarousel } from '@/components/vehicles/featured-vehicle-carousel'
 import { CategoryCard } from '@/components/vehicles/category-card'
 import { getStatusesForGroup } from '@/lib/utils/vehicle-status'
 import type { VehicleStatus } from '@/types/database'
 
-interface FeaturedVehicle {
+interface VehicleData {
   id: string
   year: number
   make: string
@@ -62,15 +57,20 @@ interface FeaturedVehicle {
 }
 
 export default function NewHomePage() {
-  const [featuredVehicles, setFeaturedVehicles] = useState<FeaturedVehicle[]>([])
-  const [arrivedVehicles, setArrivedVehicles] = useState<FeaturedVehicle[]>([])
-  const [arrivingSoonVehicles, setArrivingSoonVehicles] = useState<FeaturedVehicle[]>([])
+  const [arrivedVehicles, setArrivedVehicles] = useState<VehicleData[]>([])
+  const [arrivingSoonVehicles, setArrivingSoonVehicles] = useState<VehicleData[]>([])
   const [loading, setLoading] = useState(true)
   const [isUAE, setIsUAE] = useState<boolean | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     loadAllVehicles()
     detectLocation()
+    // Check authentication status from localStorage
+    if (typeof window !== 'undefined') {
+      const mockAuth = localStorage.getItem('mockAuth')
+      setIsAuthenticated(mockAuth === 'true')
+    }
   }, [])
 
   const detectLocation = async () => {
@@ -94,7 +94,7 @@ export default function NewHomePage() {
   const loadAllVehicles = async () => {
     try {
       // Make a single optimized API call to fetch enough vehicles for all sections
-      // Requesting 20 vehicles to ensure we have enough for filtering into 3 sections
+      // Requesting 20 vehicles to ensure we have enough for filtering into both sections
       const response = await fetchVehicles({ is_public: true }, 1, 20)
 
       if (response.success && response.data) {
@@ -105,20 +105,14 @@ export default function NewHomePage() {
         const arrivingSoonStatuses = getStatusesForGroup('arriving_soon')
 
         // Split vehicles into sections based on current_status (not dates)
-        const arrived = allVehicles.filter(v =>
+        const arrived = allVehicles.filter((v: VehicleData) =>
           arrivedStatuses.includes(v.current_status as VehicleStatus)
         ).slice(0, 6)
 
-        const arriving = allVehicles.filter(v =>
+        const arriving = allVehicles.filter((v: VehicleData) =>
           arrivingSoonStatuses.includes(v.current_status as VehicleStatus)
         ).slice(0, 6)
 
-        // Featured: prioritize vehicles with photos, mix of arrived and arriving
-        const featured = allVehicles
-          .filter(v => v.vehicle_photos && v.vehicle_photos.length > 0)
-          .slice(0, 3)
-
-        setFeaturedVehicles(featured)
         setArrivedVehicles(arrived)
         setArrivingSoonVehicles(arriving)
       }
@@ -130,203 +124,64 @@ export default function NewHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-pattern">
       <SiteNavbar />
 
       <Hero03 />
 
-      {/* Salvage Vehicle Disclaimer Badge */}
-      <div className="bg-background py-6">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-center">
-            <Badge className="
-              backdrop-blur-md
-              bg-amber-500/90
-              text-white
-              border border-white/20
-              px-5 py-2.5
-              text-sm md:text-base
-              font-semibold
-              inline-flex items-center gap-2.5
-              shadow-lg
-              transition-all duration-300
-              hover:bg-amber-500/95 hover:scale-105
-            ">
-              <AlertTriangle className="h-4 w-4 md:h-5 md:w-5" />
-              <span>Salvage Vehicles • Sold AS-IS • Cash Only • No Warranties</span>
-            </Badge>
-          </div>
-        </div>
-      </div>
-
-      {/* Featured Vehicle Carousel */}
-      <section className="py-12 md:py-20 bg-background">
-        <div className="container mx-auto px-4 mb-8">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full backdrop-blur-md bg-primary/90 text-white border border-white/20 shadow-lg transition-all duration-300 hover:bg-primary/95 hover:scale-105">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-semibold">Featured Vehicles</span>
+      {/* Stats Strip */}
+      <section className="frosted-panel border-y">
+        <div className="max-w-content mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4">
+            <div className="p-6 border-r border-border">
+              <p className="text-[10px] uppercase font-bold text-accent tracking-widest mb-1">Hub Location</p>
+              <p className="text-lg font-extrabold text-foreground">Sharjah, UAE</p>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Handpicked Premium Selections</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Explore our top picks from US and Canada auctions
-            </p>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="px-4 md:px-8">
-            <div className="relative w-full h-[500px] md:h-[600px] bg-muted rounded-xl animate-pulse" />
-          </div>
-        ) : featuredVehicles.length > 0 ? (
-          <FeaturedVehicleCarousel vehicles={featuredVehicles} isUAE={isUAE} />
-        ) : (
-          <div className="text-center py-12">
-            <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-xl text-muted-foreground">No vehicles available at the moment</p>
-          </div>
-        )}
-      </section>
-
-      {/* Categories Section */}
-      <section className="py-20 bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Browse by Category</h2>
-            <p className="text-xl text-muted-foreground">Find the perfect vehicle for your needs</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            <CategoryCard
-              name="SUVs"
-              slug="suv"
-              exampleModels={['Range Rover Sport', 'Mercedes GLE', 'Tesla Model X']}
-              icon={<Car className="h-6 w-6 md:h-7 md:w-7" />}
-            />
-            <CategoryCard
-              name="Sedans"
-              slug="sedan"
-              exampleModels={['BMW 5 Series', 'Audi A6', 'Toyota Camry']}
-              icon={<Car className="h-6 w-6 md:h-7 md:w-7" />}
-            />
-            <CategoryCard
-              name="Trucks"
-              slug="truck"
-              exampleModels={['Ford F-150', 'Chevrolet Silverado', 'RAM 1500']}
-              icon={<Truck className="h-6 w-6 md:h-7 md:w-7" />}
-            />
-            <CategoryCard
-              name="Luxury"
-              slug="luxury"
-              exampleModels={['Bentley Flying Spur', 'Mercedes S-Class', 'Lexus LS']}
-              icon={<Gem className="h-6 w-6 md:h-7 md:w-7" />}
-            />
-            <CategoryCard
-              name="Sports Cars"
-              slug="sports"
-              exampleModels={['Porsche 911', 'Audi R8', 'BMW M4']}
-              icon={<Zap className="h-6 w-6 md:h-7 md:w-7" />}
-            />
-            <CategoryCard
-              name="Electric"
-              slug="electric"
-              exampleModels={['Tesla Model S', 'Lucid Air', 'BMW i7']}
-              icon={<Zap className="h-6 w-6 md:h-7 md:w-7" />}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works - Benefits-Focused (Option B) */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Simple, transparent process from discovery to ownership
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 md:gap-12 max-w-6xl mx-auto">
-            {/* Step 1 */}
-            <div className="relative">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-full mb-6 transition-all duration-300 hover:scale-110 hover:bg-primary/20">
-                  <Search className="h-8 w-8 md:h-10 md:w-10 text-primary" />
-                </div>
-                <div className="mb-4">
-                  <span className="text-sm font-semibold text-primary uppercase tracking-wide">Step 1</span>
-                  <h3 className="text-2xl font-bold mt-2 mb-3">Find Your Project</h3>
-                </div>
-                <p className="text-muted-foreground leading-relaxed">
-                  Browse imported salvage vehicles at unbeatable prices. Perfect for repairs, rebuilds, or parts.
-                  Detailed photos and damage reports available.
-                </p>
-              </div>
+            <div className="p-6 border-r border-border">
+              <p className="text-[10px] uppercase font-bold text-accent tracking-widest mb-1">Vehicle Type</p>
+              <p className="text-lg font-extrabold text-foreground">Salvage / AS-IS</p>
             </div>
-
-            {/* Step 2 */}
-            <div className="relative">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-full mb-6 transition-all duration-300 hover:scale-110 hover:bg-primary/20">
-                  <Eye className="h-8 w-8 md:h-10 md:w-10 text-primary" />
-                </div>
-                <div className="mb-4">
-                  <span className="text-sm font-semibold text-primary uppercase tracking-wide">Step 2</span>
-                  <h3 className="text-2xl font-bold mt-2 mb-3">See It Yourself</h3>
-                </div>
-                <p className="text-muted-foreground leading-relaxed">
-                  Inspect the vehicle at our Sharjah showroom. Assess repair costs and feasibility.
-                  Get honest guidance from our experienced team.
-                </p>
-              </div>
+            <div className="p-6 border-r border-border">
+              <p className="text-[10px] uppercase font-bold text-accent tracking-widest mb-1">Payment</p>
+              <p className="text-lg font-extrabold text-foreground">Cash Only</p>
             </div>
-
-            {/* Step 3 */}
-            <div className="relative">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-full mb-6 transition-all duration-300 hover:scale-110 hover:bg-primary/20">
-                  <ShoppingCart className="h-8 w-8 md:h-10 md:w-10 text-primary" />
-                </div>
-                <div className="mb-4">
-                  <span className="text-sm font-semibold text-primary uppercase tracking-wide">Step 3</span>
-                  <h3 className="text-2xl font-bold mt-2 mb-3">Complete Your Purchase</h3>
-                </div>
-                <p className="text-muted-foreground leading-relaxed">
-                  Secure your vehicle with a deposit (cash purchases only).
-                  Access our network of trusted repair shops and parts suppliers. We guide you through the restoration journey.
-                </p>
-              </div>
+            <div className="p-6">
+              <p className="text-[10px] uppercase font-bold text-accent tracking-widest mb-1">Auction Partners</p>
+              <p className="text-lg font-extrabold text-foreground">Copart / IAAI</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Arrived in Stock Section */}
-      <section className="py-20 bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full backdrop-blur-md bg-green-500/90 text-white border border-white/20 shadow-lg transition-all duration-300 hover:bg-green-500/95 hover:scale-105">
-              <CheckCircle2 className="h-4 w-4" />
-              <span className="text-sm font-semibold">Ready for Inspection</span>
+      <section className="py-16 md:py-20">
+        <div className="max-w-content mx-auto px-4 md:px-6">
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <p className="text-[10px] uppercase font-bold text-accent tracking-widest mb-2">Ready for Inspection</p>
+              <h2 className="text-3xl font-extrabold tracking-tight">Arrived in Stock</h2>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Arrived in Stock</h2>
-            <p className="text-xl text-muted-foreground">
-              These vehicles are here now and ready to view in our Sharjah showroom
-            </p>
+            {arrivedVehicles.length > 0 && (
+              <Link
+                href="/inventory?status=arrived"
+                className="text-sm font-bold text-primary hover:text-accent transition-colors uppercase tracking-wider flex items-center gap-2"
+              >
+                View All <ChevronRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {loading ? (
               [...Array(6)].map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="h-80 w-full" />
+                <div key={i} className="alumina-surface rounded-2xl border border-border overflow-hidden">
+                  <Skeleton className="h-56 w-full" />
                   <div className="p-6 space-y-4">
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-12 w-1/2" />
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-10 w-1/2" />
                   </div>
-                </Card>
+                </div>
               ))
             ) : arrivedVehicles.length > 0 ? (
               arrivedVehicles.map((vehicle, index) => (
@@ -334,6 +189,7 @@ export default function NewHomePage() {
                   key={vehicle.id}
                   vehicle={vehicle}
                   isUAE={isUAE}
+                  isAuthenticated={isAuthenticated}
                   priority={index === 0}
                 />
               ))
@@ -345,52 +201,46 @@ export default function NewHomePage() {
               </div>
             )}
           </div>
-
-          {arrivedVehicles.length > 0 && (
-            <div className="text-center mt-12">
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-                <Link href="/inventory?status=arrived">
-                  View All Available Vehicles
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
-            </div>
-          )}
         </div>
       </section>
 
       {/* Arriving Soon Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full backdrop-blur-md bg-red-500/90 text-white border border-white/20 shadow-lg transition-all duration-300 hover:bg-red-500/95 hover:scale-105">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-semibold">Pre-Order Opportunity</span>
+      <section className="py-16 md:py-20 bg-secondary/30">
+        <div className="max-w-content mx-auto px-4 md:px-6">
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <p className="text-[10px] uppercase font-bold text-precision-500 tracking-widest mb-2">Currently In Transit</p>
+              <h2 className="text-3xl font-extrabold tracking-tight">Arriving Soon</h2>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Arriving Soon</h2>
-            <p className="text-xl text-muted-foreground">
-              Reserve these vehicles before they arrive at our showroom
-            </p>
+            {arrivingSoonVehicles.length > 0 && (
+              <Link
+                href="/inventory?status=arriving"
+                className="text-sm font-bold text-primary hover:text-accent transition-colors uppercase tracking-wider flex items-center gap-2"
+              >
+                View All <ChevronRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {loading ? (
               [...Array(6)].map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="h-80 w-full" />
+                <div key={i} className="alumina-surface rounded-2xl border border-border overflow-hidden">
+                  <Skeleton className="h-56 w-full" />
                   <div className="p-6 space-y-4">
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-12 w-1/2" />
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-10 w-1/2" />
                   </div>
-                </Card>
+                </div>
               ))
             ) : arrivingSoonVehicles.length > 0 ? (
-              arrivingSoonVehicles.map((vehicle, index) => (
+              arrivingSoonVehicles.map((vehicle) => (
                 <PublicVehicleCard
                   key={vehicle.id}
                   vehicle={vehicle}
                   isUAE={isUAE}
+                  isAuthenticated={isAuthenticated}
                   priority={false}
                 />
               ))
@@ -402,154 +252,246 @@ export default function NewHomePage() {
               </div>
             )}
           </div>
-
-          {arrivingSoonVehicles.length > 0 && (
-            <div className="text-center mt-12">
-              <Button asChild size="lg" variant="outline">
-                <Link href="/inventory?status=arriving">
-                  View All Arriving Vehicles
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Value Propositions - Salvage-Specific */}
-      <section className="py-20 bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Georgia Used Cars?</h2>
-            <p className="text-xl text-muted-foreground">Your trusted partner in salvage vehicle imports</p>
+      {/* Categories Section */}
+      <section className="py-16 md:py-20">
+        <div className="max-w-content mx-auto px-4 md:px-6">
+          <div className="text-center mb-10">
+            <p className="text-[10px] uppercase font-bold text-accent tracking-widest mb-2">Browse By</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Vehicle Categories</h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <CategoryCard
+              name="SUVs"
+              slug="suv"
+              exampleModels={['Range Rover Sport', 'Mercedes GLE', 'Tesla Model X']}
+              icon={<Car className="h-6 w-6" />}
+            />
+            <CategoryCard
+              name="Sedans"
+              slug="sedan"
+              exampleModels={['BMW 5 Series', 'Audi A6', 'Toyota Camry']}
+              icon={<Car className="h-6 w-6" />}
+            />
+            <CategoryCard
+              name="Trucks"
+              slug="truck"
+              exampleModels={['Ford F-150', 'Chevrolet Silverado', 'RAM 1500']}
+              icon={<Truck className="h-6 w-6" />}
+            />
+            <CategoryCard
+              name="Luxury"
+              slug="luxury"
+              exampleModels={['Bentley Flying Spur', 'Mercedes S-Class', 'Lexus LS']}
+              icon={<Gem className="h-6 w-6" />}
+            />
+            <CategoryCard
+              name="Sports"
+              slug="sports"
+              exampleModels={['Porsche 911', 'Audi R8', 'BMW M4']}
+              icon={<Zap className="h-6 w-6" />}
+            />
+            <CategoryCard
+              name="Electric"
+              slug="electric"
+              exampleModels={['Tesla Model S', 'Lucid Air', 'BMW i7']}
+              icon={<Zap className="h-6 w-6" />}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-16 md:py-20 bg-precision-900 text-white">
+        <div className="max-w-content mx-auto px-4 md:px-6">
+          <div className="text-center mb-14">
+            <p className="text-[10px] uppercase font-bold text-precision-400 tracking-widest mb-2">Simple Process</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">How It Works</h2>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-8">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-precision-600 flex items-center justify-center mx-auto mb-6">
+                <Search className="w-8 h-8" />
+              </div>
+              <p className="text-5xl font-black text-precision-800 mb-3 font-mono">01</p>
+              <h3 className="font-bold text-lg mb-2">Browse & Select</h3>
+              <p className="text-sm text-precision-300">Explore our curated inventory with detailed damage reports and photos.</p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-precision-600 flex items-center justify-center mx-auto mb-6">
+                <Eye className="w-8 h-8" />
+              </div>
+              <p className="text-5xl font-black text-precision-800 mb-3 font-mono">02</p>
+              <h3 className="font-bold text-lg mb-2">Inspect in Person</h3>
+              <p className="text-sm text-precision-300">Visit our Sharjah yard to inspect in-stock units before you buy.</p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-precision-600 flex items-center justify-center mx-auto mb-6">
+                <ShoppingCart className="w-8 h-8" />
+              </div>
+              <p className="text-5xl font-black text-precision-800 mb-3 font-mono">03</p>
+              <h3 className="font-bold text-lg mb-2">Complete Purchase</h3>
+              <p className="text-sm text-precision-300">Finalize payment (cash only). We handle all documentation.</p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-action-600 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <p className="text-5xl font-black text-precision-800 mb-3 font-mono">04</p>
+              <h3 className="font-bold text-lg mb-2">Take Delivery</h3>
+              <p className="text-sm text-precision-300">Collect from our yard or arrange delivery anywhere in UAE.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Value Propositions */}
+      <section className="py-16 md:py-20">
+        <div className="max-w-content mx-auto px-4 md:px-6">
+          <div className="text-center mb-10">
+            <p className="text-[10px] uppercase font-bold text-accent tracking-widest mb-2">Why Choose Us</p>
+            <h2 className="text-3xl font-extrabold tracking-tight">The Georgia Advantage</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center p-8 border-border/50 hover:border-border transition-all duration-300 hover:shadow-xl">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6 transition-transform duration-300 hover:scale-110">
-                <BadgeDollarSign className="h-8 w-8 text-primary" />
+            <div className="alumina-surface rounded-2xl border border-border p-8 card-hover">
+              <div className="w-14 h-14 rounded-2xl bg-precision-100 text-precision-900 flex items-center justify-center mb-6">
+                <BadgeDollarSign className="w-7 h-7" />
               </div>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">Unbeatable Prices</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  Access premium salvage vehicles from US and Canada auctions at fraction of retail cost.
-                  Perfect for budget-conscious buyers and repair businesses.
-                </p>
-              </CardContent>
-            </Card>
+              <h3 className="font-extrabold text-xl mb-3">Unbeatable Prices</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Access premium salvage vehicles from US and Canada auctions at a fraction of retail cost. Perfect for budget-conscious buyers.
+              </p>
+            </div>
 
-            <Card className="text-center p-8 border-border/50 hover:border-border transition-all duration-300 hover:shadow-xl">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6 transition-transform duration-300 hover:scale-110">
-                <Network className="h-8 w-8 text-primary" />
+            <div className="alumina-surface rounded-2xl border border-border p-8 card-hover">
+              <div className="w-14 h-14 rounded-2xl bg-action-100 text-action-600 flex items-center justify-center mb-6">
+                <Network className="w-7 h-7" />
               </div>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">Trusted Network</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  We connect you with reliable repair shops and quality parts suppliers.
-                  Benefit from our established relationships in the automotive industry.
-                </p>
-              </CardContent>
-            </Card>
+              <h3 className="font-extrabold text-xl mb-3">Trusted Network</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                We connect you with reliable repair shops and quality parts suppliers. Benefit from our established industry relationships.
+              </p>
+            </div>
 
-            <Card className="text-center p-8 border-border/50 hover:border-border transition-all duration-300 hover:shadow-xl">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6 transition-transform duration-300 hover:scale-110">
-                <Globe2 className="h-8 w-8 text-primary" />
+            <div className="alumina-surface rounded-2xl border border-border p-8 card-hover">
+              <div className="w-14 h-14 rounded-2xl bg-success/10 text-success flex items-center justify-center mb-6">
+                <Globe2 className="w-7 h-7" />
               </div>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">Import Expertise</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  Years of experience importing from US and Canada. We handle all paperwork,
-                  shipping, and customs procedures for you.
-                </p>
-              </CardContent>
-            </Card>
+              <h3 className="font-extrabold text-xl mb-3">Import Expertise</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Years of experience importing from US and Canada. We handle all paperwork, shipping, and customs procedures for you.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Who Buys From Us */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Who Buys From Us?</h2>
-            <p className="text-xl text-muted-foreground">We serve diverse customers across the automotive industry</p>
+      <section className="py-16 md:py-20 bg-secondary/30">
+        <div className="max-w-content mx-auto px-4 md:px-6">
+          <div className="text-center mb-10">
+            <p className="text-[10px] uppercase font-bold text-accent tracking-widest mb-2">Our Customers</p>
+            <h2 className="text-3xl font-extrabold tracking-tight">Who Buys From Us?</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="text-center p-8 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl group">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20">
-                <Wrench className="h-8 w-8 text-primary" />
+            <div className="alumina-surface rounded-2xl border border-border p-8 text-center card-hover">
+              <div className="icon-circle bg-precision-100 text-precision-900 mx-auto mb-4">
+                <Wrench className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">DIY Enthusiasts</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Car enthusiasts looking for project vehicles to restore, customize, or rebuild from the ground up.
+              <h3 className="font-bold text-lg mb-2">DIY Enthusiasts</h3>
+              <p className="text-sm text-muted-foreground">
+                Car enthusiasts looking for project vehicles to restore, customize, or rebuild.
               </p>
-            </Card>
+            </div>
 
-            <Card className="text-center p-8 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl group">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20">
-                <Factory className="h-8 w-8 text-primary" />
+            <div className="alumina-surface rounded-2xl border border-border p-8 text-center card-hover">
+              <div className="icon-circle bg-precision-100 text-precision-900 mx-auto mb-4">
+                <Factory className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">Parts Dealers</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Automotive parts businesses sourcing quality components from salvage vehicles for resale.
+              <h3 className="font-bold text-lg mb-2">Parts Dealers</h3>
+              <p className="text-sm text-muted-foreground">
+                Automotive parts businesses sourcing quality components from salvage vehicles.
               </p>
-            </Card>
+            </div>
 
-            <Card className="text-center p-8 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl group">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20">
-                <Users className="h-8 w-8 text-primary" />
+            <div className="alumina-surface rounded-2xl border border-border p-8 text-center card-hover">
+              <div className="icon-circle bg-precision-100 text-precision-900 mx-auto mb-4">
+                <Users className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">Repair Shops</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Professional auto body shops and mechanics acquiring vehicles for repair and resale.
+              <h3 className="font-bold text-lg mb-2">Repair Shops</h3>
+              <p className="text-sm text-muted-foreground">
+                Professional auto body shops acquiring vehicles for repair and resale.
               </p>
-            </Card>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section className="py-20 bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Get In Touch</h2>
-            <p className="text-xl text-muted-foreground">Ready to find your next project vehicle? Contact us today</p>
+      {/* CTA Banner */}
+      <section className="px-4 md:px-6 py-16">
+        <div className="max-w-content mx-auto hero-gradient rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.3) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <Card className="text-center p-6 border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
-              <Phone className="h-12 w-12 text-primary mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Phone</h3>
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">Ready to Find Your Next Vehicle?</h2>
+              <p className="text-precision-200 text-sm uppercase tracking-widest font-bold">
+                Direct Auction Access • Customs Clearance • UAE-Wide Delivery
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button asChild size="lg" className="bg-action-600 hover:bg-action-700 text-white btn-precision">
+                <Link href="/inventory">
+                  Browse Inventory
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-2 border-white/30 hover:border-white/60 text-white bg-transparent hover:bg-white/10">
+                <Link href="/contact">
+                  Contact Sales
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Info Strip */}
+      <section className="py-12 md:py-16">
+        <div className="max-w-content mx-auto px-4 md:px-6">
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="alumina-surface rounded-2xl border border-border p-6 text-center card-hover">
+              <Phone className="h-10 w-10 text-primary mx-auto mb-4" />
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Phone</h3>
               <p className="text-muted-foreground">+971 55 546 7220</p>
-            </Card>
+            </div>
 
-            <Card className="text-center p-6 border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
-              <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Email</h3>
+            <div className="alumina-surface rounded-2xl border border-border p-6 text-center card-hover">
+              <Mail className="h-10 w-10 text-primary mx-auto mb-4" />
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Email</h3>
               <p className="text-muted-foreground">info@georgiacars.com</p>
-            </Card>
+            </div>
 
-            <Card className="text-center p-6 border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
-              <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Location</h3>
-              <p className="text-muted-foreground">Sharjah, UAE</p>
-            </Card>
-          </div>
-
-          <div className="text-center mt-12">
-            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              <Link href="/contact">
-                Contact Us Today
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
+            <div className="alumina-surface rounded-2xl border border-border p-6 text-center card-hover">
+              <MapPin className="h-10 w-10 text-primary mx-auto mb-4" />
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Location</h3>
+              <p className="text-muted-foreground">Sharjah Industrial Area</p>
+            </div>
           </div>
         </div>
       </section>

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { fetchVehicleById, updateVehicle } from '@/lib/api/vehicles-client'
 import { StatusTracker } from '@/components/vehicles/status-tracker'
 import { PhotoUpload } from '@/components/vehicles/photo-upload'
+import { VehicleGallery } from '@/components/vehicles/vehicle-gallery'
 import { ExpenseForm } from '@/components/expenses/expense-form'
 import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
 import { Button } from '@/components/ui/button'
@@ -12,8 +13,9 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
 import { Vehicle } from '@/types/database'
-import { ArrowLeft, Car, DollarSign, Calendar, MapPin, Wrench, FileText, Plus, Globe, Eye, EyeOff, Clock } from 'lucide-react'
+import { ArrowLeft, Car, DollarSign, Calendar, MapPin, Wrench, FileText, Plus, Globe, Eye, EyeOff, Clock, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/context'
 
@@ -47,12 +49,13 @@ interface VehicleWithDetails extends Vehicle {
 export default function VehicleDetailsPage() {
   const params = useParams()
   const vehicleId = params.id as string
-  
+
   const [vehicle, setVehicle] = useState<VehicleWithDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [showExpenseForm, setShowExpenseForm] = useState(false)
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false)
   const [updatingVisibility, setUpdatingVisibility] = useState(false)
-  
+
   const { user } = useAuth()
 
   const loadVehicle = useCallback(async () => {
@@ -105,7 +108,7 @@ export default function VehicleDetailsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="flex-1 space-y-6 p-6">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -124,7 +127,7 @@ export default function VehicleDetailsPage() {
 
   if (!vehicle) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="flex-1 space-y-6 p-6">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold mb-4">Vehicle Not Found</h1>
           <p className="text-muted-foreground mb-6">
@@ -144,191 +147,231 @@ export default function VehicleDetailsPage() {
   const totalExpenses = vehicle.expenses.reduce((sum, expense) => sum + expense.amount, 0)
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="flex-1 space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/admin/vehicles">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <Link href="/admin/vehicles">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold">
+                {vehicle.year} {vehicle.make} {vehicle.model}
+              </h1>
+              <Badge variant="secondary">
+                {vehicle.current_status.split('_').map(word =>
+                  word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ')}
+              </Badge>
+            </div>
+            {vehicle.trim && (
+              <p className="text-muted-foreground mt-1">{vehicle.trim}</p>
+            )}
+            <p className="text-xs text-muted-foreground font-mono mt-1">VIN: {vehicle.vin}</p>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowPhotoUpload(!showPhotoUpload)}>
+            <Upload className="h-4 w-4 mr-2" />
+            Manage Photos
           </Button>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">
-            {vehicle.year} {vehicle.make} {vehicle.model}
-            {vehicle.trim && ` ${vehicle.trim}`}
-          </h1>
-          <p className="text-muted-foreground font-mono">VIN: {vehicle.vin}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Vehicle Photos */}
+          {/* Image Gallery */}
           <Card>
-            <CardHeader>
-              <CardTitle>Photos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PhotoUpload
-                vehicleId={vehicle.id}
+            <CardContent className="p-6">
+              <VehicleGallery
                 photos={vehicle.vehicle_photos || []}
-                onPhotosUpdate={loadVehicle}
+                vehicleName={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
               />
             </CardContent>
           </Card>
+
+          {/* Photo Upload Section - Collapsible */}
+          {showPhotoUpload && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Photo Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PhotoUpload
+                  vehicleId={vehicle.id}
+                  photos={vehicle.vehicle_photos || []}
+                  onPhotosUpdate={loadVehicle}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Vehicle Details Tabs */}
           <Card>
             <CardContent className="p-0">
               <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-4 rounded-none border-b">
                   <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="auction">Auction Info</TabsTrigger>
+                  <TabsTrigger value="auction">Auction</TabsTrigger>
                   <TabsTrigger value="damage">Damage</TabsTrigger>
                   <TabsTrigger value="expenses">Expenses</TabsTrigger>
                 </TabsList>
-                
-                <TabsContent value="details" className="p-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Car className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Vehicle Details</span>
+
+                <TabsContent value="details" className="p-6 space-y-6">
+                  {/* Mechanical Details */}
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Car className="h-4 w-4" />
+                      Mechanical Specifications
+                    </h4>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Engine</span>
+                        <span className="font-medium">{vehicle.engine || 'N/A'}</span>
                       </div>
-                      <div className="grid gap-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Engine:</span>
-                          <span>{vehicle.engine || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Transmission:</span>
-                          <span>{vehicle.transmission || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Fuel Type:</span>
-                          <span>{vehicle.fuel_type || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Body Style:</span>
-                          <span>{vehicle.body_style || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Mileage:</span>
-                          <span>{vehicle.mileage ? `${vehicle.mileage.toLocaleString()} miles` : 'N/A'}</span>
-                        </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Transmission</span>
+                        <span className="font-medium">{vehicle.transmission || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Fuel Type</span>
+                        <span className="font-medium">{vehicle.fuel_type || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Body Style</span>
+                        <span className="font-medium">{vehicle.body_style || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Mileage</span>
+                        <span className="font-medium">{vehicle.mileage ? `${vehicle.mileage.toLocaleString()} mi` : 'N/A'}</span>
                       </div>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Colors & Features</span>
+                  </div>
+
+                  <Separator />
+
+                  {/* Appearance & Condition */}
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3">Appearance & Condition</h4>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Exterior Color</span>
+                        <span className="font-medium">{vehicle.exterior_color || 'N/A'}</span>
                       </div>
-                      <div className="grid gap-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Exterior:</span>
-                          <span>{vehicle.exterior_color || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Interior:</span>
-                          <span>{vehicle.interior_color || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Title Status:</span>
-                          <span>{vehicle.title_status || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Keys Available:</span>
-                          <Badge variant={vehicle.keys_available ? "default" : "secondary"}>
-                            {vehicle.keys_available ? 'Yes' : 'No'}
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Run & Drive:</span>
-                          <Badge variant={vehicle.run_and_drive ? "default" : "secondary"}>
-                            {vehicle.run_and_drive ? 'Yes' : 'No'}
-                          </Badge>
-                        </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Interior Color</span>
+                        <span className="font-medium">{vehicle.interior_color || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Title Status</span>
+                        <span className="font-medium">{vehicle.title_status || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Keys Available</span>
+                        <Badge variant={vehicle.keys_available ? "default" : "secondary"} className="text-xs">
+                          {vehicle.keys_available ? 'Yes' : 'No'}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Run & Drive</span>
+                        <Badge variant={vehicle.run_and_drive ? "default" : "secondary"} className="text-xs">
+                          {vehicle.run_and_drive ? 'Yes' : 'No'}
+                        </Badge>
                       </div>
                     </div>
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="auction" className="p-6 space-y-4">
-                  <div className="grid gap-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Auction Information</span>
-                    </div>
-                    <div className="grid gap-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Auction House:</span>
-                        <span>{vehicle.auction_house}</span>
+                <TabsContent value="auction" className="p-6">
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Auction Information
+                    </h4>
+                    <div className="space-y-2.5 text-sm">
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Auction House</span>
+                        <span className="font-medium">{vehicle.auction_house}</span>
                       </div>
                       {vehicle.auction_location && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Location:</span>
-                          <span>{vehicle.auction_location}</span>
+                        <div className="flex justify-between py-1">
+                          <span className="text-muted-foreground">Location</span>
+                          <span className="font-medium">{vehicle.auction_location}</span>
                         </div>
                       )}
                       {vehicle.sale_date && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Sale Date:</span>
-                          <span>{formatDate(vehicle.sale_date)}</span>
+                        <div className="flex justify-between py-1">
+                          <span className="text-muted-foreground">Sale Date</span>
+                          <span className="font-medium">{formatDate(vehicle.sale_date)}</span>
                         </div>
                       )}
                       {vehicle.lot_number && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Lot Number:</span>
-                          <span>{vehicle.lot_number}</span>
+                        <div className="flex justify-between py-1">
+                          <span className="text-muted-foreground">Lot Number</span>
+                          <span className="font-medium">{vehicle.lot_number}</span>
                         </div>
                       )}
                     </div>
                   </div>
                 </TabsContent>
-                
-                <TabsContent value="damage" className="p-6 space-y-4">
-                  <div className="grid gap-4">
-                    <div className="flex items-center gap-2">
-                      <Wrench className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Damage Assessment</span>
-                    </div>
-                    <div className="grid gap-2 text-sm">
+
+                <TabsContent value="damage" className="p-6 space-y-6">
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Wrench className="h-4 w-4" />
+                      Damage Assessment
+                    </h4>
+                    <div className="space-y-2.5 text-sm">
                       {vehicle.primary_damage && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Primary Damage:</span>
-                          <span>{vehicle.primary_damage}</span>
+                        <div className="flex justify-between py-1">
+                          <span className="text-muted-foreground">Primary Damage</span>
+                          <span className="font-medium">{vehicle.primary_damage}</span>
                         </div>
                       )}
                       {vehicle.secondary_damage && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Secondary Damage:</span>
-                          <span>{vehicle.secondary_damage}</span>
+                        <div className="flex justify-between py-1">
+                          <span className="text-muted-foreground">Secondary Damage</span>
+                          <span className="font-medium">{vehicle.secondary_damage}</span>
                         </div>
                       )}
                       {vehicle.damage_severity && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Severity:</span>
-                          <Badge variant="outline">
+                        <div className="flex justify-between py-1">
+                          <span className="text-muted-foreground">Severity</span>
+                          <Badge variant="outline" className="text-xs">
                             {vehicle.damage_severity.replace('_', ' ')}
                           </Badge>
                         </div>
                       )}
                       {vehicle.repair_estimate && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Repair Estimate:</span>
-                          <span>{formatPrice(vehicle.repair_estimate, 'USD')}</span>
-                        </div>
-                      )}
-                      {vehicle.damage_description && (
-                        <div className="mt-3">
-                          <span className="text-muted-foreground">Description:</span>
-                          <p className="mt-1">{vehicle.damage_description}</p>
+                        <div className="flex justify-between py-1">
+                          <span className="text-muted-foreground">Repair Estimate</span>
+                          <span className="font-medium">{formatPrice(vehicle.repair_estimate, 'USD')}</span>
                         </div>
                       )}
                     </div>
                   </div>
+
+                  {vehicle.damage_description && (
+                    <>
+                      <Separator />
+                      <div>
+                        <h4 className="text-sm font-semibold mb-2">Description</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {vehicle.damage_description}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="expenses" className="p-6 space-y-4">
@@ -384,29 +427,26 @@ export default function VehicleDetailsPage() {
         <div className="space-y-6">
           {/* Website Visibility */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Globe className="h-4 w-4" />
                 Website Visibility
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-3">
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   {vehicle.is_public ? (
-                    <Eye className="h-5 w-5 text-green-600" />
+                    <Eye className="h-4 w-4 text-green-600" />
                   ) : (
-                    <EyeOff className="h-5 w-5 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   )}
                   <div>
-                    <p className="font-medium">
-                      {vehicle.is_public ? 'Visible on Website' : 'Hidden from Website'}
+                    <p className="text-sm font-medium">
+                      {vehicle.is_public ? 'Public' : 'Private'}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {vehicle.is_public 
-                        ? 'Customers can see this vehicle online' 
-                        : 'Only admins can see this vehicle'
-                      }
+                    <p className="text-xs text-muted-foreground">
+                      {vehicle.is_public ? 'Visible to customers' : 'Admin only'}
                     </p>
                   </div>
                 </div>
@@ -414,19 +454,15 @@ export default function VehicleDetailsPage() {
                   checked={vehicle.is_public || false}
                   onCheckedChange={handleVisibilityToggle}
                   disabled={updatingVisibility}
-                  className="data-[state=checked]:bg-green-600"
                 />
-              </div>
-              <div className="mt-3 text-xs text-muted-foreground">
-                <p>Toggle to control whether this vehicle appears on your public website</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Status Tracking */}
           <Card>
-            <CardHeader>
-              <CardTitle>Status Tracking</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Status Tracking</CardTitle>
             </CardHeader>
             <CardContent>
               <StatusTracker
@@ -442,9 +478,9 @@ export default function VehicleDetailsPage() {
           {/* Arrival Tracking */}
           {(vehicle.expected_arrival_date || vehicle.actual_arrival_date) && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
                   Arrival Tracking
                 </CardTitle>
               </CardHeader>
@@ -504,8 +540,11 @@ export default function VehicleDetailsPage() {
 
           {/* Financial Summary */}
           <Card>
-            <CardHeader>
-              <CardTitle>Financial Summary</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Financial Summary
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">

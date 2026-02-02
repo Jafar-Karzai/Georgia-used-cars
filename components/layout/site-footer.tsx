@@ -1,58 +1,114 @@
 'use client'
 
 import Link from 'next/link'
-import { Logo } from '@/components/ui/logo'
+import { MessageCircle } from 'lucide-react'
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-muted/50 py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-8">
-          <div>
-            <Logo variant="compact" className="mb-4" />
-            <p className="text-muted-foreground text-sm">
-              Premium salvage vehicles imported from US and Canada auctions. Your trusted partner in Sharjah, UAE.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
-            <div className="space-y-2 text-sm">
-              <Link href="/" className="block text-muted-foreground hover:text-foreground transition-colors">Home</Link>
-              <Link href="/inventory" className="block text-muted-foreground hover:text-foreground transition-colors">Inventory</Link>
-              <Link href="/about" className="block text-muted-foreground hover:text-foreground transition-colors">About</Link>
-              <Link href="/contact" className="block text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
+    <footer className="bg-slate-900 text-slate-400 py-16 px-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        {/* Logo and Description - spans 2 columns on desktop */}
+        <div className="col-span-1 md:col-span-2">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-white flex items-center justify-center rounded-lg">
+              <span className="text-blue-900 font-black text-xl">G</span>
+            </div>
+            <div>
+              <h1 className="font-extrabold text-xl tracking-tighter text-white">
+                GEORGIA <span className="text-red-600">USED CARS</span>
+              </h1>
             </div>
           </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Services</h4>
-            <div className="space-y-2 text-sm">
-              <p className="text-muted-foreground">Vehicle Import</p>
-              <p className="text-muted-foreground">Auction Bidding</p>
-              <p className="text-muted-foreground">Inspection Services</p>
-              <p className="text-muted-foreground">Documentation</p>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Contact Info</h4>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>+971 55 546 7220</p>
-              <p>info@georgiacars.com</p>
-              <p>Sharjah, UAE</p>
-            </div>
-          </div>
+          <p className="text-sm leading-relaxed max-w-sm">
+            Premium salvage vehicles imported from US and Canada auctions.
+            Specializing in project cars and industrial spare parts.
+            Your trusted partner in Sharjah, UAE.
+          </p>
         </div>
 
-        <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 Georgia Used Cars. All rights reserved.</p>
-          <p className="mt-2">
-            Developed by <span className="font-medium text-foreground">Jafar Karzai</span>
-          </p>
+        {/* Quick Links */}
+        <div>
+          <h4 className="text-white font-bold text-xs uppercase tracking-widest mb-6">
+            Quick Links
+          </h4>
+          <ul className="text-sm space-y-4">
+            <li>
+              <Link
+                href="/"
+                className="hover:text-white transition-colors"
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/inventory"
+                className="hover:text-white transition-colors"
+              >
+                Live Inventory
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/about"
+                className="hover:text-white transition-colors"
+              >
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/contact"
+                className="hover:text-white transition-colors"
+              >
+                Contact
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        {/* Contact Info */}
+        <div>
+          <h4 className="text-white font-bold text-xs uppercase tracking-widest mb-6">
+            Contact
+          </h4>
+          <ul className="text-sm space-y-4">
+            <li>Sharjah Industrial Area 4</li>
+            <li className="text-blue-400">+971 55 546 7220</li>
+            <li>info@georgiacars.com</li>
+            <li className="pt-2">
+              <a
+                href="https://wa.me/971555467220"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                WhatsApp
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="max-w-7xl mx-auto border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-widest">
+        <span>&copy; {new Date().getFullYear()} Georgia Used Cars Sharjah. All Rights Reserved.</span>
+        <div className="flex gap-6">
+          <Link
+            href="/privacy-policy"
+            className="hover:text-white transition-colors"
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            href="/terms-of-service"
+            className="hover:text-white transition-colors"
+          >
+            Terms of Service
+          </Link>
         </div>
       </div>
     </footer>
   )
 }
-

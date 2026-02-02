@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { CustomerService, CustomerWithStats, CustomerFilters } from '@/lib/services/customers'
+import { fetchCustomers, fetchCustomerStats, deleteCustomer, type CustomerFilters } from '@/lib/api/customers-client'
 import { CustomerForm } from '@/components/customers/customer-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,6 +34,25 @@ import {
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 
+interface CustomerWithStats {
+  id: string
+  email?: string | null
+  fullName: string
+  phone?: string | null
+  address?: string | null
+  city?: string | null
+  country: string
+  dateOfBirth?: Date | null
+  preferredLanguage: string
+  marketingConsent: boolean
+  createdAt: Date
+  updatedAt: Date
+  inquiryCount?: number
+  lastInquiryDate?: Date
+  totalPurchases?: number
+  totalSpent?: number
+}
+
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<CustomerWithStats[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,28 +76,36 @@ export default function CustomersPage() {
 
   const loadCustomers = async () => {
     setLoading(true)
-    
-    const searchFilters = {
-      ...filters,
-      ...(searchTerm && { search: searchTerm })
-    }
 
-    const result = await CustomerService.getAll(searchFilters, page, 20)
-    
-    if (result.success) {
-      setCustomers(result.data || [])
-      setTotalPages(result.pagination?.pages || 1)
-    } else {
-      console.error('Failed to load customers:', result.error)
+    try {
+      const searchFilters = {
+        ...filters,
+        ...(searchTerm && { search: searchTerm })
+      }
+
+      const result = await fetchCustomers(searchFilters, page, 20)
+
+      if (result.success) {
+        setCustomers(result.data || [])
+        setTotalPages(result.pagination?.pages || 1)
+      } else {
+        console.error('Failed to load customers:', result.error)
+      }
+    } catch (error) {
+      console.error('Failed to load customers:', error)
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   const loadStatistics = async () => {
-    const result = await CustomerService.getStatistics()
-    if (result.success) {
-      setStatistics(result.data)
+    try {
+      const result = await fetchCustomerStats()
+      if (result.success) {
+        setStatistics(result.data?.overview)
+      }
+    } catch (error) {
+      console.error('Failed to load statistics:', error)
     }
   }
 
@@ -105,12 +132,16 @@ export default function CustomersPage() {
       return
     }
 
-    const result = await CustomerService.delete(customerId)
-    if (result.success) {
-      loadCustomers()
-      loadStatistics()
-    } else {
-      alert('Failed to delete customer: ' + result.error)
+    try {
+      const result = await deleteCustomer(customerId)
+      if (result.success) {
+        loadCustomers()
+        loadStatistics()
+      } else {
+        alert('Failed to delete customer: ' + result.error)
+      }
+    } catch (error) {
+      alert('Failed to delete customer: ' + error)
     }
   }
 
@@ -139,7 +170,7 @@ export default function CustomersPage() {
 
   if (loading && customers.length === 0) {
     return (
-      <div className="container mx-auto p-8">
+      <div className="flex-1 space-y-6 p-6">
         <div className="space-y-8">
           <div className="space-y-4">
             <Skeleton className="h-10 w-80" />
@@ -203,8 +234,8 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="container mx-auto p-page">
-      <div className="flex justify-between items-center mb-section">
+    <div className="flex-1 space-y-6 p-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Customer Management</h1>
           <p className="text-sm text-muted-foreground">
@@ -222,7 +253,7 @@ export default function CustomersPage() {
 
       {/* Statistics Cards */}
       {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-section">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
@@ -265,7 +296,7 @@ export default function CustomersPage() {
       )}
 
       {/* Filters and Search */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-section">
+      <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 flex gap-2">
           <Input
             placeholder="Search customers by name, email, or phone..."
@@ -327,7 +358,7 @@ export default function CustomersPage() {
         </div>
       ) : (
         <>
-          <div className="space-y-4 mb-section">
+          <div className="space-y-4">
             {customers.map((customer) => (
               <Card key={customer.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-card-lg">

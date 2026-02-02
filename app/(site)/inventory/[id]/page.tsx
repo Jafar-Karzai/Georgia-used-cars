@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { fetchVehicleById, fetchVehicles } from '@/lib/api/vehicles-client'
 import { Vehicle, VehiclePhoto } from '@/types/database'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SiteNavbar } from '@/components/layout/site-navbar'
 import { getPublicStatusLabel, getPublicStatusBadgeStyle } from '@/lib/utils/vehicle-status'
 import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
+import { ReservationModal } from '@/components/reservations/ReservationModal'
 import {
   Car,
   ChevronRight,
@@ -35,7 +36,8 @@ import {
   DollarSign,
   Key,
   Settings2,
-  Circle
+  Circle,
+  ShoppingCart
 } from 'lucide-react'
 
 // Local interface for page-specific needs, extending the database Vehicle type
@@ -70,6 +72,7 @@ type PublicVehicle = PageVehicle
 
 export default function VehicleDetailPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const vehicleId = params.id as string
 
   const [vehicle, setVehicle] = useState<PageVehicle | null>(null)
@@ -77,6 +80,24 @@ export default function VehicleDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [relatedVehicles, setRelatedVehicles] = useState<PageVehicle[]>([])
+  const [reservationModalOpen, setReservationModalOpen] = useState(false)
+  // Check localStorage for mock authentication
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Check authentication status from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mockAuth = localStorage.getItem('mockAuth')
+      setIsAuthenticated(mockAuth === 'true')
+    }
+  }, [])
+
+  // Auto-open reservation modal if ?reserve=true is in URL
+  useEffect(() => {
+    if (searchParams.get('reserve') === 'true' && vehicle && !loading) {
+      setReservationModalOpen(true)
+    }
+  }, [searchParams, vehicle, loading])
 
   // Define functions with useCallback to provide stable dependencies
   const loadVehicleImpl = useCallback(async () => {
@@ -242,6 +263,13 @@ export default function VehicleDetailPage() {
     return severityMap[severity] || null
   }
 
+  // Mask VIN for non-authenticated users (show last 6 digits only)
+  const displayVin = vehicle.vin
+    ? isAuthenticated
+      ? vehicle.vin
+      : `•••••••••••${vehicle.vin.slice(-6)}`
+    : null
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNavbar />
@@ -360,9 +388,9 @@ export default function VehicleDetailPage() {
                         {getPublicStatusLabel(vehicle.current_status as any)}
                       </Badge>
                     )}
-                    {vehicle.vin && (
+                    {displayVin && (
                       <span className="text-sm text-muted-foreground">
-                        VIN: {vehicle.vin}
+                        VIN: <span className="font-mono tracking-wide">{displayVin}</span>
                       </span>
                     )}
                   </div>
@@ -571,10 +599,29 @@ export default function VehicleDetailPage() {
                 <div className="space-y-5">
                   <h3 className="text-xl font-bold">Interested in this vehicle?</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    Contact us for more information, schedule an inspection, or get a personalized quote.
+                    {vehicle.sale_price && vehicle.sale_price > 0 && vehicle.is_public
+                      ? 'Reserve this vehicle online or contact us for more information.'
+                      : 'Contact us for more information, schedule an inspection, or get a personalized quote.'}
                   </p>
+
+                  {/* Reserve Now Button - Only show if vehicle is public and has a price */}
+                  {vehicle.sale_price && vehicle.sale_price > 0 && vehicle.is_public && (
+                    <div className="space-y-3">
+                      <Button
+                        className="w-full h-12 text-lg"
+                        onClick={() => setReservationModalOpen(true)}
+                      >
+                        <ShoppingCart className="h-5 w-5 mr-2" />
+                        Reserve This Vehicle
+                      </Button>
+                      <p className="text-xs text-center text-muted-foreground">
+                        Secure your vehicle with just 5% deposit
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button asChild className="flex-1">
+                    <Button asChild variant="outline" className="flex-1">
                       <Link href={`/contact?vehicle=${vehicle.id}`}>
                         <Phone className="h-4 w-4 mr-2" />
                         Get Quote
@@ -695,6 +742,23 @@ export default function VehicleDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Reservation Modal */}
+      <ReservationModal
+        open={reservationModalOpen}
+        onOpenChange={setReservationModalOpen}
+        vehicle={{
+          id: vehicle.id,
+          year: vehicle.year,
+          make: vehicle.make,
+          model: vehicle.model,
+          trim: vehicle.trim || undefined,
+          salePrice: vehicle.sale_price || 0,
+          saleCurrency: vehicle.sale_currency || 'AED',
+          vehiclePhotos: vehicle.vehicle_photos,
+        }}
+        isAuthenticated={isAuthenticated}
+      />
     </div>
   )
 }

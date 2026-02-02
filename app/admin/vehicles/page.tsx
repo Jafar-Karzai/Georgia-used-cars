@@ -156,8 +156,8 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="container mx-auto p-page">
-      <div className="flex justify-between items-center mb-section">
+    <div className="flex-1 space-y-6 p-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Vehicle Inventory</h1>
           <p className="text-sm text-muted-foreground">
@@ -175,7 +175,7 @@ export default function VehiclesPage() {
 
       {/* Statistics Cards */}
       {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-section">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-normal">Total Vehicles</CardTitle>
@@ -229,7 +229,7 @@ export default function VehiclesPage() {
       )}
 
       {/* Filters and Search */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-section">
+      <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 flex gap-2">
           <Input
             placeholder="Search by VIN, make, model..."
@@ -276,7 +276,7 @@ export default function VehiclesPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-section">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {vehicles.map((vehicle) => (
               <VehicleCard
                 key={vehicle.id}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Cars | Premium Salvage Vehicles Sharjah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hero-gradient {
+            background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)), url('https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        .active-tab { border-bottom: 3px solid #D32F2F; color: #003366; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center">
+                    <div class="text-2xl font-bold flex items-center">
+                        <span class="text-blue-900">GEORGIA</span><span class="text-red-600">CARS</span>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex space-x-8 font-medium">
+                    <a href="#" class="text-blue-900">Inventory</a>
+                    <a href="#" class="text-gray-500 hover:text-blue-900">Shipping</a>
+                    <a href="#" class="text-gray-500 hover:text-blue-900">Auctions</a>
+                    <a href="#" class="text-gray-500 hover:text-blue-900">Contact</a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gray-100 p-1 rounded-lg flex items-center">
+                        <button onclick="setCurrency('AED')" id="btn-aed" class="px-3 py-1 rounded-md text-sm font-bold bg-white shadow-sm text-blue-900">AED</button>
+                        <button onclick="setCurrency('USD')" id="btn-usd" class="px-3 py-1 rounded-md text-sm font-bold text-gray-500">USD</button>
+                    </div>
+                    <button class="bg-blue-900 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-800 transition">Login</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient py-20 border-b">
+        <div class="max-w-7xl mx-auto px-4 text-center sm:text-left grid md:grid-cols-2 gap-10 items-center">
+            <div>
+                <span class="text-red-600 font-bold tracking-widest uppercase text-sm">Direct from US Auctions</span>
+                <h1 class="text-5xl md:text-6xl font-extrabold text-blue-900 mt-4 leading-tight">
+                    Premium Salvage <br>Cars in Sharjah.
+                </h1>
+                <p class="text-gray-600 mt-6 text-lg max-w-lg">
+                    We import directly from Copart, IAAI, and Impact. Quality project cars and affordable parts vehicles delivered to your doorstep.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <a href="#inventory" class="bg-red-600 text-white px-8 py-4 rounded-lg font-bold text-center hover:bg-red-700 transition shadow-lg">Browse Inventory</a>
+                    <a href="#" class="bg-white border-2 border-blue-900 text-blue-900 px-8 py-4 rounded-lg font-bold text-center hover:bg-blue-50 transition">Track Transit</a>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Car" class="rounded-2xl shadow-2xl border-8 border-white">
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <div class="max-w-7xl mx-auto px-4 -mt-10 relative z-10">
+        <div class="bg-white p-6 rounded-xl shadow-xl grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Make</label>
+                <select class="w-full bg-gray-50 border-none rounded-md p-2 focus:ring-2 focus:ring-blue-900">
+                    <option>All Makes</option>
+                    <option>Toyota</option>
+                    <option>Ford</option>
+                    <option>Honda</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Model</label>
+                <select class="w-full bg-gray-50 border-none rounded-md p-2 focus:ring-2 focus:ring-blue-900">
+                    <option>All Models</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Year</label>
+                <select class="w-full bg-gray-50 border-none rounded-md p-2 focus:ring-2 focus:ring-blue-900">
+                    <option>2018 - 2024</option>
+                    <option>2010 - 2017</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Price Range</label>
+                <select class="w-full bg-gray-50 border-none rounded-md p-2 focus:ring-2 focus:ring-blue-900">
+                    <option>Any Price</option>
+                    <option>Under 20,000</option>
+                    <option>20k - 50k</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button class="w-full bg-blue-900 text-white p-2.5 rounded-md font-bold hover:bg-blue-800">
+                    <i class="fas fa-search mr-2"></i> Filter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Section -->
+    <section id="inventory" class="max-w-7xl mx-auto px-4 py-16">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 border-b border-gray-200">
+            <div class="flex space-x-8">
+                <button onclick="toggleTab('yard')" id="tab-yard" class="pb-4 font-bold text-lg active-tab">Available in Yard (Sharjah)</button>
+                <button onclick="toggleTab('transit')" id="tab-transit" class="pb-4 font-bold text-lg text-gray-400 hover:text-blue-900">In Transit (USA/Canada)</button>
+            </div>
+        </div>
+
+        <!-- Vehicle Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- Card 1 -->
+            <div class="bg-white rounded-2xl overflow-hidden card-shadow border border-gray-100 group">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Car" class="w-full h-56 object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">Runs & Drives</span>
+                    <span class="absolute top-4 right-4 bg-white/90 backdrop-blur text-blue-900 text-xs font-bold px-3 py-1 rounded-md shadow">COPART</span>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-bold text-blue-900">2022 BMW M4 Competition</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4"><i class="fas fa-map-marker-alt text-red-600 mr-1"></i> Industrial Area 4, Sharjah</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="text-sm border-r border-gray-100">
+                            <span class="block text-gray-400 uppercase text-[10px] font-bold">Mileage</span>
+                            <span class="font-semibold text-gray-700">12,400 mi</span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="block text-gray-400 uppercase text-[10px] font-bold">Damage</span>
+                            <span class="font-semibold text-gray-700">Front End</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-4 border-t">
+                        <div>
+                            <span class="block text-xs text-gray-400 font-bold uppercase">Price</span>
+                            <span class="text-2xl font-black text-blue-900 currency-val" data-aed="145000">AED 145,000</span>
+                        </div>
+                        <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition">Reserve</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white rounded-2xl overflow-hidden card-shadow border border-gray-100 group">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1603386329225-868f9b1ee6c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Car" class="w-full h-56 object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">Starts</span>
+                    <span class="absolute top-4 right-4 bg-white/90 backdrop-blur text-blue-600 text-xs font-bold px-3 py-1 rounded-md shadow">IAAI</span>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-bold text-blue-900">2021 Toyota Supra</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4"><i class="fas fa-map-marker-alt text-red-600 mr-1"></i> Industrial Area 4, Sharjah</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="text-sm border-r border-gray-100">
+                            <span class="block text-gray-400 uppercase text-[10px] font-bold">Mileage</span>
+                            <span class="font-semibold text-gray-700">8,200 mi</span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="block text-gray-400 uppercase text-[10px] font-bold">Damage</span>
+                            <span class="font-semibold text-gray-700">Side Damage</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-4 border-t">
+                        <div>
+                            <span class="block text-xs text-gray-400 font-bold uppercase">Price</span>
+                            <span class="text-2xl font-black text-blue-900 currency-val" data-aed="98000">AED 98,000</span>
+                        </div>
+                        <button class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition">Reserve</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3 (In Transit) -->
+            <div class="bg-white rounded-2xl overflow-hidden card-shadow border border-gray-100 group">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-blue-900/10 z-10 pointer-events-none"></div>
+                    <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Car" class="w-full h-56 object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">In Transit</span>
+                    <span class="absolute top-4 right-4 bg-white/90 backdrop-blur text-red-600 text-xs font-bold px-3 py-1 rounded-md shadow">IMPACT</span>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-bold text-blue-900">2023 Ford Mustang GT</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4"><i class="fas fa-ship text-blue-600 mr-1"></i> ETA: Jan 28 (Jebel Ali)</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="text-sm border-r border-gray-100">
+                            <span class="block text-gray-400 uppercase text-[10px] font-bold">Mileage</span>
+                            <span class="font-semibold text-gray-700">1,500 mi</span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="block text-gray-400 uppercase text-[10px] font-bold">Status</span>
+                            <span class="font-semibold text-gray-700">Salvage Title</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-4 border-t">
+                        <div>
+                            <span class="block text-xs text-gray-400 font-bold uppercase">Price</span>
+                            <span class="text-2xl font-black text-blue-900 currency-val" data-aed="112000">AED 112,000</span>
+                        </div>
+                        <button class="bg-blue-900 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-800 transition">Pre-Order</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-blue-950 text-white py-12 mt-20">
+        <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-8">
+            <div>
+                <div class="text-2xl font-bold flex items-center mb-6">
+                    <span class="text-white">GEORGIA</span><span class="text-red-500">CARS</span>
+                </div>
+                <p class="text-blue-200 text-sm leading-relaxed">
+                    Licensed salvage car dealer in Sharjah, UAE. Specializing in high-quality vehicle imports from North American auctions.
+                </p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-6">Quick Links</h4>
+                <ul class="space-y-4 text-blue-200 text-sm">
+                    <li><a href="#" class="hover:text-white transition">Inventory</a></li>
+                    <li><a href="#" class="hover:text-white transition">Auction Calendar</a></li>
+                    <li><a href="#" class="hover:text-white transition">Shipping Services</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-6">Our Location</h4>
+                <p class="text-blue-200 text-sm">
+                    Yard 12, Industrial Area 4<br>
+                    Sharjah, United Arab Emirates
+                </p>
+                <p class="mt-4 text-blue-200 text-sm">
+                    <i class="fas fa-phone mr-2"></i> +971 50 123 4567
+                </p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-6">Newsletter</h4>
+                <div class="flex">
+                    <input type="text" placeholder="Email" class="bg-blue-900 border-none rounded-l-md p-2 w-full focus:ring-1 focus:ring-red-500">
+                    <button class="bg-red-600 px-4 rounded-r-md hover:bg-red-700">Join</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Currency Toggle Logic
+        function setCurrency(cur) {
+            const btnAed = document.getElementById('btn-aed');
+            const btnUsd = document.getElementById('btn-usd');
+            const priceElements = document.querySelectorAll('.currency-val');
+            const rate = 3.67;
+
+            if (cur === 'USD') {
+                btnUsd.classList.add('bg-white', 'shadow-sm', 'text-blue-900');
+                btnUsd.classList.remove('text-gray-500');
+                btnAed.classList.remove('bg-white', 'shadow-sm', 'text-blue-900');
+                btnAed.classList.add('text-gray-500');
+
+                priceElements.forEach(el => {
+                    const aedValue = parseFloat(el.getAttribute('data-aed'));
+                    const usdValue = (aedValue / rate).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                    el.innerText = '$ ' + usdValue;
+                });
+            } else {
+                btnAed.classList.add('bg-white', 'shadow-sm', 'text-blue-900');
+                btnAed.classList.remove('text-gray-500');
+                btnUsd.classList.remove('bg-white', 'shadow-sm', 'text-blue-900');
+                btnUsd.classList.add('text-gray-500');
+
+                priceElements.forEach(el => {
+                    const aedValue = parseFloat(el.getAttribute('data-aed'));
+                    el.innerText = 'AED ' + aedValue.toLocaleString();
+                });
+            }
+        }
+
+        // Tab Switching Logic
+        function toggleTab(type) {
+            const tabYard = document.getElementById('tab-yard');
+            const tabTransit = document.getElementById('tab-transit');
+
+            if(type === 'yard') {
+                tabYard.classList.add('active-tab');
+                tabYard.classList.remove('text-gray-400');
+                tabTransit.classList.remove('active-tab');
+                tabTransit.classList.add('text-gray-400');
+            } else {
+                tabTransit.classList.add('active-tab');
+                tabTransit.classList.remove('text-gray-400');
+                tabYard.classList.remove('active-tab');
+                tabYard.classList.add('text-gray-400');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Used Cars | Premium Salvage from USA & Canada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --alumina-silver: #f1f5f9;
+            --precision-blue: #1e3a8a;
+            --precision-blue-light: #3b82f6;
+            --action-red: #dc2626;
+            --action-red-dark: #b91c1c;
+            --frosted-white: rgba(255, 255, 255, 0.75);
+            --metal-border: rgba(203, 213, 225, 0.5);
+            --success-green: #16a34a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(circle at 2px 2px, rgba(0,0,0,0.02) 1px, transparent 0);
+            background-size: 24px 24px;
+            color: #0f172a;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .frosted-panel {
+            background: var(--frosted-white);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid var(--metal-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+        }
+
+        .alumina-surface {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alumina-surface::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        .status-tag {
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+            padding: 4px 16px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+        }
+
+        .card-hover {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-6px);
+            border-color: var(--precision-blue);
+            box-shadow: 0 16px 48px rgba(30, 58, 138, 0.12);
+        }
+
+        .btn-precision {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-precision::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-precision:hover::before {
+            left: 100%;
+        }
+
+        .spec-line {
+            border-bottom: 1px dashed var(--metal-border);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+        }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-reveal {
+            animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .icon-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 frosted-panel border-b px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-900 flex items-center justify-center rounded-lg">
+                    <span class="text-white font-black text-xl">G</span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tighter leading-none">GEORGIA <span class="text-red-600">USED CARS</span></h1>
+                    <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Sharjah Industrial Area</p>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8 text-sm font-semibold uppercase tracking-wider">
+                <a href="#" class="text-blue-900 border-b-2 border-blue-900 pb-1">Home</a>
+                <a href="#" class="text-slate-500 hover:text-blue-900 transition-colors">Inventory</a>
+                <a href="#" class="text-slate-500 hover:text-blue-900 transition-colors">About</a>
+                <a href="#" class="text-slate-500 hover:text-blue-900 transition-colors">Contact</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button class="border border-slate-300 text-slate-600 px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg hover:border-blue-900 hover:text-blue-900 transition-all">
+                    Sign In
+                </button>
+                <button class="bg-blue-900 text-white px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-blue-800 transition-all btn-precision">
+                    Browse Cars
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-gradient text-white py-20 px-6 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute inset-0" style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.3) 1px, transparent 0); background-size: 32px 32px;"></div>
+            </div>
+            <div class="max-w-7xl mx-auto relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div class="animate-reveal">
+                        <p class="text-blue-200 text-xs font-bold uppercase tracking-widest mb-4">Direct from US & Canada Auctions</p>
+                        <h1 class="text-5xl lg:text-6xl font-black tracking-tight leading-[0.95] mb-6">
+                            Premium Salvage<br>
+                            <span class="text-blue-300">Delivered to UAE</span>
+                        </h1>
+                        <p class="text-blue-100 text-lg max-w-lg mb-8 leading-relaxed">
+                            Curated selection from Copart and IAAI auctions. High-accuracy damage reports for repair shops and project enthusiasts. Sold AS-IS.
+                        </p>
+                        <div class="flex gap-4">
+                            <button class="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all btn-precision">
+                                View Inventory
+                            </button>
+                            <button class="border-2 border-white/30 hover:border-white/60 text-white px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all">
+                                Contact Sales
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hero Search Card -->
+                    <div class="frosted-panel rounded-2xl p-6 animate-reveal" style="animation-delay: 0.2s; background: rgba(255,255,255,0.95);">
+                        <h3 class="text-slate-900 font-extrabold text-lg mb-6 flex items-center gap-3">
+                            <span class="w-2 h-6 bg-red-600 rounded-full"></span>
+                            Find Your Vehicle
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Make / Brand</label>
+                                <select class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 font-semibold text-sm text-slate-700 outline-none focus:border-blue-500">
+                                    <option>All Makes</option>
+                                    <option>BMW</option>
+                                    <option>Mercedes</option>
+                                    <option>Toyota</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Model</label>
+                                <select class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 font-semibold text-sm text-slate-700 outline-none focus:border-blue-500">
+                                    <option>All Models</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Year From</label>
+                                <select class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 font-semibold text-sm text-slate-700 outline-none focus:border-blue-500">
+                                    <option>Any Year</option>
+                                    <option>2024</option>
+                                    <option>2023</option>
+                                    <option>2022</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Price Range</label>
+                                <select class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 font-semibold text-sm text-slate-700 outline-none focus:border-blue-500">
+                                    <option>Any Price</option>
+                                    <option>Under 50,000 AED</option>
+                                    <option>50,000 - 100,000 AED</option>
+                                    <option>100,000+ AED</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-blue-800 transition-all btn-precision">
+                            Search Vehicles
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Strip -->
+        <section class="frosted-panel border-b">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-2 md:grid-cols-4">
+                    <div class="p-6 border-r border-slate-200">
+                        <p class="text-[10px] uppercase font-bold text-red-600 tracking-widest mb-1">Hub Location</p>
+                        <p class="text-lg font-extrabold text-slate-900">Sharjah, UAE</p>
+                    </div>
+                    <div class="p-6 border-r border-slate-200">
+                        <p class="text-[10px] uppercase font-bold text-red-600 tracking-widest mb-1">Current Inventory</p>
+                        <p class="text-lg font-extrabold text-slate-900 mono">142 Units</p>
+                    </div>
+                    <div class="p-6 border-r border-slate-200">
+                        <p class="text-[10px] uppercase font-bold text-red-600 tracking-widest mb-1">Next Shipment</p>
+                        <p class="text-lg font-extrabold text-slate-900 mono">3 Days</p>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-[10px] uppercase font-bold text-red-600 tracking-widest mb-1">Auction Partners</p>
+                        <p class="text-lg font-extrabold text-slate-900">Copart / IAAI</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Arrived in Stock -->
+        <section class="max-w-7xl mx-auto px-6 py-16">
+            <div class="flex justify-between items-end mb-10">
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-red-600 tracking-widest mb-2">Ready for Inspection</p>
+                    <h2 class="text-3xl font-extrabold tracking-tight">Arrived in Stock</h2>
+                </div>
+                <a href="#" class="text-sm font-bold text-blue-900 hover:text-red-600 transition-colors uppercase tracking-wider flex items-center gap-2">
+                    View All <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="alumina-surface rounded-2xl border border-slate-200 overflow-hidden card-hover">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800" alt="BMW M4" class="w-full h-full object-cover">
+                        <div class="absolute top-4 left-4 bg-green-500 text-white status-tag">In Yard</div>
+                        <div class="absolute top-4 right-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-green-600 uppercase flex items-center gap-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            Run & Drive
+                        </div>
+                        <div class="absolute bottom-4 left-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-blue-900 uppercase mono">
+                            Lot #88492021
+                        </div>
+                    </div>
+                    <div class="p-6 relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-extrabold leading-tight mb-1">2023 BMW M4 Competition</h3>
+                                <p class="text-xs mono text-slate-500">VIN: •••••••••••123456</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 mb-5">
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Primary Damage</span>
+                                <span class="font-bold text-red-600">Front End</span>
+                            </div>
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Mileage</span>
+                                <span class="font-bold">12,400 Mi</span>
+                            </div>
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Engine / Trans</span>
+                                <span class="font-bold">3.0L Twin-Turbo / Auto</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Price</p>
+                                <p class="text-2xl font-black text-blue-900 mono">142,500 <span class="text-sm">AED</span></p>
+                            </div>
+                            <button class="bg-red-600 text-white px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider hover:bg-red-700 transition-all btn-precision">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="alumina-surface rounded-2xl border border-slate-200 overflow-hidden card-hover">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" alt="Porsche 911" class="w-full h-full object-cover">
+                        <div class="absolute top-4 left-4 bg-green-500 text-white status-tag">In Yard</div>
+                        <div class="absolute top-4 right-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-amber-600 uppercase flex items-center gap-2">
+                            <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+                            Starts
+                        </div>
+                        <div class="absolute bottom-4 left-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-blue-900 uppercase mono">
+                            Lot #44921003
+                        </div>
+                    </div>
+                    <div class="p-6 relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-extrabold leading-tight mb-1">2022 Porsche 911 Carrera</h3>
+                                <p class="text-xs mono text-slate-500">VIN: •••••••••••789012</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 mb-5">
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Primary Damage</span>
+                                <span class="font-bold text-red-600">Rear End</span>
+                            </div>
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Mileage</span>
+                                <span class="font-bold">8,200 Mi</span>
+                            </div>
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Engine / Trans</span>
+                                <span class="font-bold">3.0L Flat-6 / PDK</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Price</p>
+                                <p class="text-2xl font-black text-blue-900 mono">285,000 <span class="text-sm">AED</span></p>
+                            </div>
+                            <button class="bg-red-600 text-white px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider hover:bg-red-700 transition-all btn-precision">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="alumina-surface rounded-2xl border border-slate-200 overflow-hidden card-hover">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=800" alt="Mustang" class="w-full h-full object-cover">
+                        <div class="absolute top-4 left-4 bg-green-500 text-white status-tag">In Yard</div>
+                        <div class="absolute top-4 right-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-green-600 uppercase flex items-center gap-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            Run & Drive
+                        </div>
+                        <div class="absolute bottom-4 left-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-blue-900 uppercase mono">
+                            Lot #77123456
+                        </div>
+                    </div>
+                    <div class="p-6 relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-extrabold leading-tight mb-1">2021 Ford Mustang GT</h3>
+                                <p class="text-xs mono text-slate-500">VIN: •••••••••••345678</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 mb-5">
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Primary Damage</span>
+                                <span class="font-bold text-red-600">Side Impact</span>
+                            </div>
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Mileage</span>
+                                <span class="font-bold">24,500 Mi</span>
+                            </div>
+                            <div class="flex justify-between text-xs spec-line pb-2">
+                                <span class="text-slate-400 font-medium">Engine / Trans</span>
+                                <span class="font-bold">5.0L V8 / Manual</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Price</p>
+                                <p class="text-2xl font-black text-blue-900 mono">64,500 <span class="text-sm">AED</span></p>
+                            </div>
+                            <button class="bg-red-600 text-white px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider hover:bg-red-700 transition-all btn-precision">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Arriving Soon -->
+        <section class="bg-slate-50 py-16">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex justify-between items-end mb-10">
+                    <div>
+                        <p class="text-[10px] uppercase font-bold text-blue-600 tracking-widest mb-2">Currently In Transit</p>
+                        <h2 class="text-3xl font-extrabold tracking-tight">Arriving Soon</h2>
+                    </div>
+                    <a href="#" class="text-sm font-bold text-blue-900 hover:text-red-600 transition-colors uppercase tracking-wider flex items-center gap-2">
+                        View All <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Arriving Card 1 -->
+                    <div class="alumina-surface rounded-2xl border border-slate-200 overflow-hidden card-hover">
+                        <div class="relative h-56 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800" alt="Supra" class="w-full h-full object-cover">
+                            <div class="absolute top-4 left-4 bg-blue-600 text-white status-tag">In Transit</div>
+                            <div class="absolute top-4 right-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-red-600 uppercase flex items-center gap-2">
+                                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                Does Not Start
+                            </div>
+                            <div class="absolute bottom-4 left-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-blue-600 uppercase flex items-center gap-2">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                                ETA: 5 Days
+                            </div>
+                        </div>
+                        <div class="p-6 relative z-10">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg font-extrabold leading-tight mb-1">2024 Toyota Supra</h3>
+                                    <p class="text-xs mono text-slate-500">VIN: •••••••••••901234</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 mb-5">
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Primary Damage</span>
+                                    <span class="font-bold text-red-600">Heavy Front</span>
+                                </div>
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Mileage</span>
+                                    <span class="font-bold">3,200 Mi</span>
+                                </div>
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Engine / Trans</span>
+                                    <span class="font-bold">3.0L I6 / Auto</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Price</p>
+                                    <p class="text-2xl font-black text-blue-900 mono">89,000 <span class="text-sm">AED</span></p>
+                                </div>
+                                <button class="bg-blue-900 text-white px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider hover:bg-blue-800 transition-all btn-precision">
+                                    Reserve Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arriving Card 2 -->
+                    <div class="alumina-surface rounded-2xl border border-slate-200 overflow-hidden card-hover">
+                        <div class="relative h-56 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800" alt="Tesla" class="w-full h-full object-cover">
+                            <div class="absolute top-4 left-4 bg-blue-600 text-white status-tag">In Transit</div>
+                            <div class="absolute top-4 right-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-green-600 uppercase flex items-center gap-2">
+                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                Run & Drive
+                            </div>
+                            <div class="absolute bottom-4 left-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-blue-600 uppercase flex items-center gap-2">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                                ETA: 8 Days
+                            </div>
+                        </div>
+                        <div class="p-6 relative z-10">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg font-extrabold leading-tight mb-1">2023 Tesla Model 3</h3>
+                                    <p class="text-xs mono text-slate-500">VIN: •••••••••••567890</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 mb-5">
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Primary Damage</span>
+                                    <span class="font-bold text-amber-600">Hail Damage</span>
+                                </div>
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Mileage</span>
+                                    <span class="font-bold">15,800 Mi</span>
+                                </div>
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Battery / Trans</span>
+                                    <span class="font-bold">82 kWh / Direct</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Price</p>
+                                    <p class="text-2xl font-black text-blue-900 mono">95,000 <span class="text-sm">AED</span></p>
+                                </div>
+                                <button class="bg-blue-900 text-white px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider hover:bg-blue-800 transition-all btn-precision">
+                                    Reserve Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arriving Card 3 -->
+                    <div class="alumina-surface rounded-2xl border border-slate-200 overflow-hidden card-hover">
+                        <div class="relative h-56 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&q=80&w=800" alt="Mercedes" class="w-full h-full object-cover">
+                            <div class="absolute top-4 left-4 bg-blue-600 text-white status-tag">In Transit</div>
+                            <div class="absolute top-4 right-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-amber-600 uppercase flex items-center gap-2">
+                                <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+                                Starts
+                            </div>
+                            <div class="absolute bottom-4 left-4 frosted-panel px-3 py-1 rounded-lg text-[10px] font-bold text-blue-600 uppercase flex items-center gap-2">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                                ETA: 12 Days
+                            </div>
+                        </div>
+                        <div class="p-6 relative z-10">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg font-extrabold leading-tight mb-1">2022 Mercedes-AMG GT</h3>
+                                    <p class="text-xs mono text-slate-500">VIN: •••••••••••112233</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 mb-5">
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Primary Damage</span>
+                                    <span class="font-bold text-red-600">Water / Flood</span>
+                                </div>
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Mileage</span>
+                                    <span class="font-bold">6,100 Mi</span>
+                                </div>
+                                <div class="flex justify-between text-xs spec-line pb-2">
+                                    <span class="text-slate-400 font-medium">Engine / Trans</span>
+                                    <span class="font-bold">4.0L V8 / Auto</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Price</p>
+                                    <p class="text-2xl font-black text-blue-900 mono">195,000 <span class="text-sm">AED</span></p>
+                                </div>
+                                <button class="bg-blue-900 text-white px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider hover:bg-blue-800 transition-all btn-precision">
+                                    Reserve Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories -->
+        <section class="max-w-7xl mx-auto px-6 py-16">
+            <div class="text-center mb-10">
+                <p class="text-[10px] uppercase font-bold text-red-600 tracking-widest mb-2">Browse By</p>
+                <h2 class="text-3xl font-extrabold tracking-tight">Vehicle Categories</h2>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-6 text-center card-hover cursor-pointer">
+                    <div class="icon-circle bg-blue-100 text-blue-900 mx-auto mb-4">
+                        <i data-lucide="car" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">SUVs</h3>
+                    <p class="text-xs mono text-slate-500">42 Units</p>
+                </div>
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-6 text-center card-hover cursor-pointer">
+                    <div class="icon-circle bg-blue-100 text-blue-900 mx-auto mb-4">
+                        <i data-lucide="car" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">Sedans</h3>
+                    <p class="text-xs mono text-slate-500">38 Units</p>
+                </div>
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-6 text-center card-hover cursor-pointer">
+                    <div class="icon-circle bg-blue-100 text-blue-900 mx-auto mb-4">
+                        <i data-lucide="truck" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">Trucks</h3>
+                    <p class="text-xs mono text-slate-500">24 Units</p>
+                </div>
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-6 text-center card-hover cursor-pointer">
+                    <div class="icon-circle bg-blue-100 text-blue-900 mx-auto mb-4">
+                        <i data-lucide="gem" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">Luxury</h3>
+                    <p class="text-xs mono text-slate-500">18 Units</p>
+                </div>
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-6 text-center card-hover cursor-pointer">
+                    <div class="icon-circle bg-blue-100 text-blue-900 mx-auto mb-4">
+                        <i data-lucide="gauge" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">Sports</h3>
+                    <p class="text-xs mono text-slate-500">12 Units</p>
+                </div>
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-6 text-center card-hover cursor-pointer">
+                    <div class="icon-circle bg-blue-100 text-blue-900 mx-auto mb-4">
+                        <i data-lucide="zap" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">Electric</h3>
+                    <p class="text-xs mono text-slate-500">8 Units</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="bg-slate-900 text-white py-20">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="text-center mb-14">
+                    <p class="text-[10px] uppercase font-bold text-blue-400 tracking-widest mb-2">Simple Process</p>
+                    <h2 class="text-3xl font-extrabold tracking-tight">How It Works</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="search" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-5xl font-black text-slate-700 mb-3 mono">01</p>
+                        <h3 class="font-bold text-lg mb-2">Browse & Select</h3>
+                        <p class="text-sm text-slate-400">Explore our curated inventory with detailed damage reports and photos.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="calendar-check" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-5xl font-black text-slate-700 mb-3 mono">02</p>
+                        <h3 class="font-bold text-lg mb-2">Reserve or Inspect</h3>
+                        <p class="text-sm text-slate-400">Reserve arriving vehicles or visit our yard to inspect in-stock units.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="credit-card" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-5xl font-black text-slate-700 mb-3 mono">03</p>
+                        <h3 class="font-bold text-lg mb-2">Complete Purchase</h3>
+                        <p class="text-sm text-slate-400">Finalize payment. We handle all customs clearance and documentation.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-2xl bg-red-600 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="package-check" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-5xl font-black text-slate-700 mb-3 mono">04</p>
+                        <h3 class="font-bold text-lg mb-2">Take Delivery</h3>
+                        <p class="text-sm text-slate-400">Collect from our yard or arrange delivery anywhere in UAE.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Value Props -->
+        <section class="max-w-7xl mx-auto px-6 py-16">
+            <div class="text-center mb-10">
+                <p class="text-[10px] uppercase font-bold text-red-600 tracking-widest mb-2">Why Choose Us</p>
+                <h2 class="text-3xl font-extrabold tracking-tight">The Georgia Advantage</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-8 card-hover">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-100 text-blue-900 flex items-center justify-center mb-6">
+                        <i data-lucide="file-check" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="font-extrabold text-xl mb-3">Full Transparency</h3>
+                    <p class="text-slate-500 leading-relaxed">Complete auction history, damage reports, and high-resolution photos. No hidden surprises - what you see is what you get.</p>
+                </div>
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-8 card-hover">
+                    <div class="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mb-6">
+                        <i data-lucide="shield-check" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="font-extrabold text-xl mb-3">Quality Selection</h3>
+                    <p class="text-slate-500 leading-relaxed">We carefully select vehicles with repair potential. Each unit is assessed for value and repairability before import.</p>
+                </div>
+                <div class="alumina-surface rounded-2xl border border-slate-200 p-8 card-hover">
+                    <div class="w-14 h-14 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center mb-6">
+                        <i data-lucide="ship" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="font-extrabold text-xl mb-3">Direct Shipping</h3>
+                    <p class="text-slate-500 leading-relaxed">Established shipping routes from USA/Canada to Jebel Ali. Weekly container arrivals ensure fresh inventory.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Banner -->
+        <section class="mx-6 mb-16">
+            <div class="max-w-7xl mx-auto bg-gradient-to-r from-blue-900 to-blue-700 rounded-3xl p-12 text-white relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10">
+                    <div class="absolute inset-0" style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.3) 1px, transparent 0); background-size: 24px 24px;"></div>
+                </div>
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-3">Ready to Find Your Next Vehicle?</h2>
+                        <p class="text-blue-200 text-sm uppercase tracking-widest font-bold">Direct Auction Access • Customs Clearance • UAE-Wide Delivery</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <button class="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all btn-precision">
+                            Browse Inventory
+                        </button>
+                        <button class="border-2 border-white/30 hover:border-white/60 text-white px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all">
+                            Contact Sales
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-16 px-6">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div class="col-span-1 md:col-span-2">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-white flex items-center justify-center rounded-lg">
+                        <span class="text-blue-900 font-black text-xl">G</span>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-xl tracking-tighter text-white">GEORGIA <span class="text-red-600">USED CARS</span></h1>
+                    </div>
+                </div>
+                <p class="text-sm leading-relaxed max-w-sm">Specializing in the import and auction logistics of North American salvage vehicles to the Middle East. Your trusted partner for project cars and industrial spare parts.</p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6">Quick Links</h4>
+                <ul class="text-sm space-y-4">
+                    <li><a href="#" class="hover:text-white transition-colors">Live Inventory</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Arriving Soon</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">How It Works</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6">Contact</h4>
+                <ul class="text-sm space-y-4">
+                    <li>Sharjah Industrial Area 4</li>
+                    <li class="text-blue-400">+971 6 XXX XXXX</li>
+                    <li>info@georgiausedcars.ae</li>
+                    <li class="pt-2">
+                        <a href="#" class="inline-flex items-center gap-2 text-green-400 hover:text-green-300 transition-colors">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i>
+                            WhatsApp
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-widest">
+            <span>&copy; 2024 Georgia Used Cars Sharjah. All Rights Reserved.</span>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

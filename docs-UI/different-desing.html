@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Cars | Premium US Salvage Imports</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .hero-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); }
+        .red-accent { color: #dc2626; }
+        .bg-red-accent { background-color: #dc2626; }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-900 text-white p-2 rounded-lg">
+                <i class="fas fa-car-side fa-lg"></i>
+            </div>
+            <span class="text-2xl font-black tracking-tighter text-blue-900">GEORGIA<span class="text-red-600">CARS</span></span>
+        </div>
+
+        <div class="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-600">
+            <a href="#" class="hover:text-red-600">Buy Inventory</a>
+            <a href="#" class="hover:text-red-600">In-Transit</a>
+            <a href="#" class="hover:text-red-600">Auction Services</a>
+            <a href="#" class="hover:text-red-600">Location</a>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <!-- Currency Toggle -->
+            <div class="flex bg-gray-100 p-1 rounded-full border border-gray-200">
+                <button class="px-4 py-1 rounded-full text-xs font-bold bg-white shadow-sm text-blue-900 uppercase">AED</button>
+                <button class="px-4 py-1 rounded-full text-xs font-bold text-gray-400 uppercase">USD</button>
+            </div>
+            <button class="bg-red-600 text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-red-700 transition">
+                WhatsApp Us
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative bg-white overflow-hidden border-b">
+        <div class="max-w-7xl mx-auto px-6 py-16 lg:py-24 flex flex-col lg:flex-row items-center">
+            <div class="w-full lg:w-1/2 z-10">
+                <span class="text-red-600 font-bold tracking-widest uppercase text-sm">Direct Sharjah Importer</span>
+                <h1 class="text-5xl lg:text-7xl font-extrabold text-blue-900 mt-4 leading-tight">
+                    Premium Salvage <br/> <span class="text-gray-400">American Muscle.</span>
+                </h1>
+                <p class="mt-6 text-lg text-gray-500 max-w-lg">
+                    We source the best repairable vehicles from Copart and IAAI. 
+                    Available now in our Sharjah yard or arriving soon.
+                </p>
+                <div class="mt-10 flex gap-4">
+                    <button class="bg-blue-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-black transition flex items-center gap-2">
+                        Browse Inventory <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="bg-white border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-xl font-bold hover:bg-gray-50 transition">
+                        How it Works
+                    </button>
+                </div>
+            </div>
+            <div class="w-full lg:w-1/2 mt-12 lg:mt-0 relative">
+                <img src="https://images.unsplash.com/photo-1555353540-64580b51c258?auto=format&fit=crop&q=80&w=1000" alt="Mustang" class="rounded-3xl shadow-2xl relative z-10">
+                <div class="absolute -bottom-6 -left-6 bg-red-600 text-white p-6 rounded-2xl z-20 shadow-xl">
+                    <p class="text-3xl font-bold">200+</p>
+                    <p class="text-xs uppercase tracking-wider opacity-80">Cars Sold Monthly</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search & Filter Bar (Sticky) -->
+    <div class="bg-white border-b sticky top-[73px] z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center gap-4">
+            <div class="flex-1 min-w-[200px] relative">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" placeholder="Search Make, Model or VIN..." class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 transition">
+            </div>
+            <select class="px-4 py-3 bg-white border border-gray-200 rounded-xl font-semibold text-gray-600 outline-none">
+                <option>All Makes</option>
+                <option>Ford</option>
+                <option>Dodge</option>
+                <option>Toyota</option>
+            </select>
+            <select class="px-4 py-3 bg-white border border-gray-200 rounded-xl font-semibold text-gray-600 outline-none">
+                <option>Any Year</option>
+                <option>2020 - 2024</option>
+                <option>2015 - 2019</option>
+            </select>
+            <select class="px-4 py-3 bg-white border border-gray-200 rounded-xl font-semibold text-gray-600 outline-none">
+                <option>Price: Low to High</option>
+                <option>Price: High to Low</option>
+            </select>
+            <div class="flex items-center gap-2 ml-auto">
+                <button class="px-5 py-3 bg-blue-50 text-blue-900 rounded-xl font-bold text-sm">In Yard</button>
+                <button class="px-5 py-3 text-gray-400 rounded-xl font-bold text-sm hover:bg-gray-50">In Transit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Grid -->
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- Card 1: In Yard -->
+            <div class="bg-white rounded-3xl overflow-hidden card-shadow group transition duration-300 hover:-translate-y-2">
+                <div class="relative h-60">
+                    <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">In Sharjah Yard</span>
+                    <button class="absolute top-4 right-4 bg-white/90 p-2 rounded-full text-gray-700 hover:text-red-600 transition">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-extrabold text-blue-900">2022 Dodge Challenger</h3>
+                        <span class="bg-green-100 text-gray-600 text-[10px] px-2 py-1 rounded font-bold">RUN & DRIVE</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4 flex items-center gap-2">
+                         VIN: •••••••••••123456
+                    </p>
+                    <div class="grid grid-cols-3 gap-2 py-4 border-y border-gray-50 mb-6">
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Engine</p>
+                            <p class="text-xs font-bold text-blue-900">3.6L V6</p>
+                        </div>
+                        <div class="text-center border-x">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Mileage</p>
+                            <p class="text-xs font-bold text-blue-900">12,400 mi</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">LOT #</p>
+                            <p class="text-xs font-bold text-blue-900">3453454</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Price</p>
+                            <p class="text-2xl font-black text-blue-900 leading-none">AED 64,500</p>
+                        </div>
+                        <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-red-200">
+                            Reserve
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: In Transit -->
+            <div class="bg-white rounded-3xl overflow-hidden card-shadow group transition duration-300 hover:-translate-y-2 border border-gray-100">
+                <div class="relative h-60">
+                    <img src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90">
+                    <div class="absolute inset-0 bg-blue-900/10 group-hover:bg-transparent transition duration-500"></div>
+                    <span class="absolute top-4 left-4 bg-amber-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">In-Transit: 12 Days</span>
+                    <button class="absolute top-4 right-4 bg-white/90 p-2 rounded-full text-gray-700">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-extrabold text-blue-900">2023 Ford Mustang GT</h3>
+                        <span class="bg-green-100 text-gray-600 text-[10px] px-2 py-1 rounded font-bold">STARTS</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4 flex items-center gap-2">
+                        VIN: •••••••••••123456
+                    </p>
+                    <div class="grid grid-cols-3 gap-2 py-4 border-y border-gray-50 mb-6">
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Engine</p>
+                            <p class="text-xs font-bold text-blue-900">5.0L V8</p>
+                        </div>
+                        <div class="text-center border-x">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Mileage</p>
+                            <p class="text-xs font-bold text-blue-900">4,100 mi</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">LOT #</p>
+                            <p class="text-xs font-bold text-blue-900">4353454</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Price</p>
+                            <p class="text-2xl font-black text-blue-900 leading-none">AED 92,000</p>
+                        </div>
+                        <button class="bg-blue-900 hover:bg-black text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-blue-200">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: In Yard -->
+            <div class="bg-white rounded-3xl overflow-hidden card-shadow group transition duration-300 hover:-translate-y-2">
+                <div class="relative h-60">
+                    <img src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">In Sharjah Yard</span>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-extrabold text-blue-900">2021 Toyota Supra</h3>
+                        <span class="bg-red-100 text-gray-600 text-[10px] px-2 py-1 rounded font-bold">DOES NOT START</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4 flex items-center gap-2">
+                        VIN: •••••••••••123456
+                    </p>
+                    <div class="grid grid-cols-3 gap-2 py-4 border-y border-gray-50 mb-6">
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Engine</p>
+                            <p class="text-xs font-bold text-blue-900">3.0L</p>
+                        </div>
+                        <div class="text-center border-x">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Mileage</p>
+                            <p class="text-xs font-bold text-blue-900">28,000 mi</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">LOT #</p>
+                            <p class="text-xs font-bold text-blue-900">845323</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Price</p>
+                            <p class="text-2xl font-black text-blue-900 leading-none">AED 115,000</p>
+                        </div>
+                        <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-red-200">
+                            Reserve
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

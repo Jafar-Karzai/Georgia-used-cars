@@ -129,7 +129,7 @@ export default function ExpensesPage() {
 
   if (loading && expenses.length === 0) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="flex-1 space-y-6 p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -143,8 +143,8 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="flex-1 space-y-6 p-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Expense Management</h1>
           <p className="text-muted-foreground">
@@ -162,7 +162,7 @@ export default function ExpensesPage() {
 
       {/* Statistics Cards */}
       {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
@@ -232,7 +232,7 @@ export default function ExpensesPage() {
       )}
 
       {/* Filters and Search */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 flex gap-2">
           <Input
             placeholder="Search expenses..."
@@ -309,7 +309,7 @@ export default function ExpensesPage() {
         </div>
       ) : (
         <>
-          <div className="space-y-4 mb-6">
+          <div className="space-y-4">
             {expenses.map((expense) => (
               <Card key={expense.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">

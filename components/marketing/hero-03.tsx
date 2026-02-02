@@ -1,69 +1,95 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ArrowUpRight, PhoneCall } from 'lucide-react'
+import { ArrowRight, Phone } from 'lucide-react'
 import { HeroSearchCard } from './hero-search-card'
 
 export function Hero03() {
   return (
-    <section className="w-full relative">
-      {/* Text Content */}
-      <div className="container mx-auto px-4 sm:px-6 pt-16 pb-8 md:pt-20 md:pb-12">
-        {/* Heading and CTAs */}
-        <div className="text-center max-w-4xl mx-auto mb-12 md:mb-16">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight font-bold tracking-tight text-foreground">
-            Premium Salvage Vehicles,
-            <br />
-            <span className="text-primary">Expertly Imported</span>
-          </h1>
-          <p className="mt-6 text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto">
-            Georgia Used Cars sources quality vehicles from top auction houses and delivers a transparent, high‑touch buying experience in the UAE.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Button asChild size="lg" className="rounded-full text-base w-full sm:w-auto shadow-lg">
-              <Link href="/inventory">
-                Browse Inventory <ArrowUpRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-full text-base shadow-none w-full sm:w-auto">
-              <Link href="/contact">
-                <PhoneCall className="mr-2 h-5 w-5" /> Contact Sales
-              </Link>
-            </Button>
+    <section className="hero-gradient relative overflow-hidden">
+      {/* Dot Pattern Overlay - creates premium texture */}
+      <div
+        className="absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.4) 1px, transparent 0)',
+          backgroundSize: '32px 32px',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Gradient Orb - subtle ambient lighting effect */}
+      <div
+        className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full opacity-20 blur-3xl pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(59,130,246,0.5) 0%, transparent 70%)',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center py-16 md:py-20 lg:py-24">
+
+          {/* Left Column - Text Content */}
+          <div className="text-white animate-reveal">
+            {/* Subtitle Badge */}
+            <p className="text-precision-200 text-xs font-bold uppercase tracking-widest mb-4">
+              Direct from US &amp; Canada Auctions
+            </p>
+
+            {/* Main Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95] mb-6 text-balance">
+              Premium Salvage
+              <br />
+              <span className="text-precision-300">Delivered to UAE</span>
+            </h1>
+
+            {/* Description */}
+            <p className="text-precision-100 text-lg max-w-lg mb-8 leading-relaxed">
+              Curated selection from Copart and IAAI auctions. High-accuracy damage reports
+              for repair shops and project enthusiasts. Sold AS-IS.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                asChild
+                size="lg"
+                className="bg-action-600 hover:bg-action-700 text-white px-8 py-6 rounded-xl font-bold text-sm uppercase tracking-widest transition-all btn-precision shadow-lg shadow-action-600/25"
+              >
+                <Link href="/inventory">
+                  View Inventory
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="border-2 border-white/30 hover:border-white/60 bg-transparent text-white px-8 py-6 rounded-xl font-bold text-sm uppercase tracking-widest transition-all hover:bg-white/5"
+              >
+                <Link href="/contact">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Contact Sales
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Column - Search Card */}
+          <div className="animate-reveal" style={{ animationDelay: '0.15s' }}>
+            <HeroSearchCard variant="hero" />
           </div>
         </div>
       </div>
 
-      {/* Search Card and Hero Image Container */}
-      <div className="relative overflow-x-hidden">
-        {/* Search Card Container - with responsive max-width to create side margins */}
-        <div className="flex justify-center px-4 sm:px-6 pb-4 sm:pb-6 md:pb-8 relative z-20">
-          <div className="w-full max-w-[82%] sm:max-w-[85%] md:max-w-[80%]">
-            <HeroSearchCard />
-          </div>
-        </div>
-
-        {/* Hero Image Container - FULL WIDTH with deeper negative margin for intrusion effect */}
-        <div className="relative w-full -mt-12 sm:-mt-16 md:-mt-20 lg:-mt-24 pb-12 md:pb-20 z-0 px-4 sm:px-6 overflow-hidden">
-          <div className="relative w-full h-[500px] md:h-[650px] lg:h-[750px] rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-            {/* SVG background gradient */}
-            <Image src="/hero/vehicle-hero.svg" alt="Background gradient" fill priority className="object-cover" />
-            {/* Real car, transparent background */}
-            <Image
-              src="/hero/Side-View-Red-Ferrari-PNG-Clipart.png"
-              alt="Showcase vehicle"
-              fill
-              sizes="(max-width: 768px) 100vw, 1200px"
-              priority
-              className="object-contain object-center drop-shadow-2xl"
-            />
-            {/* Gradient overlay at bottom for better card visibility */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/10 via-transparent to-transparent" />
-          </div>
-        </div>
-      </div>
+      {/* Bottom gradient fade - smooth transition to next section */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background/10 to-transparent pointer-events-none"
+        aria-hidden="true"
+      />
     </section>
   )
 }

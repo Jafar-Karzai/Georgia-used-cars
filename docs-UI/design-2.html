@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Used Cars | Industrial Salvage Logistics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0A2463;
+            --primary-red: #D83121;
+            --industrial-gray: #1A1A1A;
+            --steel: #E2E8F0;
+            --stenciled-white: #F8FAFC;
+            --caution-yellow: #FACC15;
+            --freight-border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--industrial-gray);
+            color: var(--stenciled-white);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* Background Texture - Freight Steel */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(26, 26, 26, 0.97), rgba(26, 26, 26, 0.97)),
+                url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+            z-index: -1;
+        }
+
+        /* Structural Grid Overlay */
+        .structural-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background-size: 40px 40px;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+            z-index: 0;
+        }
+
+        header {
+            padding: 2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--primary-blue);
+            background: rgba(10, 36, 99, 0.1);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span:first-child { color: var(--primary-blue); background: var(--stenciled-white); padding: 0 8px; }
+        .logo span:last-child { color: var(--primary-red); border: 2px solid var(--primary-red); padding: 0 8px; }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        nav a {
+            color: var(--steel);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        nav a:hover { color: var(--primary-red); }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-size: 6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 0.9;
+            margin-bottom: 2rem;
+            letter-spacing: -4px;
+        }
+
+        .hero-title span {
+            color: transparent;
+            -webkit-text-stroke: 1px var(--steel);
+        }
+
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border: 1px solid var(--freight-border);
+            margin-bottom: 4rem;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .stat-item {
+            padding: 1.5rem;
+            border-right: 1px solid var(--freight-border);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .stat-item:last-child { border-right: none; }
+        .stat-label { font-size: 0.7rem; color: var(--primary-red); margin-bottom: 0.5rem; display: block; }
+        .stat-value { font-size: 1.2rem; font-weight: bold; }
+
+        /* CARDS - Freight Structuralism */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .car-card {
+            background: #222;
+            border: 1px solid var(--freight-border);
+            position: relative;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s;
+            overflow: hidden;
+        }
+
+        .car-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-blue);
+        }
+
+        .card-header {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(90deg, var(--primary-blue) 0%, transparent 100%);
+        }
+
+        .origin-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            background: var(--primary-red);
+            padding: 2px 8px;
+            font-weight: bold;
+        }
+
+        .vin-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .image-container {
+            height: 250px;
+            background-color: #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(0.2) contrast(1.1);
+            transition: scale 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .car-card:hover .image-container img {
+            scale: 1.1;
+        }
+
+        .as-is-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--caution-yellow);
+            color: var(--caution-yellow);
+            padding: 4px 10px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 2;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .card-body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 40px; height: 1px;
+            background: var(--primary-red);
+        }
+
+        .car-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .car-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .spec-item {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--steel);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spec-label {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .card-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid var(--freight-border);
+        }
+
+        .price-box {
+            padding: 1rem;
+            background: #111;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .price-box .currency { font-size: 0.7rem; color: var(--primary-red); }
+        .price-box .amount { font-size: 1.2rem; font-weight: bold; }
+
+        .action-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-red);
+        }
+
+        /* Stencil Elements */
+        .stencil-marking {
+            position: absolute;
+            font-family: 'Space Mono', monospace;
+            font-size: 8rem;
+            font-weight: 900;
+            color: rgba(255,255,255,0.02);
+            z-index: -1;
+            user-select: none;
+            bottom: -20px;
+            right: -20px;
+        }
+
+        .cargo-tag {
+            writing-mode: vertical-rl;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--caution-yellow);
+            color: black;
+            font-size: 0.6rem;
+            font-weight: bold;
+            padding: 10px 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .animate-entry {
+            animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--industrial-gray); }
+        ::-webkit-scrollbar-thumb { background: var(--primary-blue); }
+    </style>
+</head>
+<body>
+    <div class="structural-grid"></div>
+
+    <header>
+        <div class="logo">
+            <span>GEORGIA</span>
+            <span>USED CARS</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#">Inventory</a></li>
+                <li><a href="#">USA/Canada Logistics</a></li>
+                <li><a href="#">Auction Partners</a></li>
+                <li><a href="#">Contact Sharjah Hub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="hero-section animate-entry">
+            <h1 class="hero-title">
+                AUCTION DIRECT<br>
+                <span>FROM USA & CANADA</span>
+            </h1>
+            <p style="font-family: 'Space Mono', monospace; max-width: 600px; margin-bottom: 3rem; color: var(--steel);">
+                Industrial-scale salvage imports. Sold in AS-IS condition. We bridge the gap between North American auctions and UAE profitability.
+            </p>
+        </div>
+
+        <div class="stats-strip animate-entry" style="animation-delay: 0.2s;">
+            <div class="stat-item">
+                <span class="stat-label">HUB LOCATION</span>
+                <span class="stat-value">SHARJAH, UAE</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">WEEKLY IMPORTS</span>
+                <span class="stat-value">45+ UNITS</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">PARTNER AUCTIONS</span>
+                <span class="stat-value">COPART / IAAI</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">PORT OF ORIGIN</span>
+                <span class="stat-value">HOUSTON / SAVANNAH</span>
+            </div>
+        </div>
+
+        <div class="inventory-grid">
+            <!-- Card 1 -->
+            <div class="car-card animate-entry" style="animation-delay: 0.3s;">
+                <div class="card-header">
+                    <span class="origin-badge">COPART - TEXAS</span>
+                    <span class="vin-number">VIN: 1FA6P8CF...</span>
+                </div>
+                <div class="image-container">
+                    <div class="as-is-overlay">Condition: Collision Salvage</div>
+                    <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=800" alt="Mustang">
+                    <div class="cargo-tag">FREIGHT ID: GUC-9921</div>
+                </div>
+                <div class="card-body">
+                    <h2 class="car-title">2021 FORD MUSTANG GT</h2>
+                    <div class="car-specs">
+                        <div class="spec-item">
+                            <span class="spec-label">Damage Type</span>
+                            <span>Front End Impact</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Engine Status</span>
+                            <span>Runs & Drives</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Odometer</span>
+                            <span>24,500 Mi</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Transmission</span>
+                            <span>Automatic</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="price-box">
+                        <div class="currency">AED (AS-IS)</div>
+                        <div class="amount">64,500</div>
+                    </div>
+                    <button class="action-btn">
+                        VIEW LOGS
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+                <div class="stencil-marking">01</div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="car-card animate-entry" style="animation-delay: 0.4s;">
+                <div class="card-header">
+                    <span class="origin-badge">IAAI - NEW JERSEY</span>
+                    <span class="vin-number">VIN: JTMBV1FV...</span>
+                </div>
+                <div class="image-container">
+                    <div class="as-is-overlay">Condition: Water Damage</div>
+                    <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" alt="Porsche">
+                    <div class="cargo-tag">FREIGHT ID: GUC-8842</div>
+                </div>
+                <div class="card-body">
+                    <h2 class="car-title">2023 PORSCHE 911</h2>
+                    <div class="car-specs">
+                        <div class="spec-item">
+                            <span class="spec-label">Damage Type</span>
+                            <span>Freshwater Recovery</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Engine Status</span>
+                            <span>Non-Runner</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Odometer</span>
+                            <span>1,200 Mi</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Transmission</span>
+                            <span>PDK</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="price-box">
+                        <div class="currency">AED (AS-IS)</div>
+                        <div class="amount">215,000</div>
+                    </div>
+                    <button class="action-btn">
+                        VIEW LOGS
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+                <div class="stencil-marking">02</div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="car-card animate-entry" style="animation-delay: 0.5s;">
+                <div class="card-header" style="background: linear-gradient(90deg, var(--primary-red) 0%, transparent 100%);">
+                    <span class="origin-badge" style="background: var(--primary-blue);">COPART - TORONTO</span>
+                    <span class="vin-number">VIN: 5YJ3E1EB...</span>
+                </div>
+                <div class="image-container">
+                    <div class="as-is-overlay">Condition: Hail Damage</div>
+                    <img src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800" alt="Tesla">
+                    <div class="cargo-tag">FREIGHT ID: GUC-7710</div>
+                </div>
+                <div class="card-body">
+                    <h2 class="car-title">2022 TESLA MODEL 3</h2>
+                    <div class="car-specs">
+                        <div class="spec-item">
+                            <span class="spec-label">Damage Type</span>
+                            <span>Surface / Hail</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Battery Status</span>
+                            <span>Healthy (98%)</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Odometer</span>
+                            <span>15,800 Mi</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Transmission</span>
+                            <span>Direct Drive</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="price-box">
+                        <div class="currency">AED (AS-IS)</div>
+                        <div class="amount">89,000</div>
+                    </div>
+                    <button class="action-btn">
+                        VIEW LOGS
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+                <div class="stencil-marking">03</div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="margin-top: 4rem; padding: 4rem; border-top: 1px solid var(--freight-border); text-align: center;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 0.7rem; opacity: 0.5;">
+            GEORGIA USED CARS LOGISTICS DIV // SHARJAH INDUSTRIAL AREA 4 // UAE-NORTH-AMERICA FREIGHT CHAIN
+        </div>
+    </footer>
+</body>
+</html>

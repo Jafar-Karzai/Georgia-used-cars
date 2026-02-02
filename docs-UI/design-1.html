@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Used Cars | Sharjah Salvage Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0A58CA;
+            --primary-red: #D90429;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: #020408;
+            color: #f1f1f1;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .tectonic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(10, 88, 202, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(217, 4, 41, 0.1) 0%, transparent 50%);
+        }
+
+        .vitreous-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vitreous-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.05),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .vitreous-card:hover::before {
+            left: 100%;
+        }
+
+        .vitreous-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(10, 88, 202, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .tectonic-layer {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100px;
+            background: var(--primary-blue);
+            filter: blur(60px);
+            opacity: 0.2;
+            z-index: 0;
+            transition: 0.6s ease;
+        }
+
+        .vitreous-card:hover .tectonic-layer {
+            opacity: 0.5;
+            transform: scale(1.5);
+            background: var(--primary-red);
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        .flux-badge {
+            background: linear-gradient(135deg, var(--primary-blue), #002855);
+            padding: 4px 12px;
+            font-weight: 800;
+            font-style: italic;
+            text-transform: uppercase;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+        }
+
+        .flux-badge-red {
+            background: linear-gradient(135deg, var(--primary-red), #800010);
+        }
+
+        .nav-link {
+            position: relative;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--primary-red);
+            transition: 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 10;
+            background: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: -100px; }
+            100% { top: 100%; }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tectonic-header {
+            font-weight: 900;
+            font-size: clamp(3rem, 10vw, 8rem);
+            line-height: 0.8;
+            letter-spacing: -0.05em;
+            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .accent-line {
+            height: 1px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-red), transparent);
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="tectonic-bg"></div>
+    <div class="scanline"></div>
+
+    <!-- Header Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center backdrop-blur-md border-b border-white/5">
+        <div class="flex items-center gap-2">
+            <div class="w-10 h-10 bg-red-600 flex items-center justify-center font-black text-xl italic">G</div>
+            <span class="font-black text-xl tracking-tighter">GEORGIA <span class="text-blue-500">USED CARS</span></span>
+        </div>
+        <div class="hidden md:flex gap-12">
+            <a href="#" class="nav-link">Inventory</a>
+            <a href="#" class="nav-link">How we buy</a>
+            <a href="#" class="nav-link">Export Services</a>
+            <a href="#" class="nav-link">Contact</a>
+        </div>
+        <div>
+            <button class="bg-blue-600 hover:bg-red-600 transition-colors duration-500 px-6 py-2 font-bold text-xs uppercase tracking-widest">Login Portal</button>
+        </div>
+    </nav>
+
+    <main class="pt-32 px-8 max-w-7xl mx-auto">
+        <!-- Hero Section -->
+        <section class="mb-32">
+            <h1 class="tectonic-header mb-8">DIRECT AUCTION<br>IMPORTS.</h1>
+            <div class="grid md:grid-cols-2 gap-12 items-end">
+                <p class="text-zinc-400 text-lg max-w-md border-l-2 border-red-600 pl-6">
+                    Sourcing exclusively from <span class="text-white font-bold">Copart</span> and <span class="text-white font-bold">IAAI</span>. 
+                    Premium salvage vehicles delivered from USA & Canada to the heart of Sharjah. Sold <strong>AS IS</strong> for maximum profit potential.
+                </p>
+                <div class="flex gap-4">
+                    <div class="flex flex-col">
+                        <span class="mono text-zinc-500 uppercase">Current Inventory</span>
+                        <span class="text-3xl font-black italic">142 UNITS</span>
+                    </div>
+                    <div class="accent-line w-24 self-center"></div>
+                    <div class="flex flex-col">
+                        <span class="mono text-zinc-500 uppercase">Next Shipment</span>
+                        <span class="text-3xl font-black italic">4 DAYS</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inventory Grid -->
+        <section class="mb-20">
+            <div class="flex justify-between items-end mb-12">
+                <h2 class="text-4xl font-black italic uppercase tracking-tighter">Featured Inventory</h2>
+                <div class="flex gap-2">
+                    <span class="mono px-3 py-1 bg-white/5 border border-white/10">SHARJAH YARD</span>
+                    <span class="mono px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-blue-400 uppercase">In Transit</span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Vehicle Card 1 -->
+                <div class="vitreous-card group p-4">
+                    <div class="tectonic-layer"></div>
+                    <div class="relative mb-6 overflow-hidden aspect-[16/10]">
+                        <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800" alt="Vehicle" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700">
+                        <div class="absolute top-0 left-0 p-4 w-full flex justify-between items-start">
+                            <div class="flux-badge text-[10px]">IAAI SECURED</div>
+                            <div class="bg-black/80 backdrop-blur-md p-2 text-right">
+                                <p class="mono text-[10px] text-zinc-400">STATUS</p>
+                                <p class="text-xs font-bold text-red-500">ACCIDENT / AS-IS</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4 relative z-10">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-xl font-black leading-none mb-1">2023 BMW M4 COMPETITION</h3>
+                                <p class="mono text-zinc-500 uppercase">Lot #88492021 • USA Branch</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-white/5 p-3 border border-white/5">
+                                <p class="mono text-[9px] text-zinc-500 uppercase">Primary Damage</p>
+                                <p class="text-sm font-bold uppercase">Front End</p>
+                            </div>
+                            <div class="bg-white/5 p-3 border border-white/5">
+                                <p class="mono text-[9px] text-zinc-500 uppercase">Engine/Drive</p>
+                                <p class="text-sm font-bold uppercase">Run & Drive</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                            <div>
+                                <p class="mono text-[10px] text-zinc-500 uppercase leading-none mb-1">Current Bid (AED)</p>
+                                <span class="text-2xl font-black text-blue-500">142,500</span>
+                            </div>
+                            <button class="bg-white text-black px-4 py-2 text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-colors">Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Card 2 -->
+                <div class="vitreous-card group p-4">
+                    <div class="tectonic-layer"></div>
+                    <div class="relative mb-6 overflow-hidden aspect-[16/10]">
+                        <img src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=800" alt="Vehicle" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700">
+                        <div class="absolute top-0 left-0 p-4 w-full flex justify-between items-start">
+                            <div class="flux-badge text-[10px]">COPART SECURED</div>
+                            <div class="bg-black/80 backdrop-blur-md p-2 text-right">
+                                <p class="mono text-[10px] text-zinc-400">STATUS</p>
+                                <p class="text-xs font-bold text-blue-500">IN SHARJAH YARD</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4 relative z-10">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-xl font-black leading-none mb-1">2022 PORSCHE 911 CARRERA</h3>
+                                <p class="mono text-zinc-500 uppercase">Lot #44921003 • Canada Branch</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-white/5 p-3 border border-white/5">
+                                <p class="mono text-[9px] text-zinc-500 uppercase">Primary Damage</p>
+                                <p class="text-sm font-bold uppercase">Rear Collision</p>
+                            </div>
+                            <div class="bg-white/5 p-3 border border-white/5">
+                                <p class="mono text-[9px] text-zinc-500 uppercase">Odometer</p>
+                                <p class="text-sm font-bold uppercase">12,400 KM</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                            <div>
+                                <p class="mono text-[10px] text-zinc-500 uppercase leading-none mb-1">Price (AED)</p>
+                                <span class="text-2xl font-black text-blue-500">285,000</span>
+                            </div>
+                            <button class="bg-white text-black px-4 py-2 text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-colors">Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Card 3 -->
+                <div class="vitreous-card group p-4">
+                    <div class="tectonic-layer"></div>
+                    <div class="relative mb-6 overflow-hidden aspect-[16/10]">
+                        <img src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800" alt="Vehicle" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700">
+                        <div class="absolute top-0 left-0 p-4 w-full flex justify-between items-start">
+                            <div class="flux-badge text-[10px]">IAAI SECURED</div>
+                            <div class="bg-black/80 backdrop-blur-md p-2 text-right">
+                                <p class="mono text-[10px] text-zinc-400">STATUS</p>
+                                <p class="text-xs font-bold text-red-500">HEAVY DAMAGE</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4 relative z-10">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-xl font-black leading-none mb-1">2024 TOYOTA SUPRA</h3>
+                                <p class="mono text-zinc-500 uppercase">Lot #11288349 • USA Branch</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-white/5 p-3 border border-white/5">
+                                <p class="mono text-[9px] text-zinc-500 uppercase">Primary Damage</p>
+                                <p class="text-sm font-bold uppercase">Side Swipe</p>
+                            </div>
+                            <div class="bg-white/5 p-3 border border-white/5">
+                                <p class="mono text-[9px] text-zinc-500 uppercase">Engine/Drive</p>
+                                <p class="text-sm font-bold uppercase">Starts & Idles</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                            <div>
+                                <p class="mono text-[10px] text-zinc-500 uppercase leading-none mb-1">Current Bid (AED)</p>
+                                <span class="text-2xl font-black text-blue-500">89,000</span>
+                            </div>
+                            <button class="bg-white text-black px-4 py-2 text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-colors">Details</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="reveal mb-32 relative py-24 overflow-hidden">
+            <div class="absolute inset-0 bg-blue-600/5 backdrop-blur-3xl border border-white/10 -skew-y-2"></div>
+            <div class="relative z-10 text-center px-4">
+                <h2 class="text-5xl font-black italic mb-6">READY TO SHIP TO Jebel Ali?</h2>
+                <p class="mono text-blue-400 mb-8 tracking-widest uppercase">Direct Auction Access • Customs Clearance • Worldwide Logistics</p>
+                <div class="flex flex-wrap justify-center gap-6">
+                    <button class="bg-red-600 hover:bg-white hover:text-black transition-all duration-500 px-10 py-4 font-black text-sm uppercase tracking-widest">Register as Buyer</button>
+                    <button class="border border-white/20 hover:border-blue-500 px-10 py-4 font-black text-sm uppercase tracking-widest">View Auction Calendar</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-white/5 py-20 px-8">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
+            <div class="col-span-2">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="w-8 h-8 bg-blue-600 flex items-center justify-center font-black italic">G</div>
+                    <span class="font-black text-lg tracking-tighter">GEORGIA USED CARS</span>
+                </div>
+                <p class="text-zinc-500 max-w-sm text-sm">
+                    Sharjah Industrial Area 4, UAE. Providing the most transparent salvage car importation service in the Emirates. Direct from USA/Canada auctions.
+                </p>
+            </div>
+            <div>
+                <h4 class="mono text-white mb-6 uppercase font-bold">Quick Links</h4>
+                <ul class="text-zinc-500 text-sm space-y-4 font-bold">
+                    <li><a href="#" class="hover:text-blue-500">Live Inventory</a></li>
+                    <li><a href="#" class="hover:text-blue-500">Shipping Tracker</a></li>
+                    <li><a href="#" class="hover:text-blue-500">Auction Guides</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="mono text-white mb-6 uppercase font-bold">Contact</h4>
+                <ul class="text-zinc-500 text-sm space-y-4 font-bold">
+                    <li>SHARJAH, UAE</li>
+                    <li class="text-blue-500">+971 6 XXX XXXX</li>
+                    <li>INFO@GEORGIAUSED.AE</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 flex justify-between items-center text-[10px] mono text-zinc-600">
+            <span>© 2024 GEORGIA USED CARS. SHARJAH BRANCH.</span>
+            <span class="text-red-900">SYSTEM STATUS: OPTIMAL</span>
+        </div>
+    </footer>
+
+    <script>
+        // Reveal animation on scroll
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Subtle mouse parallax for vitreous cards
+        document.querySelectorAll('.vitreous-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px) scale(1.02)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)`;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -591,3 +591,9 @@ A unified digital platform that addresses every aspect of your business operatio
 ---
 
 *This comprehensive platform represents the future of Georgia Used Cars - a professional, efficient, and scalable solution that positions your business as the leading salvage vehicle dealer in the UAE market.*
+
+
+ADD FURTHER FORM THE MEETING ON 7TH DECEMBER; 
+1. Payment processing for reserving cars with a deposit. 
+2. Show the last 6 digits of the VIN number only on the public facing website, the rest 11 starting digits should be hidden. 
+3. Makes sure payments coming from different sources are being tracked properly and sent to proper accounts, cash, bank transfer. 

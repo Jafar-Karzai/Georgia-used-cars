@@ -17,27 +17,14 @@ interface VehicleCardProps {
 }
 
 export function VehicleCard({ vehicle, onEdit, onViewDetails, className }: VehicleCardProps) {
-  const getStatusColor = (status: string) => {
-    const statusColors: Record<string, string> = {
-      'auction_won': 'bg-blue-100 text-blue-800',
-      'at_yard': 'bg-green-100 text-green-800',
-      'ready_for_sale': 'bg-purple-100 text-purple-800',
-      'sold': 'bg-gray-100 text-gray-800',
-      'in_transit': 'bg-yellow-100 text-yellow-800',
-      'customs_clearance': 'bg-orange-100 text-orange-800'
-    }
-    return statusColors[status] || 'bg-gray-100 text-gray-800'
-  }
-
   const formatStatus = (status: string) => {
     if (!status) return ''
-    return status.split('_').map(word => 
+    return status.split('_').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ')
   }
 
   const formatPrice = (price: number | null | undefined, currency: string | null | undefined) => {
-    // Only show price if it exists and is greater than 0
     if (!price || price <= 0) return 'Contact for Price'
     return new Intl.NumberFormat('en-AE', {
       style: 'currency',
@@ -48,132 +35,163 @@ export function VehicleCard({ vehicle, onEdit, onViewDetails, className }: Vehic
   }
 
   // Get primary photo or first photo
-  const primaryPhoto = vehicle.vehicle_photos?.find(photo => photo.is_primary) 
+  const primaryPhoto = vehicle.vehicle_photos?.find(photo => photo.is_primary)
     || vehicle.vehicle_photos?.[0]
 
   return (
-    <Card className={`hover:shadow-lg transition-shadow ${className}`}>
+    <Card className={`overflow-hidden hover:shadow-md transition-shadow border-border ${className}`}>
       {/* Vehicle Image */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-t-lg">
+      <div className="relative aspect-video w-full overflow-hidden bg-muted">
         {primaryPhoto ? (
           <img
             src={primaryPhoto.url}
             alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-            className="h-full w-full object-cover transition-transform hover:scale-105"
+            className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-muted">
+          <div className="flex h-full w-full items-center justify-center">
             <div className="text-center">
-              <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">No photo</p>
+              <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground/40" />
+              <p className="mt-1 text-xs text-muted-foreground">No image</p>
             </div>
           </div>
         )}
-        
-        {/* Status badge overlay */}
-        <div className="absolute top-2 right-2 left-2 flex flex-wrap gap-2 justify-end">
-          <Badge className={getStatusColor(vehicle.current_status)}>
+
+        {/* Compact status badges overlay */}
+        <div className="absolute top-2 left-2 right-2 flex gap-1.5 justify-between items-start">
+          <Badge variant="secondary" className="text-xs font-medium shadow-sm">
             {formatStatus(vehicle.current_status)}
           </Badge>
 
-          {/* Visibility indicator - only show if is_public field exists */}
           {vehicle.is_public !== undefined && (
-            vehicle.is_public ? (
-              <Badge className="bg-green-100 text-green-800 border-green-200">
-                <Globe className="h-3 w-3 mr-1" />
-                Public
-              </Badge>
-            ) : (
-              <Badge className="bg-gray-100 text-gray-800 border-gray-200">
-                <EyeOff className="h-3 w-3 mr-1" />
-                Private
-              </Badge>
-            )
+            <Badge variant={vehicle.is_public ? "default" : "outline"} className="text-xs shadow-sm">
+              {vehicle.is_public ? (
+                <>
+                  <Globe className="h-3 w-3 mr-1" />
+                  Public
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-3 w-3 mr-1" />
+                  Private
+                </>
+              )}
+            </Badge>
           )}
         </div>
       </div>
 
-      <CardHeader className="pb-3">
+      {/* Card Content */}
+      <div className="p-4 space-y-3">
+        {/* Vehicle Title */}
         <div>
-          <h3 className="font-semibold text-lg">
+          <h3 className="font-semibold text-base leading-tight">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </h3>
           {vehicle.trim && (
-            <p className="text-sm text-muted-foreground">{vehicle.trim}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{vehicle.trim}</p>
           )}
         </div>
-        <p className="text-sm font-mono text-muted-foreground">
-          VIN: {vehicle.vin}
-        </p>
-      </CardHeader>
 
-      <CardContent className="space-y-3">
-        {/* Arrival Countdown - Prominent placement */}
+        {/* VIN */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+          <span className="font-normal">VIN:</span>
+          <span className="truncate">{vehicle.vin}</span>
+        </div>
+
+        {/* Arrival Status - Prominent */}
         {vehicle.expected_arrival_date && (
-          <div className="-mt-1">
-            <ArrivalCountdown
-              expectedDate={vehicle.expected_arrival_date}
-              actualDate={vehicle.actual_arrival_date}
-              variant="badge"
-            />
-          </div>
+          <ArrivalCountdown
+            expectedDate={vehicle.expected_arrival_date}
+            actualDate={vehicle.actual_arrival_date}
+            variant="badge"
+          />
         )}
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <Car className="h-4 w-4 text-muted-foreground" />
-            <span>{vehicle.auction_house}</span>
+        {/* Key Information Grid */}
+        <div className="space-y-2 text-sm pt-1">
+          {/* Price - Most important, shown prominently */}
+          <div className="flex items-center justify-between py-1.5 border-y border-border">
+            <span className="text-muted-foreground">Price</span>
+            <span className="font-semibold">{formatPrice(vehicle.sale_price, vehicle.sale_currency)}</span>
           </div>
-          
-          {vehicle.current_location && (
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="truncate">{vehicle.current_location}</span>
+
+          {/* Other details in compact rows */}
+          <div className="space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Car className="h-3.5 w-3.5" />
+                <span>Auction</span>
+              </div>
+              <span className="font-medium">{vehicle.auction_house}</span>
             </div>
-          )}
-          
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span>{formatPrice(vehicle.sale_price, vehicle.sale_currency)}</span>
+
+            {vehicle.sale_date && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span>Sale Date</span>
+                </div>
+                <span className="font-medium">{new Date(vehicle.sale_date).toLocaleDateString()}</span>
+              </div>
+            )}
+
+            {vehicle.current_location && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>Location</span>
+                </div>
+                <span className="font-medium truncate ml-2">{vehicle.current_location}</span>
+              </div>
+            )}
+
+            {vehicle.primary_damage && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Wrench className="h-3.5 w-3.5" />
+                  <span>Damage</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">
+                    {vehicle.primary_damage}
+                    {vehicle.secondary_damage && `, ${vehicle.secondary_damage}`}
+                  </span>
+                  {vehicle.damage_severity && (
+                    <Badge variant="outline" className="text-xs py-0 h-5 ml-1">
+                      {vehicle.damage_severity.replace('_', ' ')}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-          
-          {vehicle.sale_date && (
-            <div className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-muted-foreground" />
-              <span>{new Date(vehicle.sale_date).toLocaleDateString()}</span>
-            </div>
-          )}
         </div>
 
-        {vehicle.primary_damage && (
-          <div className="flex items-center gap-2">
-            <Wrench className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">
-              {vehicle.primary_damage}
-              {vehicle.secondary_damage && `, ${vehicle.secondary_damage}`}
-            </span>
-          </div>
-        )}
-
-        {vehicle.damage_severity && (
-          <Badge variant="outline" className="w-fit">
-            {vehicle.damage_severity.replace('_', ' ')}
-          </Badge>
-        )}
-      </CardContent>
-
-      <CardFooter className="pt-3 gap-2">
-        {onViewDetails && (
-          <Button variant="outline" size="sm" onClick={() => onViewDetails(vehicle)}>
-            View Details
-          </Button>
-        )}
-        {onEdit && (
-          <Button size="sm" onClick={() => onEdit(vehicle)}>
-            Edit
-          </Button>
-        )}
-      </CardFooter>
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-2">
+          {onViewDetails && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onViewDetails(vehicle)}
+              className="flex-1"
+            >
+              View Details
+            </Button>
+          )}
+          {onEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(vehicle)}
+              className="flex-1"
+            >
+              Edit
+            </Button>
+          )}
+        </div>
+      </div>
     </Card>
   )
 }

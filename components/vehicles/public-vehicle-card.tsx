@@ -3,19 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
-import {
-  Gauge,
-  Fuel,
-  Cog,
-  Car,
-  ChevronRight,
-  CheckCircle,
-  Clock
-} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Car } from 'lucide-react'
 import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
-import { getPublicStatusLabel, getPublicStatusBadgeStyle } from '@/lib/utils/vehicle-status'
+import { getPublicStatusLabel } from '@/lib/utils/vehicle-status'
 import type { VehicleStatus } from '@/types/database'
 
 interface PublicVehicle {
@@ -23,6 +14,8 @@ interface PublicVehicle {
   year: number
   make: string
   model: string
+  vin?: string
+  lot_number?: string
   mileage?: number
   fuel_type?: string
   transmission?: string
@@ -35,6 +28,7 @@ interface PublicVehicle {
   expected_arrival_date?: string
   actual_arrival_date?: string
   run_and_drive?: boolean
+  primary_damage?: string
   vehicle_photos?: Array<{
     url: string
     is_primary: boolean
@@ -44,6 +38,7 @@ interface PublicVehicle {
 interface PublicVehicleCardProps {
   vehicle: PublicVehicle
   isUAE?: boolean | null
+  isAuthenticated?: boolean
   priority?: boolean
   className?: string
 }
@@ -51,11 +46,11 @@ interface PublicVehicleCardProps {
 export function PublicVehicleCard({
   vehicle,
   isUAE = null,
+  isAuthenticated = false,
   priority = false,
   className = ''
 }: PublicVehicleCardProps) {
   const [isVisible, setIsVisible] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
   // Intersection Observer for scroll-in animation
@@ -77,14 +72,15 @@ export function PublicVehicleCard({
     return () => observer.disconnect()
   }, [])
 
-  const formatCurrency = (amount: number | string) => {
-    if (typeof amount === 'string') return amount
-    return new Intl.NumberFormat('en-AE', {
-      style: 'currency',
-      currency: 'AED',
+  const formatPrice = (amount: number | string): { currency: string; amount: string; isContactPrice: boolean } => {
+    if (typeof amount === 'string') {
+      return { currency: '', amount: amount, isContactPrice: true }
+    }
+    const formatted = new Intl.NumberFormat('en-AE', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
+    return { currency: 'AED', amount: formatted, isContactPrice: false }
   }
 
   // Calculate display price based on vehicle's sale type and user location
@@ -111,228 +107,166 @@ export function PublicVehicleCard({
     }
   }
 
-  // Get VAT note for display
-  const getVatNote = () => {
-    if (!vehicle.sale_price || vehicle.sale_price <= 0) return null
-
-    const saleType = vehicle.sale_type || 'local_and_export'
-
-    if (saleType === 'export_only') {
-      return 'VAT free'
-    }
-
-    if (saleType === 'local_only') {
-      return 'Includes 5% VAT'
-    }
-
-    if (isUAE) {
-      return 'Includes 5% VAT (UAE)'
-    } else {
-      return 'VAT free (Export)'
-    }
-  }
-
   const primaryPhoto = vehicle.vehicle_photos?.find(p => p.is_primary) || vehicle.vehicle_photos?.[0]
   const displayPrice = getDisplayPrice()
-  const vatNote = getVatNote()
+  const priceFormatted = formatPrice(displayPrice)
   const statusLabel = getPublicStatusLabel(vehicle.current_status as VehicleStatus)
-  const statusStyle = getPublicStatusBadgeStyle(vehicle.current_status as VehicleStatus)
+  const hasPrice = !priceFormatted.isContactPrice
+
+  // Mask VIN for non-authenticated users (show last 6 digits only)
+  const displayVin = vehicle.vin
+    ? isAuthenticated
+      ? vehicle.vin
+      : `•••••••••••${vehicle.vin.slice(-6)}`
+    : null
+
+  // Check if vehicle is in transit
+  const isInTransit = ['in_transit', 'at_auction', 'purchased'].includes(vehicle.current_status)
+
+  // Get run/drive status color
+  const getRunDriveStatus = () => {
+    if (vehicle.run_and_drive === true) {
+      return { label: 'Run & Drive', color: 'text-success', dot: 'bg-success' }
+    }
+    if (vehicle.run_and_drive === false) {
+      return { label: 'Does Not Start', color: 'text-action-600', dot: 'bg-action-600' }
+    }
+    return null
+  }
+
+  const runDriveStatus = getRunDriveStatus()
 
   return (
     <div
       ref={cardRef}
       className={`
-        group
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}
-        transition-all duration-500 ease-out
+        transition-all duration-500 ease-reveal
         ${className}
       `}
-      style={{ transitionDelay: isVisible ? '0ms' : '0ms' }}
     >
-      <Card className="overflow-hidden border border-border/50 hover:border-border transition-all duration-300 hover:shadow-2xl h-full flex flex-col">
-        <Link
-          href={`/inventory/${vehicle.id}`}
-          className="flex flex-col h-full"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          {/* Image Section - Bold & Dramatic */}
-          <div className="relative bg-muted aspect-[4/3] overflow-hidden">
+      <Link href={`/inventory/${vehicle.id}`} className="block">
+        <div className="alumina-surface rounded-2xl border border-border overflow-hidden card-hover h-full">
+          {/* Image Section */}
+          <div className="relative h-48 md:h-56 overflow-hidden">
             {primaryPhoto?.url ? (
-              <>
-                <Image
-                  src={primaryPhoto.url}
-                  alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                  fill
-                  priority={priority}
-                  className={`
-                    object-cover object-center
-                    transition-transform duration-500 ease-out
-                    ${isHovered ? 'scale-105' : 'scale-100'}
-                  `}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-                {/* Gradient overlay for badge legibility */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent pointer-events-none" />
-              </>
+              <Image
+                src={primaryPhoto.url}
+                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                fill
+                priority={priority}
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-muted">
-                <Car className="h-20 w-20 text-muted-foreground/30" />
+                <Car className="h-16 w-16 text-muted-foreground/30" />
               </div>
             )}
 
-            {/* Glassmorphism Status Badge - Top Right */}
-            <div className="absolute top-3 right-3 left-3 flex flex-wrap gap-2 justify-end">
-              {statusLabel && (
-                <Badge
-                  className={`
-                    backdrop-blur-md bg-white/90 dark:bg-black/90
-                    shadow-lg
-                    transition-all duration-300
-                    ${statusStyle}
-                    ${isHovered ? 'scale-105' : 'scale-100'}
-                  `}
-                >
-                  {statusLabel}
-                </Badge>
-              )}
-            </div>
-
-            {/* Hover Overlay with CTA */}
-            <div
-              className={`
-                absolute inset-0 bg-black/40 backdrop-blur-sm
-                flex items-center justify-center
-                transition-opacity duration-300
-                ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-              `}
-            >
-              <div className="text-white text-lg font-semibold flex items-center gap-2 transform transition-transform duration-300">
-                View Details
-                <ChevronRight className={`h-5 w-5 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`} />
+            {/* Status Tag - Top Left */}
+            {statusLabel && (
+              <div
+                className={`absolute top-3 left-3 status-tag ${
+                  isInTransit ? 'bg-precision-600' : 'bg-success'
+                } text-white`}
+              >
+                {statusLabel}
               </div>
+            )}
+
+            {/* Run & Drive Badge - Top Right */}
+            {runDriveStatus && (
+              <div className="absolute top-3 right-3 frosted-panel px-2 py-1 rounded-lg">
+                <span className={`text-[9px] font-bold uppercase flex items-center gap-1 ${runDriveStatus.color}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${runDriveStatus.dot}`} />
+                  {runDriveStatus.label}
+                </span>
+              </div>
+            )}
+
+            {/* Lot Number or ETA - Bottom Left */}
+            <div className="absolute bottom-3 left-3 frosted-panel px-2 py-1 rounded-lg">
+              {isInTransit && vehicle.expected_arrival_date ? (
+                <ArrivalCountdown
+                  expectedDate={vehicle.expected_arrival_date}
+                  actualDate={vehicle.actual_arrival_date}
+                  variant="badge"
+                />
+              ) : vehicle.lot_number ? (
+                <span className="text-[9px] font-bold text-primary uppercase font-mono">
+                  Lot #{vehicle.lot_number}
+                </span>
+              ) : null}
             </div>
           </div>
 
           {/* Content Section */}
-          <div className="p-6 flex flex-col flex-grow">
-            {/* Vehicle Title Section - Fixed Height for consistency */}
-            <div className="min-h-[88px] mb-4">
-              {/* Vehicle Title - Bold Typography with 2-line max */}
-              <h3 className="text-2xl font-bold text-foreground mb-3 line-clamp-2 leading-tight">
-                {vehicle.year} {vehicle.make} {vehicle.model}
-              </h3>
+          <div className="p-5 relative z-10">
+            {/* Title */}
+            <h3 className="text-base font-extrabold leading-tight mb-1 line-clamp-1">
+              {vehicle.year} {vehicle.make} {vehicle.model}
+            </h3>
 
-              {/* Trust Signals & Arrival - Consistent Badge Styling */}
-              {(vehicle.expected_arrival_date || vehicle.run_and_drive) && (
-                <div className="flex flex-wrap items-center gap-2">
-                  {vehicle.expected_arrival_date && (
-                    <ArrivalCountdown
-                      expectedDate={vehicle.expected_arrival_date}
-                      actualDate={vehicle.actual_arrival_date}
-                      variant="badge"
-                    />
-                  )}
-                  {vehicle.run_and_drive && (
-                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Run & Drive
-                    </Badge>
-                  )}
+            {/* VIN */}
+            {displayVin && (
+              <p className="text-[10px] font-mono text-muted-foreground mb-4">
+                VIN: {displayVin}
+              </p>
+            )}
+
+            {/* Specs */}
+            <div className="space-y-1.5 mb-4">
+              {vehicle.primary_damage && (
+                <div className="flex justify-between text-xs spec-line pb-1.5">
+                  <span className="text-muted-foreground">Damage</span>
+                  <span className="font-bold text-action-600">{vehicle.primary_damage}</span>
                 </div>
               )}
-            </div>
-
-            {/* Specs Grid - Accessible Icons - Fixed Height */}
-            <div className="grid grid-cols-2 gap-3 py-4 mb-4 border-y border-border/40 min-h-[88px]">
               {vehicle.mileage && (
-                <div className="flex items-center gap-2">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Gauge className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs text-muted-foreground">Mileage</span>
-                    <span className="text-sm font-semibold text-foreground truncate">
-                      {vehicle.mileage.toLocaleString()} mi
-                    </span>
-                  </div>
+                <div className="flex justify-between text-xs spec-line pb-1.5">
+                  <span className="text-muted-foreground">Mileage</span>
+                  <span className="font-bold">{vehicle.mileage.toLocaleString()} Mi</span>
                 </div>
               )}
               {vehicle.transmission && (
-                <div className="flex items-center gap-2">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Cog className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs text-muted-foreground">Trans.</span>
-                    <span className="text-sm font-semibold text-foreground truncate">
-                      {vehicle.transmission}
-                    </span>
-                  </div>
-                </div>
-              )}
-              {vehicle.fuel_type && (
-                <div className="flex items-center gap-2">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Fuel className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs text-muted-foreground">Fuel</span>
-                    <span className="text-sm font-semibold text-foreground truncate">
-                      {vehicle.fuel_type}
-                    </span>
-                  </div>
-                </div>
-              )}
-              {vehicle.body_style && (
-                <div className="flex items-center gap-2">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Car className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs text-muted-foreground">Body</span>
-                    <span className="text-sm font-semibold text-foreground truncate">
-                      {vehicle.body_style}
-                    </span>
-                  </div>
+                <div className="flex justify-between text-xs spec-line pb-1.5">
+                  <span className="text-muted-foreground">Trans</span>
+                  <span className="font-bold">{vehicle.transmission}</span>
                 </div>
               )}
             </div>
 
-            {/* Price Section - Clear & Prominent */}
-            <div className="pt-4 border-t border-border/40">
-              <div className="flex items-end justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    {vehicle.sale_price && vehicle.sale_price > 0 ? 'Sale Price' : 'Pricing'}
+            {/* Price & Action */}
+            <div className="flex justify-between items-center pt-4 border-t border-border">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">Price</p>
+                {priceFormatted.isContactPrice ? (
+                  <p className="text-sm font-semibold text-foreground">Contact</p>
+                ) : (
+                  <p className="text-2xl font-black text-primary font-mono">
+                    {priceFormatted.amount} <span className="text-sm">{priceFormatted.currency}</span>
                   </p>
-                  <p className="text-3xl font-bold text-primary mb-1 truncate">
-                    {formatCurrency(displayPrice)}
-                  </p>
-                  {vatNote && (
-                    <p className="text-xs text-amber-600 font-medium flex items-center gap-1">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      {vatNote}
-                    </p>
-                  )}
-                </div>
-                <div className={`
-                  ml-4 flex-shrink-0 w-10 h-10 rounded-full
-                  bg-primary/10 flex items-center justify-center
-                  transition-all duration-300
-                  ${isHovered ? 'bg-primary scale-110' : ''}
-                `}>
-                  <ChevronRight
-                    className={`h-5 w-5 transition-all duration-300 ${
-                      isHovered ? 'text-white translate-x-0.5' : 'text-primary'
-                    }`}
-                  />
-                </div>
+                )}
               </div>
+              <Button
+                size="card"
+                className={`btn-precision ${
+                  isInTransit
+                    ? 'bg-primary hover:bg-primary/90'
+                    : 'bg-action-600 hover:bg-action-700'
+                }`}
+                onClick={(e) => e.stopPropagation()}
+                asChild
+              >
+                <Link href={hasPrice ? `/inventory/${vehicle.id}` : `/contact?vehicle=${vehicle.id}`}>
+                  {isInTransit ? 'Reserve Now' : 'View Details'}
+                </Link>
+              </Button>
             </div>
           </div>
-        </Link>
-      </Card>
+        </div>
+      </Link>
     </div>
   )
 }

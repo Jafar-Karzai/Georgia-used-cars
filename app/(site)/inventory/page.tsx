@@ -22,7 +22,9 @@ import {
   Gauge,
   Fuel,
   Cog,
-  Home
+  Home,
+  CheckCircle,
+  MessageCircle
 } from 'lucide-react'
 import { SiteNavbar } from '@/components/layout/site-navbar'
 import { getPublicStatusLabel, getPublicStatusBadgeStyle, type StatusGroup, getStatusesForGroup } from '@/lib/utils/vehicle-status'
@@ -94,11 +96,20 @@ function InventoryContent() {
     arrived: 0,
     arriving_soon: 0
   })
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const itemsPerPage = 12
 
   // Get current status group from URL
   const currentStatusGroup: StatusGroup = (searchParams?.get('statusGroup') as StatusGroup) || 'all'
+
+  // Check authentication status from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mockAuth = localStorage.getItem('mockAuth')
+      setIsAuthenticated(mockAuth === 'true')
+    }
+  }, [])
 
   // Detect if user is in UAE
   useEffect(() => {
@@ -227,14 +238,15 @@ function InventoryContent() {
     setCurrentPage(1)
   }
 
-  const formatCurrency = (amount: number | string) => {
-    if (typeof amount === 'string') return amount
-    return new Intl.NumberFormat('en-AE', {
-      style: 'currency',
-      currency: 'AED',
+  const formatPrice = (amount: number | string): { currency: string; amount: string; isContactPrice: boolean } => {
+    if (typeof amount === 'string') {
+      return { currency: '', amount: amount, isContactPrice: true }
+    }
+    const formatted = new Intl.NumberFormat('en-AE', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
+    return { currency: 'AED', amount: formatted, isContactPrice: false }
   }
 
   // Calculate display price based on vehicle's sale type and user location
@@ -525,113 +537,159 @@ function InventoryContent() {
           </div>
         ) : vehicles.length > 0 ? (
           <div className={`grid gap-6 ${viewMode === 'grid' ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
-            {vehicles.map((vehicle) => (
-              <Card key={vehicle.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-border/50 flex flex-col">
-                <Link href={`/inventory/${vehicle.id}`} className="flex flex-col h-full">
-                  {/* Fixed Height Image Container */}
-                  <div className="relative bg-muted h-60 flex-shrink-0">
-                    {vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url ? (
-                      <img
-                        src={vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url || ''}
-                        alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                        className="w-full h-full object-cover object-center"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-muted">
-                        <Car className="h-16 w-16 text-muted-foreground/50" />
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 left-3 flex flex-wrap gap-2 justify-end">
-                      {getPublicStatusLabel(vehicle.current_status as VehicleStatus) && (
-                        <Badge className={`border font-semibold shadow-sm ${getPublicStatusBadgeStyle(vehicle.current_status as VehicleStatus)}`}>
-                          {getPublicStatusLabel(vehicle.current_status as VehicleStatus)}
-                        </Badge>
+            {vehicles.map((vehicle) => {
+              const priceFormatted = formatPrice(getDisplayPrice(vehicle))
+              const hasPrice = !priceFormatted.isContactPrice
+              // Mask VIN for non-authenticated users (show last 6 digits only)
+              const displayVin = vehicle.vin
+                ? isAuthenticated
+                  ? vehicle.vin
+                  : `•••••••••••${vehicle.vin.slice(-6)}`
+                : null
+              return (
+                <Card key={vehicle.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-border/50 flex flex-col">
+                  <Link href={`/inventory/${vehicle.id}`} className="flex flex-col h-full">
+                    {/* Fixed Height Image Container */}
+                    <div className="relative bg-muted h-60 flex-shrink-0 overflow-hidden">
+                      {vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url ? (
+                        <img
+                          src={vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url || ''}
+                          alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                          className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                          <Car className="h-16 w-16 text-muted-foreground/30" />
+                        </div>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Card Content with proper spacing */}
-                  <CardContent className="p-5 flex flex-col flex-grow">
-                    {/* Vehicle Title */}
-                    <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
-                      {vehicle.year} {vehicle.make} {vehicle.model}
-                    </h3>
-
-                    {/* Badges Section - Arrival & Run & Drive */}
-                    {(vehicle.expected_arrival_date || vehicle.run_and_drive) && (
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        {vehicle.expected_arrival_date && (
-                          <ArrivalCountdown
-                            expectedDate={vehicle.expected_arrival_date}
-                            actualDate={vehicle.actual_arrival_date}
-                            variant="badge"
-                          />
-                        )}
-                        {vehicle.run_and_drive && (
-                          <Badge className="bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-colors text-xs font-semibold">
-                            Run & Drive
+                      <div className="absolute top-3 right-3 left-3 flex flex-wrap gap-2 justify-end">
+                        {getPublicStatusLabel(vehicle.current_status as VehicleStatus) && (
+                          <Badge className={`border font-semibold shadow-sm ${getPublicStatusBadgeStyle(vehicle.current_status as VehicleStatus)}`}>
+                            {getPublicStatusLabel(vehicle.current_status as VehicleStatus)}
                           </Badge>
                         )}
                       </div>
-                    )}
-
-                    {/* Specs Section */}
-                    <div className="grid grid-cols-2 gap-2.5 py-3 mb-3 border-y border-border/40">
-                      {vehicle.mileage && (
-                        <div className="flex items-center gap-1.5">
-                          <Gauge className="h-4 w-4 flex-shrink-0 text-primary" />
-                          <span className="text-sm font-medium text-muted-foreground truncate">
-                            {vehicle.mileage.toLocaleString()} mi
-                          </span>
-                        </div>
-                      )}
-                      {vehicle.transmission && (
-                        <div className="flex items-center gap-1.5">
-                          <Cog className="h-4 w-4 flex-shrink-0 text-primary" />
-                          <span className="text-sm font-medium text-muted-foreground truncate">
-                            {vehicle.transmission}
-                          </span>
-                        </div>
-                      )}
-                      {vehicle.fuel_type && (
-                        <div className="flex items-center gap-1.5">
-                          <Fuel className="h-4 w-4 flex-shrink-0 text-primary" />
-                          <span className="text-sm font-medium text-muted-foreground truncate">
-                            {vehicle.fuel_type}
-                          </span>
-                        </div>
-                      )}
-                      {vehicle.body_style && (
-                        <div className="flex items-center gap-1.5">
-                          <Car className="h-4 w-4 flex-shrink-0 text-primary" />
-                          <span className="text-sm font-medium text-muted-foreground truncate">
-                            {vehicle.body_style}
-                          </span>
-                        </div>
-                      )}
                     </div>
 
-                    {/* Price Section */}
-                    <div className="flex items-end justify-between pt-3 mt-auto border-t border-border/40">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground mb-1.5">
-                          {vehicle.sale_price && vehicle.sale_price > 0 ? 'Sale Price' : 'Price'}
+                    {/* Card Content with proper spacing */}
+                    <CardContent className="p-5 flex flex-col flex-grow">
+                      {/* VIN - Monospace, subtle (masked for non-authenticated users) */}
+                      {displayVin && (
+                        <p className="font-mono text-xs text-muted-foreground mb-1 tracking-wide">
+                          <span className="font-sans">VIN:</span> {displayVin}
                         </p>
-                        <p className="text-2xl font-bold text-primary truncate">
-                          {formatCurrency(getDisplayPrice(vehicle))}
-                        </p>
-                        {getVatNote(vehicle) && (
-                          <p className="text-xs text-amber-600 font-medium mt-1">
-                            {getVatNote(vehicle)}
-                          </p>
+                      )}
+                      {/* Vehicle Title */}
+                      <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
+                        {vehicle.year} {vehicle.make} {vehicle.model}
+                      </h3>
+
+                      {/* Badges Section - Arrival & Run & Drive */}
+                      {(vehicle.expected_arrival_date || vehicle.run_and_drive) && (
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          {vehicle.expected_arrival_date && (
+                            <ArrivalCountdown
+                              expectedDate={vehicle.expected_arrival_date}
+                              actualDate={vehicle.actual_arrival_date}
+                              variant="badge"
+                            />
+                          )}
+                          {vehicle.run_and_drive && (
+                            <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 text-xs">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Run & Drive
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Specs Section */}
+                      <div className="grid grid-cols-2 gap-2.5 py-3 mb-3 border-y border-border/40">
+                        {vehicle.mileage && (
+                          <div className="flex items-center gap-1.5">
+                            <Gauge className="h-4 w-4 flex-shrink-0 text-primary" />
+                            <span className="text-sm font-medium text-muted-foreground truncate">
+                              {vehicle.mileage.toLocaleString()} mi
+                            </span>
+                          </div>
+                        )}
+                        {vehicle.transmission && (
+                          <div className="flex items-center gap-1.5">
+                            <Cog className="h-4 w-4 flex-shrink-0 text-primary" />
+                            <span className="text-sm font-medium text-muted-foreground truncate">
+                              {vehicle.transmission}
+                            </span>
+                          </div>
+                        )}
+                        {vehicle.fuel_type && (
+                          <div className="flex items-center gap-1.5">
+                            <Fuel className="h-4 w-4 flex-shrink-0 text-primary" />
+                            <span className="text-sm font-medium text-muted-foreground truncate">
+                              {vehicle.fuel_type}
+                            </span>
+                          </div>
+                        )}
+                        {vehicle.body_style && (
+                          <div className="flex items-center gap-1.5">
+                            <Car className="h-4 w-4 flex-shrink-0 text-primary" />
+                            <span className="text-sm font-medium text-muted-foreground truncate">
+                              {vehicle.body_style}
+                            </span>
+                          </div>
                         )}
                       </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0 ml-2" />
-                    </div>
-                  </CardContent>
-                </Link>
-              </Card>
-            ))}
+
+                      {/* Price Section */}
+                      <div className="flex items-end justify-between gap-3 pt-3 mt-auto border-t border-border/40">
+                        <div className="flex-1 min-w-0">
+                          {priceFormatted.isContactPrice ? (
+                            <p className="text-base font-semibold text-foreground">
+                              {priceFormatted.amount}
+                            </p>
+                          ) : (
+                            <>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                  {priceFormatted.currency}
+                                </span>
+                                <span className="text-xl font-bold text-foreground">
+                                  {priceFormatted.amount}
+                                </span>
+                              </div>
+                              {getVatNote(vehicle) && (
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {getVatNote(vehicle)}
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <Link
+                          href={hasPrice ? `/inventory/${vehicle.id}?reserve=true` : `/contact?vehicle=${vehicle.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex-shrink-0"
+                        >
+                          <Button
+                            size="sm"
+                            variant={hasPrice ? 'default' : 'outline'}
+                            className="transition-all duration-300 group-hover:scale-105"
+                          >
+                            {hasPrice ? (
+                              'Reserve'
+                            ) : (
+                              <>
+                                <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                                Contact
+                              </>
+                            )}
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-12">

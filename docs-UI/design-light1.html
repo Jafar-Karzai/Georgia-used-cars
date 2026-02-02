@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Used Cars | Sharjah Salvage Specialists</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cobalt-primary: #1e40af;
+            --cobalt-deep: #1e3a8a;
+            --precision-red: #dc2626;
+            --blueprint-bg: #f8fafc;
+            --grid-line: rgba(30, 64, 175, 0.05);
+            --blueprint-border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --anodized-glow: rgba(30, 64, 175, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--blueprint-bg);
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Header & Navigation --- */
+        header {
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--cobalt-primary);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-mark {
+            width: 40px;
+            height: 40px;
+            background: var(--cobalt-primary);
+            position: relative;
+            clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+        }
+
+        .logo-text {
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.05em;
+            font-size: 1.5rem;
+            color: var(--cobalt-deep);
+        }
+
+        .logo-text span {
+            color: var(--precision-red);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--precision-red);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            padding: 6rem 5% 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--precision-red);
+            color: white;
+            padding: 4px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            margin-bottom: 1.5rem;
+            clip-path: polygon(0 0, 95% 0, 100% 100%, 5% 100%);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 0.95;
+            margin-bottom: 2rem;
+            max-width: 900px;
+            color: var(--cobalt-deep);
+        }
+
+        .hero p {
+            max-width: 600px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            border-left: 3px solid var(--cobalt-primary);
+            padding-left: 2rem;
+        }
+
+        /* --- Vehicle Grid --- */
+        .inventory-section {
+            padding: 4rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--blueprint-border);
+            padding-bottom: 1rem;
+        }
+
+        .section-title-wrap h2 {
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            color: var(--cobalt-primary);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 2.5rem;
+        }
+
+        /* --- The Anodized Card --- */
+        .car-card {
+            background: white;
+            border: 1px solid var(--blueprint-border);
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .car-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px var(--anodized-glow);
+            border-color: var(--cobalt-primary);
+        }
+
+        .image-wrapper {
+            position: relative;
+            height: 260px;
+            overflow: hidden;
+            background: #eee;
+        }
+
+        .car-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .car-card:hover .car-image {
+            transform: scale(1.05);
+        }
+
+        .origin-tag {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--cobalt-deep);
+            color: white;
+            padding: 8px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            z-index: 2;
+        }
+
+        .status-pill {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-left: 3px solid var(--precision-red);
+            backdrop-filter: blur(4px);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .car-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .car-year {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-top: 1px dashed var(--blueprint-border);
+            padding-top: 1.5rem;
+        }
+
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spec-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .spec-value {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--cobalt-deep);
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--blueprint-border);
+        }
+
+        .price-tag {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--precision-red);
+        }
+
+        .price-currency {
+            font-size: 0.8rem;
+            margin-right: 4px;
+        }
+
+        .view-btn {
+            background: var(--cobalt-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 85% 100%, 0 100%);
+        }
+
+        .view-btn:hover {
+            background: var(--precision-red);
+        }
+
+        /* --- Visual Flourishes --- */
+        .blueprint-mark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            transform: rotate(-90deg);
+            transform-origin: bottom right;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: reveal 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        }
+
+        @keyframes reveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            nav ul {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-mark"></div>
+            <div class="logo-text">Georgia<span>UsedCars</span></div>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#">Inventory</a></li>
+                <li><a href="#">Auctions</a></li>
+                <li><a href="#">Shipping</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-badge">DIRECT IMPORT // SHARJAH HUB</div>
+            <h1>US & Canada Salvage Auctions. <br>Delivered to Your Door.</h1>
+            <p>From Copart and IAAI directly to our Sharjah yard. Premium salvage vehicles at wholesale prices, expertly handled and ready for restoration.</p>
+        </section>
+
+        <section class="inventory-section">
+            <div class="section-header">
+                <div class="section-title-wrap">
+                    <h2>Current Stock</h2>
+                </div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 0.8rem;">
+                    [ SHOWING 3 OF 128 UNITS ]
+                </div>
+            </div>
+
+            <div class="grid-container">
+                <!-- Vehicle Card 1 -->
+                <article class="car-card scroll-reveal" style="animation-delay: 0.1s;">
+                    <div class="image-wrapper">
+                        <div class="origin-tag">USA IMPORT / IAAI</div>
+                        <div class="status-pill">Front End Damage</div>
+                        <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800" alt="2022 BMW M4" class="car-image">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <div>
+                                <span class="car-year">VIN: •••••••••••123456 </span>
+                                <h3 class="car-title">2022 BMW M4 Competition</h3>
+                            </div>
+                        </div>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">3.0L I6 BiTurbo</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Lot Number</span>
+                                <span class="spec-value">#9928341</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Location</span>
+                                <span class="spec-value">Sharjah Yard 4</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">12,400 mi</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="price-tag"><span class="price-currency">AED</span>145,000</div>
+                            <button class="view-btn">RESERVE NOW</button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Vehicle Card 2 -->
+                <article class="car-card scroll-reveal" style="animation-delay: 0.2s;">
+                    <div class="image-wrapper">
+                        <div class="origin-tag">CANADA IMPORT / IMPACT</div>
+                        <div class="status-pill">Minor Side Swipe</div>
+                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" alt="2021 Porsche 911" class="car-image">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <div>
+                                <span class="car-year">VIN: •••••••••••123456 </span>
+                                <h3 class="car-title">2021 Porsche 911 Carrera S</h3>
+                            </div>
+                        </div>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">3.0L Flat-6</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Lot Number</span>
+                                <span class="spec-value">#5512093</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Location</span>
+                                <span class="spec-value">Transit - ETA 4d</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">8,100 mi</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="price-tag"><span class="price-currency">AED</span>282,000</div>
+                            <button class="view-btn">VIEW DETAILS</button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Vehicle Card 3 -->
+                <article class="car-card scroll-reveal" style="animation-delay: 0.3s;">
+                    <div class="image-wrapper">
+                        <div class="origin-tag">USA IMPORT / COPART</div>
+                        <div class="status-pill">Hail Damage</div>
+                        <img src="https://images.unsplash.com/photo-1617469767053-d3b523a0b982?auto=format&fit=crop&q=80&w=800" alt="2023 Ford Bronco" class="car-image">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <div>
+                                <span class="car-year">2023</span>
+                                <h3 class="car-title">Ford Bronco Wildtrak</h3>
+                            </div>
+                        </div>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">2.7L V6 Ecoboost</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Lot Number</span>
+                                <span class="spec-value">#1102947</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Location</span>
+                                <span class="spec-value">Sharjah Yard 1</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">2,500 mi</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="price-tag"><span class="price-currency">AED</span>112,500</div>
+                            <button class="view-btn">RESERVE</button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <div class="blueprint-mark">
+        GEORGIA_SYSTEM_REV_04_SHJ_UAE
+    </div>
+
+    <script>
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = "1";
+                    entry.target.style.transform = "translateY(0)";
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+    </script>
+</body>

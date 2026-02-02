@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory | Georgia Used Cars</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0A58CA;
+            --primary-blue-dark: #0A2463;
+            --primary-red: #D83121;
+            --primary-red-dark: #B22A1C;
+            --background: #F5F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --border-strong: #CBD5E1;
+            --success: #16A34A;
+            --warning: #F59E0B;
+            --caution-yellow: #FACC15;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid var(--primary-blue);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 900;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .logo-georgia {
+            background: var(--primary-blue);
+            color: white;
+            padding: 4px 10px;
+        }
+
+        .logo-used-cars {
+            color: var(--primary-red);
+            border: 2px solid var(--primary-red);
+            padding: 4px 10px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+
+        nav a {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--primary-red);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            padding: 12px 24px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-red);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid var(--border-strong);
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem;
+        }
+
+        .page-header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .breadcrumb {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-blue);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-title::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 24px;
+            background: var(--primary-red);
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+
+        .page-subtitle {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+        }
+
+        /* ===== FILTERS SIDEBAR ===== */
+        .filters-sidebar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .filters-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filters-title {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filters-title::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background: var(--primary-blue);
+        }
+
+        .clear-filters {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--primary-red);
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .filter-group {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-group:last-child {
+            border-bottom: none;
+        }
+
+        .filter-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .filter-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .filter-range input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            font-size: 0.85rem;
+        }
+
+        .filter-checkboxes {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .filter-checkbox input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-blue);
+        }
+
+        .apply-filters {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .apply-filters:hover {
+            background: var(--primary-red);
+        }
+
+        /* ===== INVENTORY CONTENT ===== */
+        .inventory-content {
+            min-width: 0;
+        }
+
+        /* Toolbar */
+        .inventory-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .status-tabs {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .status-tab {
+            padding: 10px 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            border-right: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .status-tab:last-child {
+            border-right: none;
+        }
+
+        .status-tab:hover {
+            background: var(--background);
+        }
+
+        .status-tab.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            border: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .search-box input {
+            padding: 10px 16px;
+            border: none;
+            font-size: 0.85rem;
+            width: 250px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+        }
+
+        .search-box button {
+            padding: 10px 16px;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .view-toggle {
+            display: flex;
+            border: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .view-btn {
+            padding: 10px 14px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border);
+        }
+
+        .view-btn:last-child {
+            border-right: none;
+        }
+
+        .view-btn.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .sort-select {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-size: 0.85rem;
+        }
+
+        /* Results Info */
+        .results-info {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .results-info strong {
+            color: var(--text-primary);
+        }
+
+        /* Vehicle Grid */
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .vehicle-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vehicle-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--primary-blue);
+            box-shadow: 0 16px 32px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0.8rem;
+            background: linear-gradient(90deg, var(--primary-blue) 0%, rgba(10, 88, 202, 0.3) 100%);
+        }
+
+        .card-header.arriving {
+            background: linear-gradient(90deg, var(--primary-red) 0%, rgba(216, 49, 33, 0.3) 100%);
+        }
+
+        .status-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            text-transform: uppercase;
+        }
+
+        .status-badge.run-drive {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-badge.starts {
+            background: var(--warning);
+            color: white;
+        }
+
+        .status-badge.not-start {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .lot-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .card-image {
+            height: 160px;
+            position: relative;
+            overflow: hidden;
+            background: var(--border);
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .vehicle-card:hover .card-image img {
+            transform: scale(1.05);
+        }
+
+        .arrival-badge {
+            position: absolute;
+            top: 8px;
+            left: 0;
+            background: var(--caution-yellow);
+            color: #000;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            text-transform: uppercase;
+        }
+
+        .condition-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .vehicle-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            color: var(--text-primary);
+        }
+
+        .vehicle-vin {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .spec-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .spec-value {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid var(--border);
+        }
+
+        .price-box {
+            padding: 0.75rem;
+            background: var(--background);
+        }
+
+        .price-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.55rem;
+            color: var(--primary-red);
+            text-transform: uppercase;
+        }
+
+        .price-value {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .card-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-blue);
+            color: white;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .card-action:hover {
+            background: var(--primary-red);
+        }
+
+        /* List View */
+        .vehicle-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .vehicle-list-item {
+            display: grid;
+            grid-template-columns: 200px 1fr auto;
+            gap: 1.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+
+        .vehicle-list-item:hover {
+            border-color: var(--primary-blue);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .list-image {
+            height: 130px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .list-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .list-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .list-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .list-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .list-specs {
+            display: flex;
+            gap: 2rem;
+            margin-top: 0.75rem;
+        }
+
+        .list-spec {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .list-actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 0.75rem;
+        }
+
+        .list-price {
+            text-align: right;
+        }
+
+        .list-price .price-label {
+            font-size: 0.6rem;
+        }
+
+        .list-price .price-value {
+            font-size: 1.3rem;
+        }
+
+        .list-btn {
+            padding: 10px 24px;
+            background: var(--primary-blue);
+            color: white;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .list-btn:hover {
+            background: var(--primary-red);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .page-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .page-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .page-btn.nav {
+            width: auto;
+            padding: 0 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .vehicle-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-sidebar {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                display: none;
+            }
+
+            .inventory-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .status-tabs {
+                width: 100%;
+            }
+
+            .status-tab {
+                flex: 1;
+                text-align: center;
+            }
+
+            .toolbar-right {
+                flex-wrap: wrap;
+            }
+
+            .search-box {
+                flex: 1;
+                min-width: 200px;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+
+            .vehicle-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .vehicle-list-item {
+                grid-template-columns: 1fr;
+            }
+
+            .list-image {
+                height: 180px;
+            }
+
+            .list-actions {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-georgia">Georgia</span>
+                <span class="logo-used-cars">Used Cars</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#" class="active">Inventory</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="nav-actions">
+                <button class="btn btn-secondary">Sign In</button>
+                <button class="btn btn-primary">Browse Cars</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <div class="breadcrumb">
+                <a href="#">Home</a> / <span>Inventory</span>
+            </div>
+            <h1 class="page-title">Vehicle Inventory</h1>
+            <p class="page-subtitle">Browse our selection of salvage vehicles from USA & Canada auctions</p>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-container">
+        <!-- FILTERS SIDEBAR -->
+        <aside class="filters-sidebar">
+            <div class="filters-header">
+                <span class="filters-title">Filters</span>
+                <a href="#" class="clear-filters">Clear All</a>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Make</label>
+                <select class="filter-select">
+                    <option>All Makes</option>
+                    <option>BMW</option>
+                    <option>Mercedes-Benz</option>
+                    <option>Porsche</option>
+                    <option>Toyota</option>
+                    <option>Ford</option>
+                    <option>Tesla</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Model</label>
+                <select class="filter-select">
+                    <option>All Models</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Year Range</label>
+                <div class="filter-range">
+                    <input type="number" placeholder="From" min="2010" max="2025">
+                    <input type="number" placeholder="To" min="2010" max="2025">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Price Range (AED)</label>
+                <div class="filter-range">
+                    <input type="number" placeholder="Min">
+                    <input type="number" placeholder="Max">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Body Type</label>
+                <select class="filter-select">
+                    <option>All Types</option>
+                    <option>Sedan</option>
+                    <option>SUV</option>
+                    <option>Coupe</option>
+                    <option>Truck</option>
+                    <option>Hatchback</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Fuel Type</label>
+                <select class="filter-select">
+                    <option>All Fuel Types</option>
+                    <option>Petrol</option>
+                    <option>Diesel</option>
+                    <option>Electric</option>
+                    <option>Hybrid</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Engine Status</label>
+                <div class="filter-checkboxes">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" checked> Run & Drive
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" checked> Starts
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" checked> Does Not Start
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Damage Type</label>
+                <select class="filter-select">
+                    <option>All Damage Types</option>
+                    <option>Front End</option>
+                    <option>Rear End</option>
+                    <option>Side Impact</option>
+                    <option>Water Damage</option>
+                    <option>Hail Damage</option>
+                </select>
+            </div>
+
+            <button class="apply-filters">Apply Filters</button>
+        </aside>
+
+        <!-- INVENTORY CONTENT -->
+        <main class="inventory-content">
+            <!-- Toolbar -->
+            <div class="inventory-toolbar">
+                <div class="status-tabs">
+                    <button class="status-tab active">All Vehicles</button>
+                    <button class="status-tab">Arrived</button>
+                    <button class="status-tab">Arriving Soon</button>
+                </div>
+                <div class="toolbar-right">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search by make, model, or VIN...">
+                        <button>Search</button>
+                    </div>
+                    <div class="view-toggle">
+                        <button class="view-btn active" title="Grid View">▦</button>
+                        <button class="view-btn" title="List View">☰</button>
+                    </div>
+                    <select class="sort-select">
+                        <option>Newest First</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Mileage: Low to High</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Results Info -->
+            <div class="results-info">
+                Showing <strong>1-12</strong> of <strong>142</strong> vehicles
+            </div>
+
+            <!-- Vehicle Grid -->
+            <div class="vehicle-grid">
+                <!-- Card 1 -->
+                <div class="vehicle-card">
+                    <div class="card-header">
+                        <span class="status-badge run-drive">Run & Drive</span>
+                        <span class="lot-number">LOT: #88492021</span>
+                    </div>
+                    <div class="card-image">
+                        <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800" alt="BMW M4">
+                        <span class="condition-badge">Front End</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="vehicle-title">2023 BMW M4 Competition</h3>
+                        <p class="vehicle-vin">VIN: •••••••••••123456</p>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">12,400 Mi</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Trans</span>
+                                <span class="spec-value">Auto</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Fuel</span>
+                                <span class="spec-value">Petrol</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">4.5L V8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price-box">
+                            <div class="price-label">Price (AED)</div>
+                            <div class="price-value">142,500</div>
+                        </div>
+                        <a href="#" class="card-action">Details</a>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="vehicle-card">
+                    <div class="card-header">
+                        <span class="status-badge starts">Starts</span>
+                        <span class="lot-number">LOT: #44921003</span>
+                    </div>
+                    <div class="card-image">
+                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" alt="Porsche 911">
+                        <span class="condition-badge">Rear End</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="vehicle-title">2022 Porsche 911 Carrera</h3>
+                        <p class="vehicle-vin">VIN: •••••••••••789012</p>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">8,200 Mi</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Trans</span>
+                                <span class="spec-value">PDK</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Fuel</span>
+                                <span class="spec-value">Petrol</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">4.0L V8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price-box">
+                            <div class="price-label">Price (AED)</div>
+                            <div class="price-value">285,000</div>
+                        </div>
+                        <a href="#" class="card-action">Details</a>
+                    </div>
+                </div>
+
+                <!-- Card 3 - Arriving -->
+                <div class="vehicle-card">
+                    <div class="card-header arriving">
+                        <span class="status-badge not-start">Does Not Start</span>
+                        <span class="lot-number">LOT: #11288349</span>
+                    </div>
+                    <div class="card-image">
+                        <img src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800" alt="Supra">
+                        <span class="arrival-badge">Arrives: 5 Days</span>
+                        <span class="condition-badge">Heavy Damage</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="vehicle-title">2024 Toyota Supra</h3>
+                        <p class="vehicle-vin">VIN: •••••••••••901234</p>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">3,200 Mi</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Trans</span>
+                                <span class="spec-value">Auto</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Fuel</span>
+                                <span class="spec-value">Petrol</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">3.5L V6</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price-box">
+                            <div class="price-label">Price (AED)</div>
+                            <div class="price-value">89,000</div>
+                        </div>
+                        <a href="#" class="card-action">Reserve</a>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="vehicle-card">
+                    <div class="card-header">
+                        <span class="status-badge run-drive">Run & Drive</span>
+                        <span class="lot-number">LOT: #77123456</span>
+                    </div>
+                    <div class="card-image">
+                        <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=800" alt="Mustang">
+                        <span class="condition-badge">Side Impact</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="vehicle-title">2021 Ford Mustang GT</h3>
+                        <p class="vehicle-vin">VIN: •••••••••••345678</p>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">24,500 Mi</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Trans</span>
+                                <span class="spec-value">Manual</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Fuel</span>
+                                <span class="spec-value">Petrol</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">5.0L V8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price-box">
+                            <div class="price-label">Price (AED)</div>
+                            <div class="price-value">64,500</div>
+                        </div>
+                        <a href="#" class="card-action">Details</a>
+                    </div>
+                </div>
+
+                <!-- Card 5 - Arriving -->
+                <div class="vehicle-card">
+                    <div class="card-header arriving">
+                        <span class="status-badge run-drive">Run & Drive</span>
+                        <span class="lot-number">LOT: #55667788</span>
+                    </div>
+                    <div class="card-image">
+                        <img src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800" alt="Tesla">
+                        <span class="arrival-badge">Arrives: 8 Days</span>
+                        <span class="condition-badge">Hail Damage</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="vehicle-title">2023 Tesla Model 3</h3>
+                        <p class="vehicle-vin">VIN: •••••••••••567890</p>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">15,800 Mi</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Trans</span>
+                                <span class="spec-value">Direct</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Fuel</span>
+                                <span class="spec-value">Electric</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">Electric</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price-box">
+                            <div class="price-label">Price (AED)</div>
+                            <div class="price-value">95,000</div>
+                        </div>
+                        <a href="#" class="card-action">Reserve</a>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="vehicle-card">
+                    <div class="card-header">
+                        <span class="status-badge starts">Starts</span>
+                        <span class="lot-number">LOT: #99887766</span>
+                    </div>
+                    <div class="card-image">
+                        <img src="https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&q=80&w=800" alt="Mercedes">
+                        <span class="condition-badge">Water Damage</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="vehicle-title">2022 Mercedes-AMG GT</h3>
+                        <p class="vehicle-vin">VIN: •••••••••••112233</p>
+                        <div class="specs-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Mileage</span>
+                                <span class="spec-value">6,100 Mi</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Trans</span>
+                                <span class="spec-value">Auto</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Fuel</span>
+                                <span class="spec-value">Petrol</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Engine</span>
+                                <span class="spec-value">4.0L V8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price-box">
+                            <div class="price-label">Price (AED)</div>
+                            <div class="price-value">195,000</div>
+                        </div>
+                        <a href="#" class="card-action">Details</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn nav">← Prev</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <button class="page-btn">...</button>
+                <button class="page-btn">12</button>
+                <button class="page-btn nav">Next →</button>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

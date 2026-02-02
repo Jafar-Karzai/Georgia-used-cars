@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2023 BMW M4 Competition | Georgia Used Cars</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0A58CA;
+            --primary-blue-dark: #0A2463;
+            --primary-red: #D83121;
+            --primary-red-dark: #B22A1C;
+            --background: #F5F7FA;
+            --surface: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --border-strong: #CBD5E1;
+            --success: #16A34A;
+            --warning: #F59E0B;
+            --caution-yellow: #FACC15;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid var(--primary-blue);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 900;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .logo-georgia {
+            background: var(--primary-blue);
+            color: white;
+            padding: 4px 10px;
+        }
+
+        .logo-used-cars {
+            color: var(--primary-red);
+            border: 2px solid var(--primary-red);
+            padding: 4px 10px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+
+        nav a {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            color: var(--primary-red);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            padding: 12px 24px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-red);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid var(--border-strong);
+        }
+
+        .btn-red {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .btn-red:hover {
+            background: var(--primary-red-dark);
+        }
+
+        .btn-large {
+            padding: 16px 32px;
+            font-size: 0.85rem;
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+        }
+
+        .page-header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .breadcrumb {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .breadcrumb a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-blue);
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .vehicle-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        /* ===== GALLERY ===== */
+        .gallery-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+
+        .main-image {
+            position: relative;
+            height: 500px;
+            overflow: hidden;
+        }
+
+        .main-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-badges {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 8px 14px;
+            text-transform: uppercase;
+        }
+
+        .badge-status {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-arrived {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .badge-condition {
+            background: rgba(255,255,255,0.95);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .image-counter {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            padding: 8px 14px;
+        }
+
+        .image-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .image-nav:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .image-nav.prev {
+            left: 16px;
+        }
+
+        .image-nav.next {
+            right: 16px;
+        }
+
+        .thumbnail-strip {
+            display: flex;
+            gap: 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .thumbnail {
+            flex: 1;
+            height: 80px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            border-right: 1px solid var(--border);
+        }
+
+        .thumbnail:last-child {
+            border-right: none;
+        }
+
+        .thumbnail:hover,
+        .thumbnail.active {
+            opacity: 1;
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ===== VEHICLE INFO ===== */
+        .vehicle-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+
+        .info-card-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card-header::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background: var(--primary-blue);
+        }
+
+        .info-card-header.red::before {
+            background: var(--primary-red);
+        }
+
+        .info-card-title {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .info-card-body {
+            padding: 1.25rem;
+        }
+
+        /* Title Card */
+        .vehicle-title-card .info-card-body {
+            padding: 1.5rem;
+        }
+
+        .vehicle-main-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .vehicle-subtitle {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .vehicle-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            padding: 6px 12px;
+            background: var(--background);
+            border: 1px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        /* Price Card */
+        .price-card {
+            border-left: 4px solid var(--primary-red);
+        }
+
+        .price-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .price-amount {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .price-currency {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--primary-red);
+            text-transform: uppercase;
+        }
+
+        .price-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .price-row .label {
+            color: var(--text-secondary);
+        }
+
+        .price-row .value {
+            font-weight: 600;
+        }
+
+        .price-row.total {
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            font-weight: 700;
+        }
+
+        /* Specs Card */
+        .specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .spec-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+
+        .spec-item:nth-child(even) {
+            border-right: none;
+        }
+
+        .spec-item:nth-last-child(-n+2) {
+            border-bottom: none;
+        }
+
+        .spec-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .spec-value {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        /* Actions Card */
+        .actions-card .info-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn.primary {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-red-dark);
+        }
+
+        .action-btn.secondary {
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 2px solid var(--border-strong);
+        }
+
+        .action-btn.secondary:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .contact-info {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .contact-info a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        /* ===== DETAILS SECTION ===== */
+        .details-section {
+            margin-top: 2rem;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .detail-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+
+        .detail-card-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-card-header::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background: var(--primary-blue);
+        }
+
+        .detail-card-body {
+            padding: 1.25rem;
+        }
+
+        /* Auction Info */
+        .auction-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .auction-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .auction-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .auction-value {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Condition Report */
+        .condition-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .condition-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--background);
+            border: 1px solid var(--border);
+        }
+
+        .condition-item .label {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .condition-item .value {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .condition-item .value.good {
+            color: var(--success);
+        }
+
+        .condition-item .value.warning {
+            color: var(--warning);
+        }
+
+        .condition-item .value.bad {
+            color: var(--primary-red);
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            padding: 0.5rem;
+        }
+
+        .feature-item::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        /* Damage Photos */
+        .damage-photos {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+
+        .damage-photo {
+            aspect-ratio: 4/3;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .damage-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .damage-photo:hover img {
+            transform: scale(1.05);
+        }
+
+        .damage-photo-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            padding: 4px 8px;
+            text-transform: uppercase;
+        }
+
+        /* ===== RELATED VEHICLES ===== */
+        .related-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .section-title::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            background: var(--primary-red);
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .related-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .related-card:hover {
+            border-color: var(--primary-blue);
+            transform: translateY(-4px);
+        }
+
+        .related-image {
+            height: 140px;
+            overflow: hidden;
+        }
+
+        .related-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .related-body {
+            padding: 1rem;
+        }
+
+        .related-title {
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .related-price {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .vehicle-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .related-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                display: none;
+            }
+
+            .main-image {
+                height: 300px;
+            }
+
+            .thumbnail-strip {
+                display: none;
+            }
+
+            .specs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .spec-item {
+                border-right: none;
+            }
+
+            .auction-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .damage-photos {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .related-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-georgia">Georgia</span>
+                <span class="logo-used-cars">Used Cars</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Inventory</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="nav-actions">
+                <button class="btn btn-secondary">Sign In</button>
+                <button class="btn btn-primary">Browse Cars</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <div class="breadcrumb">
+                <a href="#">Home</a> / <a href="#">Inventory</a> / <span>2023 BMW M4 Competition</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-container">
+        <div class="vehicle-layout">
+            <!-- GALLERY -->
+            <div class="gallery-section">
+                <div class="main-image">
+                    <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=1200" alt="2023 BMW M4 Competition">
+                    <div class="image-badges">
+                        <span class="badge badge-status">Run & Drive</span>
+                        <span class="badge badge-arrived">In Stock</span>
+                        <span class="badge badge-condition">Front End Damage</span>
+                    </div>
+                    <div class="image-counter">1 / 12</div>
+                    <button class="image-nav prev">←</button>
+                    <button class="image-nav next">→</button>
+                </div>
+                <div class="thumbnail-strip">
+                    <div class="thumbnail active">
+                        <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=200" alt="Thumbnail 1">
+                    </div>
+                    <div class="thumbnail">
+                        <img src="https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&q=80&w=200" alt="Thumbnail 2">
+                    </div>
+                    <div class="thumbnail">
+                        <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=200" alt="Thumbnail 3">
+                    </div>
+                    <div class="thumbnail">
+                        <img src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=200" alt="Thumbnail 4">
+                    </div>
+                    <div class="thumbnail">
+                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=200" alt="Thumbnail 5">
+                    </div>
+                    <div class="thumbnail">
+                        <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=200" alt="Thumbnail 6">
+                    </div>
+                </div>
+            </div>
+
+            <!-- VEHICLE INFO -->
+            <div class="vehicle-info">
+                <!-- Title Card -->
+                <div class="info-card vehicle-title-card">
+                    <div class="info-card-body">
+                        <h1 class="vehicle-main-title">2023 BMW M4 Competition</h1>
+                        <p class="vehicle-subtitle">LOT: #88492021 • VIN: •••••••••••123456</p>
+                        <div class="vehicle-meta">
+                            <span class="meta-tag">COPART - TEXAS</span>
+                            <span class="meta-tag">Salvage Title</span>
+                            <span class="meta-tag">Run & Drive</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Card -->
+                <div class="info-card price-card">
+                    <div class="info-card-header red">
+                        <span class="info-card-title">Price Breakdown</span>
+                    </div>
+                    <div class="info-card-body">
+                        <div class="price-main">
+                            <div>
+                                <div class="price-currency">Price (AED)</div>
+                                <div class="price-amount">142,500</div>
+                            </div>
+                        </div>
+                        <div class="price-breakdown">
+                            <div class="price-row">
+                                <span class="label">Vehicle Price</span>
+                                <span class="value">135,715 AED</span>
+                            </div>
+                            <div class="price-row">
+                                <span class="label">VAT (5%)</span>
+                                <span class="value">6,785 AED</span>
+                            </div>
+                            <div class="price-row total">
+                                <span class="label">Total</span>
+                                <span class="value">142,500 AED</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Specs Card -->
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <span class="info-card-title">Specifications</span>
+                    </div>
+                    <div class="specs-grid">
+                        <div class="spec-item">
+                            <div class="spec-label">Mileage</div>
+                            <div class="spec-value">12,400 Mi</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Transmission</div>
+                            <div class="spec-value">Automatic</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Engine</div>
+                            <div class="spec-value">3.0L Twin-Turbo</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Fuel Type</div>
+                            <div class="spec-value">Petrol</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Drive Type</div>
+                            <div class="spec-value">RWD</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Body Style</div>
+                            <div class="spec-value">Coupe</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Exterior</div>
+                            <div class="spec-value">Alpine White</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Interior</div>
+                            <div class="spec-value">Black Leather</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Card -->
+                <div class="info-card actions-card">
+                    <div class="info-card-header">
+                        <span class="info-card-title">Interested?</span>
+                    </div>
+                    <div class="info-card-body">
+                        <button class="action-btn primary">Reserve This Vehicle</button>
+                        <button class="action-btn secondary">📞 Contact Sales</button>
+                        <button class="action-btn secondary">💬 WhatsApp Inquiry</button>
+                        <div class="contact-info">
+                            Or call us directly: <a href="tel:+97165551234">+971 6 555 1234</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETAILS SECTION -->
+        <div class="details-section">
+            <div class="details-grid">
+                <!-- Auction Information -->
+                <div class="detail-card">
+                    <div class="detail-card-header">Auction Information</div>
+                    <div class="detail-card-body">
+                        <div class="auction-info-grid">
+                            <div class="auction-item">
+                                <span class="auction-label">Auction House</span>
+                                <span class="auction-value">Copart</span>
+                            </div>
+                            <div class="auction-item">
+                                <span class="auction-label">Location</span>
+                                <span class="auction-value">Houston, TX</span>
+                            </div>
+                            <div class="auction-item">
+                                <span class="auction-label">Lot Number</span>
+                                <span class="auction-value">#88492021</span>
+                            </div>
+                            <div class="auction-item">
+                                <span class="auction-label">Sale Date</span>
+                                <span class="auction-value">Dec 15, 2024</span>
+                            </div>
+                            <div class="auction-item">
+                                <span class="auction-label">Title Type</span>
+                                <span class="auction-value">Salvage - TX</span>
+                            </div>
+                            <div class="auction-item">
+                                <span class="auction-label">Primary Damage</span>
+                                <span class="auction-value">Front End</span>
+                            </div>
+                            <div class="auction-item">
+                                <span class="auction-label">Secondary Damage</span>
+                                <span class="auction-value">Minor Dents</span>
+                            </div>
+                            <div class="auction-item">
+                                <span class="auction-label">Keys</span>
+                                <span class="auction-value">Present</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Condition Report -->
+                <div class="detail-card">
+                    <div class="detail-card-header">Condition Report</div>
+                    <div class="detail-card-body">
+                        <div class="condition-list">
+                            <div class="condition-item">
+                                <span class="label">Engine Status</span>
+                                <span class="value good">Runs & Drives</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="label">Transmission</span>
+                                <span class="value good">Operational</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="label">Front End</span>
+                                <span class="value bad">Damaged</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="label">Rear End</span>
+                                <span class="value good">Good</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="label">Left Side</span>
+                                <span class="value warning">Minor Scratches</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="label">Right Side</span>
+                                <span class="value good">Good</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="label">Interior</span>
+                                <span class="value good">Excellent</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="label">Airbags</span>
+                                <span class="value bad">Deployed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features & Equipment -->
+                <div class="detail-card">
+                    <div class="detail-card-header">Features & Equipment</div>
+                    <div class="detail-card-body">
+                        <div class="features-grid">
+                            <div class="feature-item">M Sport Package</div>
+                            <div class="feature-item">Carbon Fiber Roof</div>
+                            <div class="feature-item">Navigation System</div>
+                            <div class="feature-item">Harman Kardon Audio</div>
+                            <div class="feature-item">Heated Seats</div>
+                            <div class="feature-item">Parking Sensors</div>
+                            <div class="feature-item">360 Camera</div>
+                            <div class="feature-item">Adaptive Cruise</div>
+                            <div class="feature-item">LED Headlights</div>
+                            <div class="feature-item">Wireless Charging</div>
+                            <div class="feature-item">Apple CarPlay</div>
+                            <div class="feature-item">M Brakes</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Damage Photos -->
+                <div class="detail-card">
+                    <div class="detail-card-header">Damage Photos</div>
+                    <div class="detail-card-body">
+                        <div class="damage-photos">
+                            <div class="damage-photo">
+                                <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=400" alt="Front Damage">
+                                <span class="damage-photo-label">Front</span>
+                            </div>
+                            <div class="damage-photo">
+                                <img src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=400" alt="Left Side">
+                                <span class="damage-photo-label">Left Side</span>
+                            </div>
+                            <div class="damage-photo">
+                                <img src="https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&q=80&w=400" alt="Engine Bay">
+                                <span class="damage-photo-label">Engine</span>
+                            </div>
+                            <div class="damage-photo">
+                                <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=400" alt="Interior">
+                                <span class="damage-photo-label">Interior</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RELATED VEHICLES -->
+        <div class="related-section">
+            <div class="section-header">
+                <h2 class="section-title">Similar Vehicles</h2>
+                <a href="#" class="btn btn-secondary">View All →</a>
+            </div>
+            <div class="related-grid">
+                <div class="related-card">
+                    <div class="related-image">
+                        <img src="https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&q=80&w=400" alt="BMW M3">
+                    </div>
+                    <div class="related-body">
+                        <h3 class="related-title">2022 BMW M3</h3>
+                        <div class="related-price">128,000 AED</div>
+                    </div>
+                </div>
+                <div class="related-card">
+                    <div class="related-image">
+                        <img src="https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&q=80&w=400" alt="Mercedes AMG">
+                    </div>
+                    <div class="related-body">
+                        <h3 class="related-title">2023 Mercedes AMG C63</h3>
+                        <div class="related-price">165,000 AED</div>
+                    </div>
+                </div>
+                <div class="related-card">
+                    <div class="related-image">
+                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=400" alt="Porsche">
+                    </div>
+                    <div class="related-body">
+                        <h3 class="related-title">2022 Porsche 911</h3>
+                        <div class="related-price">285,000 AED</div>
+                    </div>
+                </div>
+                <div class="related-card">
+                    <div class="related-image">
+                        <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=400" alt="Mustang">
+                    </div>
+                    <div class="related-body">
+                        <h3 class="related-title">2023 Ford Mustang</h3>
+                        <div class="related-price">72,000 AED</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

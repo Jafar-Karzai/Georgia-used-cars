@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Used Cars | Premium Salvage Importers Sharjah</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --amber-50: #fffbeb;
+            --amber-100: #fef3c7;
+            --amber-400: #fbbf24;
+            --amber-600: #d97706;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --industrial-gray: #1e293b;
+            --slate-100: #f1f5f9;
+            --slate-900: #0f172a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --surface: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: #fafafa;
+            color: var(--slate-900);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        /* Material: Vitreous Amber */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(217, 119, 6, 0.05);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(255, 255, 255, 0.9);
+            height: 70px;
+            border-bottom: 1px solid var(--amber-100);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            background: var(--amber-600);
+            border-radius: 6px;
+            transform: rotate(-10deg);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--slate-900);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--amber-600);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-ghost {
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            color: var(--slate-900);
+        }
+
+        .btn-primary {
+            background: var(--slate-900);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: #000;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding-top: 140px;
+            padding-bottom: 80px;
+            position: relative;
+            background: radial-gradient(circle at top right, var(--amber-50), transparent);
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            max-width: 900px;
+            line-height: 1;
+            margin-bottom: 30px;
+            color: var(--slate-900);
+            letter-spacing: -0.04em;
+        }
+
+        .hero h1 span {
+            color: var(--amber-600);
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 40px;
+            padding: 20px;
+            border-radius: 24px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .input-group {
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--amber-600);
+            text-transform: uppercase;
+        }
+
+        .input-group select, .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            outline: none;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        /* Disclaimer Badge */
+        .disclaimer-badge {
+            margin: 40px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 24px;
+            background: var(--amber-100);
+            border: 1px solid var(--amber-400);
+            border-radius: 100px;
+            color: var(--amber-600);
+            font-weight: 700;
+            font-size: 0.85rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(217, 119, 6, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+        }
+
+        /* Featured Carousel */
+        .section-header {
+            padding: 100px 5% 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .section-title h2 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; }
+        .section-title p { color: #64748b; font-size: 1.1rem; }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            padding: 0 5%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #f1f5f9;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        .card-img {
+            height: 240px;
+            background: #e2e8f0;
+            position: relative;
+        }
+
+        .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+
+        .card-content {
+            padding: 25px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .price-tag {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--amber-600);
+        }
+
+        .mileage {
+            font-family: 'JetBrains Mono';
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        /* Category Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+            padding: 0 5% 100px;
+        }
+
+        .cat-card {
+            aspect-ratio: 1/1;
+            background: white;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .cat-card:hover {
+            background: var(--amber-50);
+            border-color: var(--amber-400);
+        }
+
+        .cat-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .cat-card h4 { font-weight: 700; font-size: 0.9rem; }
+        .cat-card span { font-size: 0.75rem; color: #64748b; }
+
+        /* How it Works */
+        .process-section {
+            background: var(--slate-900);
+            color: white;
+            padding: 100px 5%;
+        }
+
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 60px;
+            margin-top: 60px;
+        }
+
+        .step-num {
+            font-family: 'JetBrains Mono';
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--amber-600);
+            line-height: 1;
+            opacity: 0.5;
+        }
+
+        .step h3 { font-size: 1.5rem; margin: 15px 0; }
+        .step p { color: #94a3b8; }
+
+        /* WhatsApp Button */
+        .wa-float {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.3);
+            z-index: 1000;
+            color: white;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+
+        .wa-float:hover {
+            transform: scale(1.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero h1 { font-size: 3rem; }
+            .search-container { grid-template-columns: repeat(2, 1fr); }
+            .featured-grid { grid-template-columns: repeat(2, 1fr); }
+            .category-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .process-grid { grid-template-columns: 1fr; }
+            .featured-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav id="navbar">
+        <div class="logo">
+            <div class="logo-mark"></div>
+            GEORGIA USED CARS
+        </div>
+        <div class="nav-links">
+            <a href="#">Inventory</a>
+            <a href="#">How it Works</a>
+            <a href="#">Showroom</a>
+            <a href="#">Contact</a>
+        </div>
+        <div class="nav-actions">
+            <div class="mono" style="font-size: 0.8rem; font-weight: 700; color: #64748b;">AED | USD</div>
+            <a href="#" class="btn-ghost">Login</a>
+            <a href="#" class="btn-primary">Register</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="disclaimer-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            SALVAGE VEHICLES • SOLD AS-IS • CASH ONLY • NO WARRANTIES
+        </div>
+        <h1>Imported <span>Project Vehicles</span> Direct from US Auctions</h1>
+        <p style="font-size: 1.25rem; color: #64748b; max-width: 700px;">Direct access to Copart, IAAI, and Impact Auto salvage stock. Sharjah's most transparent vehicle importer.</p>
+
+        <div class="search-container glass-panel">
+            <div class="input-group">
+                <label>Make</label>
+                <select><option>Select Make</option><option>Mercedes-Benz</option><option>Toyota</option></select>
+            </div>
+            <div class="input-group">
+                <label>Model</label>
+                <select><option>Any Model</option></select>
+            </div>
+            <div class="input-group">
+                <label>Damage Type</label>
+                <select><option>Any Damage</option><option>Front End</option><option>Rear End</option><option>Flood</option></select>
+            </div>
+            <div class="input-group">
+                <label>Max Price (AED)</label>
+                <input type="number" placeholder="e.g. 50,000">
+            </div>
+            <button class="btn-primary" style="height: 48px; display: flex; align-items: center; gap: 10px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                Search Inventory
+            </button>
+        </div>
+    </section>
+
+    <div class="section-header">
+        <div class="section-title">
+            <h2>Handpicked Premium Selections</h2>
+            <p>Our top-tier project vehicles from US and Canada</p>
+        </div>
+        <a href="#" class="btn-ghost" style="border: 1px solid #e2e8f0;">View All Inventory →</a>
+    </div>
+
+    <section class="featured-grid">
+        <div class="card">
+            <div class="card-img">
+                <div class="card-badge badge-green">Ready for Inspection</div>
+                <img src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=800" alt="Porsche">
+            </div>
+            <div class="card-content">
+                <div class="card-title">2022 Porsche 911 Carrera</div>
+                <div class="mono" style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px;">VIN: WP0AA2A91NS2XXXX</div>
+                <div class="mileage">12,450 Miles • Front End Damage</div>
+                <div class="card-meta">
+                    <div class="price-tag">AED 184,000</div>
+                    <div class="btn-ghost" style="font-size: 0.8rem; background: #f8fafc;">Details</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-img">
+                <div class="card-badge badge-green">Ready for Inspection</div>
+                <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=800" alt="Corvette">
+            </div>
+            <div class="card-content">
+                <div class="card-title">2023 Chevrolet Corvette C8</div>
+                <div class="mono" style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px;">VIN: 1G1YB2D47P5XXXX</div>
+                <div class="mileage">3,120 Miles • Side Swipe</div>
+                <div class="card-meta">
+                    <div class="price-tag">AED 162,500</div>
+                    <div class="btn-ghost" style="font-size: 0.8rem; background: #f8fafc;">Details</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-img">
+                <div class="card-badge badge-red">Arriving Soon</div>
+                <img src="https://images.unsplash.com/photo-1621135802920-133df287f89c?auto=format&fit=crop&q=80&w=800" alt="Range Rover">
+            </div>
+            <div class="card-content">
+                <div class="card-title">2024 Range Rover P530</div>
+                <div class="mono" style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px;">VIN: SALGK2RE0RAXXXX</div>
+                <div class="mileage">850 Miles • Rear Collision</div>
+                <div class="card-meta">
+                    <div class="price-tag">AED 345,000</div>
+                    <div class="btn-ghost" style="font-size: 0.8rem; background: #f8fafc;">Details</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-header">
+        <div class="section-title">
+            <h2>Browse by Category</h2>
+            <p>Find the specific project type for your needs</p>
+        </div>
+    </div>
+
+    <section class="category-grid">
+        <div class="cat-card">
+            <div class="cat-icon">🚙</div>
+            <h4>SUVs</h4>
+            <span>Range Rover, GLE, Tesla X</span>
+        </div>
+        <div class="cat-card">
+            <div class="cat-icon">🏎️</div>
+            <h4>Sports</h4>
+            <span>911, R8, BMW M4</span>
+        </div>
+        <div class="cat-card">
+            <div class="cat-icon">🚘</div>
+            <h4>Sedans</h4>
+            <span>BMW 5, Audi A6, Camry</span>
+        </div>
+        <div class="cat-card">
+            <div class="cat-icon">🛻</div>
+            <h4>Trucks</h4>
+            <span>F-150, RAM, Silverado</span>
+        </div>
+        <div class="cat-card">
+            <div class="cat-icon">⚡</div>
+            <h4>Electric</h4>
+            <span>Tesla S, Lucid, BMW i7</span>
+        </div>
+        <div class="cat-card">
+            <div class="cat-icon">✨</div>
+            <h4>Luxury</h4>
+            <span>Bentley, S-Class, Lexus</span>
+        </div>
+    </section>
+
+    <section class="process-section">
+        <div class="section-title">
+            <h2 style="color: white;">Simple, Transparent Process</h2>
+            <p style="color: #94a3b8;">From discovery to ownership in Sharjah</p>
+        </div>
+        <div class="process-grid">
+            <div class="step">
+                <div class="step-num">01</div>
+                <h3>Find Your Project</h3>
+                <p>Browse imported salvage vehicles at unbeatable prices. Detailed photos and damage reports from US auctions are available for every unit.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">02</div>
+                <h3>See It Yourself</h3>
+                <p>Visit our Sharjah showroom to inspect the vehicle. Assess repair costs and feasibility with honest guidance from our team.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <h3>Secure & Repair</h3>
+                <p>Complete your purchase with cash or deposit. Gain access to our network of trusted repair shops and parts suppliers in UAE.</p>
+            </div>
+        </div>
+    </section>
+
+    <section style="padding: 100px 5%; background: var(--amber-50); display: flex; justify-content: space-around; text-align: center; border-bottom: 1px solid var(--amber-100);">
+        <div>
+            <div class="mono" style="font-size: 2.5rem; font-weight: 800; color: var(--slate-900);">15k+</div>
+            <div style="font-weight: 600; color: var(--amber-600);">Vehicles Imported</div>
+        </div>
+        <div>
+            <div class="mono" style="font-size: 2.5rem; font-weight: 800; color: var(--slate-900);">40%</div>
+            <div style="font-weight: 600; color: var(--amber-600);">Average Savings</div>
+        </div>
+        <div>
+            <div class="mono" style="font-size: 2.5rem; font-weight: 800; color: var(--slate-900);">24/7</div>
+            <div style="font-weight: 600; color: var(--amber-600);">WhatsApp Support</div>
+        </div>
+    </section>
+
+    <footer style="padding: 80px 5%; background: #fff;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 50px;">
+            <div>
+                <div class="logo" style="margin-bottom: 20px;">
+                    <div class="logo-mark"></div>
+                    GEORGIA USED CARS
+                </div>
+                <p style="color: #64748b;">Premium salvage vehicle importers specializing in North American auction sourcing for the UAE market.</p>
+            </div>
+            <div>
+                <h4 style="margin-bottom: 20px;">Inventory</h4>
+                <ul style="list-style: none; color: #64748b;">
+                    <li style="margin-bottom: 10px;">In-Stock Now</li>
+                    <li style="margin-bottom: 10px;">Arriving Soon</li>
+                    <li style="margin-bottom: 10px;">Auction Service</li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="margin-bottom: 20px;">Contact</h4>
+                <p style="color: #64748b; margin-bottom: 10px;">+971 55 546 7220</p>
+                <p style="color: #64748b;">info@georgiacars.com</p>
+            </div>
+            <div>
+                <h4 style="margin-bottom: 20px;">Location</h4>
+                <p style="color: #64748b;">Industrial Area 4,<br>Sharjah, UAE</p>
+            </div>
+        </div>
+        <div style="margin-top: 80px; padding-top: 40px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; color: #94a3b8; font-size: 0.9rem;">
+            <p>© 2024 Georgia Used Cars. All Rights Reserved.</p>
+            <div style="display: flex; gap: 20px;">
+                <a href="#" style="color: #94a3b8; text-decoration: none;">Privacy Policy</a>
+                <a href="#" style="color: #94a3b8; text-decoration: none;">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/971555467220" class="wa-float">
+        <svg width="30" height="30" fill="currentColor" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.7 17.8 69.4 27.2 106.2 27.2 122.4 0 222-99.6 222-222 0-59.3-23-115.1-65-157.1zM223.9 445.9c-33.1 0-65.7-8.9-94.1-25.7l-6.7-4-69.8 18.3 18.7-68.1-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 54 81.2 54 130.5 0 101.7-82.8 184.5-184.6 184.5zm100.5-137.4c-5.5-2.8-32.6-16.1-37.7-17.9-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-5.5-2.8-23.2-8.5-44.2-27.2-16.3-14.5-27.4-32.5-30.5-37.9-3.2-5.6-.4-8.6 2.4-11.4 2.5-2.5 5.5-6.5 8.3-9.8 2.8-3.2 3.7-5.5 5.5-9.2 1.9-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 13.2 5.8 23.5 9.2 31.5 11.8 13.3 4.2 25.4 3.6 35 2.2 10.7-1.6 32.6-13.3 37.2-26.2 4.6-12.9 4.6-24 3.2-26.2-1.3-2.3-5-3.6-10.5-6.4z"/></svg>
+    </a>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>

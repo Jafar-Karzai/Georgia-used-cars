@@ -1,5 +1,5 @@
 I want to create a webstie with an admin panel for a used (salvage) car dealer in Sharjah UAE (Georgia Used Cars) that purchases     │
-│   and imports cars for salvage auction in the USA and Canada i.e copart.com , iaai.com , impactauto.ca which is not                    │
+│   and imports cars for salvage auction in the USA and Canada i.e copart.com , iaai.com , impactauto.ca which is now                    │
 │   https://ca.iaai.com/ and more. I want this platform to be Super fast in performance and secure at the same time, I need to pick the  │
 │   right tech stack, I'm thinking between Nextjs and Vite, and for databse I'm thinking between Supabase, Neon or Firebase. This        │
 │   dealer wants to showcase their inventory on a website and have their buyers signup for special offers or early alerts on the         │

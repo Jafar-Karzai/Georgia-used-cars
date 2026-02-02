@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { InquiryService, InquiryWithDetails, InquiryFilters } from '@/lib/services/inquiries'
+import { fetchInquiries, fetchInquiryStats, assignInquiry, updateInquiry, type InquiryFilters } from '@/lib/api/inquiries-client'
 import { InquiryForm } from '@/components/inquiries/inquiry-form'
 import { CommunicationForm } from '@/components/communications/communication-form'
 import { Button } from '@/components/ui/button'
@@ -36,6 +36,26 @@ import {
   Calendar
 } from 'lucide-react'
 
+interface InquiryWithDetails {
+  id: string
+  customerId?: string
+  vehicleId?: string
+  source: string
+  subject?: string
+  message: string
+  priority: string
+  status: string
+  assignedTo?: string
+  createdAt: Date
+  updatedAt: Date
+  customer?: any
+  vehicle?: any
+  assignedToProfile?: any
+  communications?: any[]
+  communicationsCount?: number
+  lastCommunication?: Date
+}
+
 export default function InquiriesPage() {
   const [inquiries, setInquiries] = useState<InquiryWithDetails[]>([])
   const [loading, setLoading] = useState(true)
@@ -60,28 +80,36 @@ export default function InquiriesPage() {
 
   const loadInquiries = async () => {
     setLoading(true)
-    
-    const searchFilters = {
-      ...filters,
-      ...(searchTerm && { search: searchTerm })
-    }
 
-    const result = await InquiryService.getAll(searchFilters, page, 20)
-    
-    if (result.success) {
-      setInquiries(result.data as unknown as InquiryWithDetails[] || [])
-      setTotalPages(result.pagination?.pages || 1)
-    } else {
-      console.error('Failed to load inquiries:', result.error)
+    try {
+      const searchFilters = {
+        ...filters,
+        ...(searchTerm && { search: searchTerm })
+      }
+
+      const result = await fetchInquiries(searchFilters, page, 20)
+
+      if (result.success) {
+        setInquiries(result.data || [])
+        setTotalPages(result.pagination?.pages || 1)
+      } else {
+        console.error('Failed to load inquiries:', result.error)
+      }
+    } catch (error) {
+      console.error('Failed to load inquiries:', error)
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   const loadStatistics = async () => {
-    const result = await InquiryService.getStatistics(filters)
-    if (result.success) {
-      setStatistics(result.data)
+    try {
+      const result = await fetchInquiryStats(filters)
+      if (result.success) {
+        setStatistics(result.data)
+      }
+    } catch (error) {
+      console.error('Failed to load statistics:', error)
     }
   }
 
@@ -100,23 +128,31 @@ export default function InquiriesPage() {
 
   const handleAssignToMe = async (inquiryId: string) => {
     if (!user) return
-    
-    const result = await InquiryService.assign(inquiryId, user.id)
-    if (result.success) {
-      loadInquiries()
-      loadStatistics()
-    } else {
-      alert('Failed to assign inquiry: ' + result.error)
+
+    try {
+      const result = await assignInquiry(inquiryId, user.id)
+      if (result.success) {
+        loadInquiries()
+        loadStatistics()
+      } else {
+        alert('Failed to assign inquiry: ' + result.error)
+      }
+    } catch (error) {
+      alert('Failed to assign inquiry: ' + error)
     }
   }
 
   const handleStatusChange = async (inquiryId: string, status: string) => {
-    const result = await InquiryService.update(inquiryId, { status: status as any })
-    if (result.success) {
-      loadInquiries()
-      loadStatistics()
-    } else {
-      alert('Failed to update status: ' + result.error)
+    try {
+      const result = await updateInquiry(inquiryId, { status: status as any })
+      if (result.success) {
+        loadInquiries()
+        loadStatistics()
+      } else {
+        alert('Failed to update status: ' + result.error)
+      }
+    } catch (error) {
+      alert('Failed to update status: ' + error)
     }
   }
 
@@ -168,7 +204,7 @@ export default function InquiriesPage() {
 
   if (loading && inquiries.length === 0) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="flex-1 space-y-6 p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -182,8 +218,8 @@ export default function InquiriesPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="flex-1 space-y-6 p-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Inquiry Management</h1>
           <p className="text-muted-foreground">
@@ -201,7 +237,7 @@ export default function InquiriesPage() {
 
       {/* Statistics Cards */}
       {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Inquiries</CardTitle>
@@ -263,7 +299,7 @@ export default function InquiriesPage() {
       )}
 
       {/* Filters and Search */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 flex gap-2">
           <Input
             placeholder="Search inquiries by subject or message..."
@@ -280,12 +316,12 @@ export default function InquiriesPage() {
         <div className="flex gap-2 items-center">
           <Filter className="h-4 w-4 text-muted-foreground" />
           
-          <Select onValueChange={(value) => handleFilterChange('status', value)}>
+          <Select onValueChange={(value) => handleFilterChange('status', value === 'all' ? '' : value)}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="new">New</SelectItem>
               <SelectItem value="in_progress">In Progress</SelectItem>
               <SelectItem value="responded">Responded</SelectItem>
@@ -294,12 +330,12 @@ export default function InquiriesPage() {
             </SelectContent>
           </Select>
 
-          <Select onValueChange={(value) => handleFilterChange('priority', value)}>
+          <Select onValueChange={(value) => handleFilterChange('priority', value === 'all' ? '' : value)}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Priority</SelectItem>
+              <SelectItem value="all">All Priority</SelectItem>
               <SelectItem value="low">Low</SelectItem>
               <SelectItem value="medium">Medium</SelectItem>
               <SelectItem value="high">High</SelectItem>
@@ -307,12 +343,12 @@ export default function InquiriesPage() {
             </SelectContent>
           </Select>
 
-          <Select onValueChange={(value) => handleFilterChange('source', value)}>
+          <Select onValueChange={(value) => handleFilterChange('source', value === 'all' ? '' : value)}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Source" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Sources</SelectItem>
+              <SelectItem value="all">All Sources</SelectItem>
               <SelectItem value="website">Website</SelectItem>
               <SelectItem value="phone">Phone</SelectItem>
               <SelectItem value="email">Email</SelectItem>
@@ -349,7 +385,7 @@ export default function InquiriesPage() {
         </div>
       ) : (
         <>
-          <div className="space-y-4 mb-6">
+          <div className="space-y-4">
             {inquiries.map((inquiry) => (
               <Card key={inquiry.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">

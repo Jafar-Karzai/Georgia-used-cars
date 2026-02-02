@@ -10,7 +10,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['supabase.co', 'localhost', 'vfqhvkufsdntswftrith.supabase.co'],
+    domains: ['supabase.co', 'localhost', 'vfqhvkufsdntswftrith.supabase.co', 'images.unsplash.com'],
     formats: ['image/webp'],
   },
   webpack: (config) => {
