@@ -7,7 +7,6 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { fetchVehicleById, fetchVehicles } from '@/lib/api/vehicles-client'
 import { Vehicle, VehiclePhoto } from '@/types/database'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SiteNavbar } from '@/components/layout/site-navbar'
@@ -18,30 +17,24 @@ import {
   Car,
   ChevronRight,
   ChevronLeft,
-  Home,
-  Calendar,
-  Gauge,
-  Fuel,
-  Cog,
-  Palette,
-  MapPin,
-  FileText,
   Phone,
-  Mail,
-  Eye,
+  MessageCircle,
   ImageIcon,
   ArrowLeft,
   CheckCircle,
   AlertTriangle,
-  DollarSign,
-  Key,
-  Settings2,
-  Circle,
-  ShoppingCart
+  AlertCircle,
+  Settings,
+  Gavel,
+  ClipboardCheck,
+  ListChecks,
+  Check,
+  ArrowRight,
+  CalendarCheck
 } from 'lucide-react'
 
 // Local interface for page-specific needs, extending the database Vehicle type
-interface PageVehicle extends Vehicle {
+interface PageVehicle extends Omit<Vehicle, 'keys_available'> {
   // Map legacy field names to database field names for backward compatibility
   status?: string // maps to current_status
   color?: string // maps to exterior_color
@@ -55,7 +48,7 @@ interface PageVehicle extends Vehicle {
   interior_color?: string
   drivetrain?: string
   title_status?: string
-  keys_available?: boolean
+  keys_available?: boolean // Made optional for page-specific handling
   lot_number?: string
   auction_location?: string
   damage_description?: string
@@ -137,8 +130,7 @@ export default function VehicleDetailPage() {
     // Only show price if amount exists and is greater than 0
     if (!amount || amount <= 0) return 'Contact for Price'
     return new Intl.NumberFormat('en-AE', {
-      style: 'currency',
-      currency: 'AED',
+      style: 'decimal',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
@@ -147,7 +139,7 @@ export default function VehicleDetailPage() {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric'
     })
   }
@@ -168,44 +160,63 @@ export default function VehicleDetailPage() {
     }
   }
 
-
+  // Loading State with Frosted Design
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background bg-pattern">
         <SiteNavbar />
-        
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid lg:grid-cols-2 gap-8">
-            <Skeleton className="h-96 w-full rounded-lg" />
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-3/4" />
-              <Skeleton className="h-6 w-1/2" />
-              <Skeleton className="h-12 w-1/3" />
-              <Skeleton className="h-32 w-full" />
-            </div>
+
+        {/* Breadcrumb Skeleton */}
+        <div className="frosted-panel border-b">
+          <div className="max-w-content mx-auto px-4 md:px-6 py-4">
+            <Skeleton className="h-4 w-64" />
           </div>
         </div>
+
+        <main className="max-w-content mx-auto px-4 md:px-6 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Gallery Skeleton */}
+            <div className="lg:col-span-2 space-y-4">
+              <Skeleton className="h-[450px] w-full rounded-2xl" />
+              <div className="flex gap-3">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="w-24 h-20 rounded-xl flex-shrink-0" />
+                ))}
+              </div>
+            </div>
+
+            {/* Sidebar Skeleton */}
+            <div className="lg:col-span-1 space-y-6">
+              <Skeleton className="h-40 w-full rounded-2xl" />
+              <Skeleton className="h-56 w-full rounded-2xl" />
+              <Skeleton className="h-64 w-full rounded-2xl" />
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
 
+  // Error State
   if (error || !vehicle) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background bg-pattern">
         <SiteNavbar />
-        
-        <div className="container mx-auto px-4 py-16 text-center">
-          <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Vehicle Not Found</h1>
-          <p className="text-muted-foreground mb-4">
-            The vehicle you are looking for does not exist or has been removed.
-          </p>
-          <Button asChild>
-            <Link href="/inventory">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Inventory
-            </Link>
-          </Button>
+
+        <div className="max-w-content mx-auto px-4 md:px-6 py-16 text-center">
+          <div className="alumina-surface rounded-2xl p-12 max-w-md mx-auto">
+            <Car className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+            <h1 className="text-2xl font-bold mb-3">Vehicle Not Found</h1>
+            <p className="text-muted-foreground mb-6">
+              The vehicle you are looking for does not exist or has been removed.
+            </p>
+            <Button asChild className="btn-precision">
+              <Link href="/inventory">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Inventory
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -238,128 +249,147 @@ export default function VehicleDetailPage() {
     return includesVat ? 0 : vehicle.sale_price * 0.05
   }
 
-  const getDamageSeverityBadge = (severity: string | undefined) => {
-    if (!severity) return null
+  // Get status badge info for the gallery
+  const getStatusBadgeInfo = () => {
+    const status = vehicle.current_status
+    if (!status) return null
 
-    const severityMap: Record<string, { label: string; className: string }> = {
-      'minor': {
-        label: 'Minor Damage',
-        className: 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-colors'
-      },
-      'moderate': {
-        label: 'Moderate Damage',
-        className: 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 hover:border-amber-400 transition-colors'
-      },
-      'major': {
-        label: 'Major Damage',
-        className: 'bg-orange-50 text-orange-900 border-orange-300 hover:bg-orange-100 hover:border-orange-400 transition-colors'
-      },
-      'total_loss': {
-        label: 'Total Loss',
-        className: 'bg-red-50 text-red-900 border-red-300 hover:bg-red-100 hover:border-red-400 transition-colors'
-      }
+    // Check if vehicle is in yard (arrived statuses)
+    const arrivedStatuses = ['at_yard', 'under_enhancement', 'ready_for_sale']
+    const inTransitStatuses = ['auction_won', 'payment_processing', 'pickup_scheduled', 'in_transit_to_port', 'at_port', 'shipped', 'in_transit', 'at_uae_port', 'customs_clearance', 'released_from_customs', 'in_transit_to_yard']
+
+    if (arrivedStatuses.includes(status)) {
+      return { label: 'In Yard', className: 'bg-emerald-500 text-white' }
     }
-
-    return severityMap[severity] || null
+    if (inTransitStatuses.includes(status)) {
+      return { label: 'In Transit', className: 'bg-precision-600 text-white' }
+    }
+    if (status === 'reserved') {
+      return { label: 'Reserved', className: 'bg-amber-500 text-white' }
+    }
+    return null
   }
 
   // Mask VIN for non-authenticated users (show last 6 digits only)
   const displayVin = vehicle.vin
     ? isAuthenticated
       ? vehicle.vin
-      : `•••••••••••${vehicle.vin.slice(-6)}`
+      : `${'*'.repeat(11)}${vehicle.vin.slice(-6)}`
     : null
 
+  const statusBadge = getStatusBadgeInfo()
+  const totalPhotos = vehicle.vehicle_photos?.length || 0
+  const visibleThumbnails = 5
+  const extraPhotos = totalPhotos > visibleThumbnails ? totalPhotos - visibleThumbnails : 0
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-pattern">
       <SiteNavbar />
 
-      {/* Breadcrumb */}
-      <div className="border-b bg-muted/30">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground transition-colors">
-              <Home className="h-4 w-4" />
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link href="/inventory" className="hover:text-foreground transition-colors">
-              Inventory
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-medium">
-              {vehicle.year} {vehicle.make} {vehicle.model}
-            </span>
-          </div>
+      {/* Breadcrumb - Frosted Panel */}
+      <div className="frosted-panel border-b">
+        <div className="max-w-content mx-auto px-4 md:px-6 py-4 flex items-center gap-2 text-xs font-mono text-muted-foreground">
+          <Link href="/" className="hover:text-primary transition-colors">
+            Home
+          </Link>
+          <span>/</span>
+          <Link href="/inventory" className="hover:text-primary transition-colors">
+            Inventory
+          </Link>
+          <span>/</span>
+          <span className="text-foreground">
+            {vehicle.year} {vehicle.make} {vehicle.model}
+          </span>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-10">
-        {/* Back Button */}
-        <div className="mb-8">
-          <Button asChild variant="outline">
-            <Link href="/inventory">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Inventory
-            </Link>
-          </Button>
-        </div>
+      <main className="max-w-content mx-auto px-4 md:px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <div className="grid lg:grid-cols-2 gap-10">
-          {/* Image Gallery */}
-          <div className="space-y-4">
-            <div className="relative bg-muted rounded-lg overflow-hidden aspect-video">
+          {/* Gallery Section - 2/3 width on desktop */}
+          <div className="lg:col-span-2 space-y-4 animate-reveal">
+            {/* Main Image */}
+            <div className="alumina-surface rounded-2xl overflow-hidden relative">
               {vehicle.vehicle_photos && vehicle.vehicle_photos.length > 0 ? (
                 <>
-                  <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={vehicle.vehicle_photos[currentImageIndex].url}
                     alt={`${vehicle.year} ${vehicle.make} ${vehicle.model} - Image ${currentImageIndex + 1}`}
-                    className="w-full h-full object-cover"
-                  /></>
-                  {vehicle.vehicle_photos.length > 1 && (
+                    className="w-full h-[450px] object-cover"
+                  />
+
+                  {/* Status Badges - Top Left */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    {statusBadge && (
+                      <span className={`status-tag ${statusBadge.className}`}>
+                        {statusBadge.label}
+                      </span>
+                    )}
+                    {vehicle.run_and_drive && (
+                      <span className="frosted-panel px-4 py-2 rounded-xl text-xs font-bold text-emerald-600 uppercase flex items-center gap-2">
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        Run & Drive
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Damage Badge - Top Right */}
+                  {vehicle.damage_description && (
+                    <div className="absolute top-4 right-4">
+                      <span className="frosted-panel px-4 py-2 rounded-xl text-xs font-bold text-foreground/70 uppercase">
+                        {vehicle.damage_description}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Image Counter - Bottom Right */}
+                  {totalPhotos > 1 && (
+                    <div className="absolute bottom-4 right-4 frosted-panel px-4 py-2 rounded-xl text-xs font-bold font-mono">
+                      {currentImageIndex + 1} / {totalPhotos}
+                    </div>
+                  )}
+
+                  {/* Navigation Arrows */}
+                  {totalPhotos > 1 && (
                     <>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-background/80 backdrop-blur"
+                      <button
                         onClick={previousImage}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 frosted-panel rounded-xl flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all"
+                        aria-label="Previous image"
                       >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-background/80 backdrop-blur"
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                      <button
                         onClick={nextImage}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 frosted-panel rounded-xl flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all"
+                        aria-label="Next image"
                       >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-background/80 backdrop-blur rounded-full px-3 py-1 text-sm">
-                        {currentImageIndex + 1} / {vehicle.vehicle_photos.length}
-                      </div>
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
                     </>
                   )}
                 </>
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
+                <div className="w-full h-[450px] flex items-center justify-center bg-muted">
                   <ImageIcon className="h-24 w-24 text-muted-foreground" />
                 </div>
               )}
             </div>
 
-            {/* Thumbnail Strip - Tighter Spacing */}
+            {/* Thumbnails Strip */}
             {vehicle.vehicle_photos && vehicle.vehicle_photos.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {vehicle.vehicle_photos.map((photo: VehiclePhoto, index: number) => (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {vehicle.vehicle_photos.slice(0, visibleThumbnails).map((photo: VehiclePhoto, index: number) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 w-24 h-20 rounded-md overflow-hidden border-2 transition-all ${
+                    className={`thumbnail w-24 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 ${
                       index === currentImageIndex
-                        ? 'border-primary ring-2 ring-primary/20'
-                        : 'border-border hover:border-primary/50'
+                        ? 'active border-primary'
+                        : 'border-transparent'
                     }`}
+                    aria-label={`View image ${index + 1}`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -369,68 +399,64 @@ export default function VehicleDetailPage() {
                     />
                   </button>
                 ))}
+                {extraPhotos > 0 && vehicle.vehicle_photos[visibleThumbnails] && (
+                  <button
+                    onClick={() => setCurrentImageIndex(visibleThumbnails)}
+                    className="thumbnail w-24 h-20 rounded-xl overflow-hidden border-2 border-transparent flex-shrink-0 relative"
+                    aria-label={`View ${extraPhotos} more images`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={vehicle.vehicle_photos[visibleThumbnails].url}
+                      alt={`Thumbnail ${visibleThumbnails + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-sm">
+                      +{extraPhotos}
+                    </div>
+                  </button>
+                )}
               </div>
             )}
           </div>
 
-          {/* Vehicle Details - Sticky on desktop */}
-          <div className="space-y-7 lg:sticky lg:top-4 lg:self-start">
-            {/* Header */}
-            <div>
-              <div className="flex items-start justify-between mb-6">
+          {/* Info Sidebar - 1/3 width on desktop */}
+          <div className="lg:col-span-1 space-y-6 animate-reveal" style={{ animationDelay: '0.2s' }}>
+
+            {/* Title Card */}
+            <div className="alumina-surface rounded-2xl p-6 relative z-10">
+              <div className="flex items-start gap-3 mb-4">
+                <span className="w-2 h-12 bg-action-600 rounded-full flex-shrink-0"></span>
                 <div>
-                  <h1 className="text-4xl font-bold mb-3 leading-tight">
+                  <h1 className="text-2xl font-black leading-tight">
                     {vehicle.year} {vehicle.make} {vehicle.model}
                   </h1>
-                  <div className="flex flex-wrap items-center gap-3 mt-2">
-                    {vehicle.current_status && getPublicStatusLabel(vehicle.current_status as any) && (
-                      <Badge className={`${getPublicStatusBadgeStyle(vehicle.current_status as any)} font-semibold`}>
-                        {getPublicStatusLabel(vehicle.current_status as any)}
-                      </Badge>
-                    )}
-                    {displayVin && (
-                      <span className="text-sm text-muted-foreground">
-                        VIN: <span className="font-mono tracking-wide">{displayVin}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-primary">
-                    {vehicle.sale_price && vehicle.sale_price > 0 && getDisplayPrice() ? formatCurrency(getDisplayPrice()!) : 'Contact for Price'}
-                  </div>
-                  {vehicle.sale_price && vehicle.sale_price > 0 && getVatAmount() > 0 && (
-                    <div className="text-sm text-amber-600 font-medium">
-                      Includes 5% VAT
-                    </div>
-                  )}
+                  <p className="text-xs font-mono text-muted-foreground mt-1">
+                    {vehicle.lot_number && <>LOT: #{vehicle.lot_number} &bull; </>}
+                    {displayVin && <>VIN: {displayVin}</>}
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Important Info Badges - Simplified */}
-            {(vehicle.run_and_drive || vehicle.keys_available || vehicle.title_status) && (
-              <div className="flex flex-wrap items-center gap-3 pb-5 border-b">
-                {vehicle.run_and_drive && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="h-5 w-5 text-primary" />
-                    <span className="font-medium">Run & Drive</span>
-                  </div>
-                )}
-                {vehicle.keys_available && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Key className="h-5 w-5 text-primary" />
-                    <span className="font-medium">Keys Available</span>
-                  </div>
+              {/* Tag Badges */}
+              <div className="flex flex-wrap gap-2">
+                {vehicle.auction_house && (
+                  <span className="px-3 py-1 bg-precision-100 text-precision-900 text-2xs font-bold uppercase rounded-full">
+                    {vehicle.auction_house}{vehicle.auction_location && ` - ${vehicle.auction_location}`}
+                  </span>
                 )}
                 {vehicle.title_status && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <span className="font-medium">{vehicle.title_status}</span>
-                  </div>
+                  <span className="px-3 py-1 bg-muted text-muted-foreground text-2xs font-bold uppercase rounded-full">
+                    {vehicle.title_status}
+                  </span>
+                )}
+                {vehicle.run_and_drive && (
+                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-2xs font-bold uppercase rounded-full">
+                    Run & Drive
+                  </span>
                 )}
               </div>
-            )}
+            </div>
 
             {/* Arrival Countdown */}
             {vehicle.expected_arrival_date && (
@@ -441,307 +467,414 @@ export default function VehicleDetailPage() {
               />
             )}
 
-            {/* Price Breakdown Card - Simplified */}
-            <div className="pt-2"></div>
+            {/* Price Card */}
             {vehicle.sale_price && vehicle.sale_price > 0 && (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    {/* Primary Price Display */}
-                    <div className="text-center pb-4 border-b">
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {vehicle.sale_type === 'export_only' ? 'Export Price' : 'Price'}
-                      </p>
-                      <p className="text-4xl font-bold">
+              <div className="alumina-surface rounded-2xl overflow-hidden relative z-10">
+                <div className="p-5 border-b border-border flex items-center gap-2">
+                  <span className="w-2 h-2 bg-action-600 rounded-full"></span>
+                  <h3 className="font-bold text-sm uppercase tracking-wider">Price Breakdown</h3>
+                </div>
+                <div className="p-6">
+                  <div className="flex justify-between items-end mb-6">
+                    <div>
+                      <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Total Price</p>
+                      <p className="text-4xl font-black text-primary font-mono">
                         {formatCurrency(vehicle.sale_type === 'export_only' ? vehicle.sale_price : getDisplayPrice())}
                       </p>
-                      {vehicle.sale_type !== 'export_only' && (
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Includes 5% VAT
-                        </p>
-                      )}
                     </div>
-
-                    {/* Price Details - Subtle */}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Base Price</span>
-                        <span className="font-medium">{formatCurrency(vehicle.sale_price)}</span>
-                      </div>
-                      {vehicle.sale_type !== 'export_only' && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">VAT (5%)</span>
-                          <span className="font-medium">{formatCurrency((vehicle.sale_price || 0) * 0.05)}</span>
-                        </div>
-                      )}
-                      {vehicle.sale_type === 'local_and_export' && (
-                        <div className="pt-2 border-t text-xs text-muted-foreground">
-                          Export customers: {formatCurrency(vehicle.sale_price)} (VAT-free)
-                        </div>
-                      )}
-                    </div>
+                    <span className="text-lg font-bold text-muted-foreground">AED</span>
                   </div>
-                </CardContent>
-              </Card>
-            )}
 
-            {/* Vehicle Specifications - Cleaner Layout */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Vehicle Specifications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {vehicle.mileage && (
-                    <div className="flex justify-between items-center py-2 border-b border-border/50">
-                      <span className="text-sm text-muted-foreground">Mileage</span>
-                      <span className="font-medium">{vehicle.mileage.toLocaleString()} miles</span>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between spec-line pb-3">
+                      <span className="text-muted-foreground">Vehicle Price</span>
+                      <span className="font-bold font-mono">{formatCurrency(vehicle.sale_price)} AED</span>
                     </div>
-                  )}
-                  {(vehicle.engine || vehicle.engine_size) && (
-                    <div className="flex justify-between items-center py-2 border-b border-border/50">
-                      <span className="text-sm text-muted-foreground">Engine</span>
-                      <span className="font-medium">{vehicle.engine || vehicle.engine_size}</span>
-                    </div>
-                  )}
-                  {vehicle.transmission && (
-                    <div className="flex justify-between items-center py-2 border-b border-border/50">
-                      <span className="text-sm text-muted-foreground">Transmission</span>
-                      <span className="font-medium">{vehicle.transmission}</span>
-                    </div>
-                  )}
-                  {vehicle.drivetrain && (
-                    <div className="flex justify-between items-center py-2 border-b border-border/50">
-                      <span className="text-sm text-muted-foreground">Drivetrain</span>
-                      <span className="font-medium">{vehicle.drivetrain}</span>
-                    </div>
-                  )}
-                  {vehicle.fuel_type && (
-                    <div className="flex justify-between items-center py-2 border-b border-border/50">
-                      <span className="text-sm text-muted-foreground">Fuel Type</span>
-                      <span className="font-medium">{vehicle.fuel_type}</span>
-                    </div>
-                  )}
-                  {(vehicle.body_style || vehicle.body_type) && (
-                    <div className="flex justify-between items-center py-2 border-b border-border/50">
-                      <span className="text-sm text-muted-foreground">Body Type</span>
-                      <span className="font-medium">{vehicle.body_style || vehicle.body_type}</span>
-                    </div>
-                  )}
-                  {(vehicle.exterior_color || vehicle.color) && (
-                    <div className="flex justify-between items-center py-2 border-b border-border/50">
-                      <span className="text-sm text-muted-foreground">Exterior Color</span>
-                      <span className="font-medium">{vehicle.exterior_color || vehicle.color}</span>
-                    </div>
-                  )}
-                  {vehicle.interior_color && (
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-sm text-muted-foreground">Interior Color</span>
-                      <span className="font-medium">{vehicle.interior_color}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Auction Information - Cleaner Layout */}
-            {(vehicle.auction_house || vehicle.sale_date || vehicle.auction_location || vehicle.current_location || vehicle.auction_date || vehicle.location || vehicle.lot_number) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Auction Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {vehicle.auction_house && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-sm text-muted-foreground">Auction House</span>
-                        <span className="font-medium">{vehicle.auction_house}</span>
+                    {vehicle.sale_type !== 'export_only' && (
+                      <div className="flex justify-between spec-line pb-3">
+                        <span className="text-muted-foreground">VAT (5%)</span>
+                        <span className="font-bold font-mono">{formatCurrency(getVatAmount())} AED</span>
                       </div>
                     )}
-                    {(vehicle.sale_date || vehicle.auction_date) && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-sm text-muted-foreground">Auction Date</span>
-                        <span className="font-medium">{formatDate((vehicle.sale_date || vehicle.auction_date) as string)}</span>
-                      </div>
-                    )}
-                    {vehicle.auction_location && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-sm text-muted-foreground">Auction Location</span>
-                        <span className="font-medium">{vehicle.auction_location}</span>
-                      </div>
-                    )}
-                    {(vehicle.current_location || vehicle.location) && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-sm text-muted-foreground">Current Location</span>
-                        <span className="font-medium">{vehicle.current_location || vehicle.location}</span>
-                      </div>
-                    )}
-                    {vehicle.lot_number && (
-                      <div className="flex justify-between items-center py-2 border-b border-border/50">
-                        <span className="text-sm text-muted-foreground">Lot Number</span>
-                        <span className="font-medium">{vehicle.lot_number}</span>
-                      </div>
-                    )}
-                    {(vehicle as PageVehicle).grade && (
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-sm text-muted-foreground">Grade</span>
-                        <span className="font-medium">{(vehicle as PageVehicle).grade}</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Contact Actions */}
-            <Card className="bg-muted/30">
-              <CardContent className="p-7">
-                <div className="space-y-5">
-                  <h3 className="text-xl font-bold">Interested in this vehicle?</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {vehicle.sale_price && vehicle.sale_price > 0 && vehicle.is_public
-                      ? 'Reserve this vehicle online or contact us for more information.'
-                      : 'Contact us for more information, schedule an inspection, or get a personalized quote.'}
-                  </p>
-
-                  {/* Reserve Now Button - Only show if vehicle is public and has a price */}
-                  {vehicle.sale_price && vehicle.sale_price > 0 && vehicle.is_public && (
-                    <div className="space-y-3">
-                      <Button
-                        className="w-full h-12 text-lg"
-                        onClick={() => setReservationModalOpen(true)}
-                      >
-                        <ShoppingCart className="h-5 w-5 mr-2" />
-                        Reserve This Vehicle
-                      </Button>
-                      <p className="text-xs text-center text-muted-foreground">
-                        Secure your vehicle with just 5% deposit
+                    <div className="flex justify-between pt-2">
+                      <span className="font-bold">Total</span>
+                      <span className="font-black text-primary font-mono">
+                        {formatCurrency(vehicle.sale_type === 'export_only' ? vehicle.sale_price : getDisplayPrice())} AED
+                      </span>
+                    </div>
+                    {vehicle.sale_type === 'local_and_export' && (
+                      <p className="pt-3 border-t text-xs text-muted-foreground">
+                        Export customers: {formatCurrency(vehicle.sale_price)} AED (VAT-free)
                       </p>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button asChild variant="outline" className="flex-1">
-                      <Link href={`/contact?vehicle=${vehicle.id}`}>
-                        <Phone className="h-4 w-4 mr-2" />
-                        Get Quote
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="flex-1">
-                      <Link href={`/contact?vehicle=${vehicle.id}&type=inquiry`}>
-                        <Mail className="h-4 w-4 mr-2" />
-                        Send Inquiry
-                      </Link>
-                    </Button>
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            )}
+
+            {/* Actions Card */}
+            <div className="alumina-surface rounded-2xl p-6 space-y-4 relative z-10">
+              {/* Reserve Button - Only show if vehicle is public and has a price */}
+              {vehicle.sale_price && vehicle.sale_price > 0 && vehicle.is_public && (
+                <button
+                  onClick={() => setReservationModalOpen(true)}
+                  className="w-full bg-action-600 text-white py-4 rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-action-700 transition-all btn-precision flex items-center justify-center gap-3"
+                >
+                  <CalendarCheck className="w-5 h-5" />
+                  Reserve This Vehicle
+                </button>
+              )}
+
+              <Button
+                asChild
+                variant="outline"
+                className="w-full border-2 border-border text-foreground py-6 rounded-xl font-bold text-sm uppercase tracking-widest hover:border-primary hover:text-primary transition-all"
+              >
+                <Link href={`/contact?vehicle=${vehicle.id}`}>
+                  <Phone className="w-5 h-5 mr-3" />
+                  Contact Sales
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                className="w-full border-2 border-emerald-200 text-emerald-700 py-6 rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-emerald-50 transition-all"
+              >
+                <a
+                  href={`https://wa.me/971655512344?text=Hi, I'm interested in the ${vehicle.year} ${vehicle.make} ${vehicle.model} (ID: ${vehicle.id})`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="w-5 h-5 mr-3" />
+                  WhatsApp Inquiry
+                </a>
+              </Button>
+
+              <p className="text-center text-xs text-muted-foreground pt-2">
+                Or call directly: <a href="tel:+971655512344" className="text-primary font-bold">+971 6 555 1234</a>
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Additional Information */}
-        <div className="mt-16 space-y-10">
-          {/* Condition & Damage Report - Simplified */}
-          {(vehicle.damage_severity || vehicle.damage_description || (vehicle as PageVehicle).condition_report || (vehicle as PageVehicle).inspection_notes) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Condition Report</span>
-                  {vehicle.damage_severity && getDamageSeverityBadge(vehicle.damage_severity) && (
-                    <Badge variant="outline" className="text-sm font-medium">
-                      {getDamageSeverityBadge(vehicle.damage_severity)?.label}
-                    </Badge>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5">
+        {/* Details Section - 2 Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+
+          {/* Specifications Card */}
+          <div className="alumina-surface rounded-2xl overflow-hidden animate-reveal" style={{ animationDelay: '0.3s' }}>
+            <div className="p-5 border-b border-border flex items-center gap-2">
+              <Settings className="w-4 h-4 text-primary" />
+              <h3 className="font-bold text-sm uppercase tracking-wider">Specifications</h3>
+            </div>
+            <div className="grid grid-cols-2 relative z-10">
+              {vehicle.mileage && (
+                <>
+                  <div className="p-4 border-b border-r border-border/50">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Mileage</p>
+                    <p className="font-bold">{vehicle.mileage.toLocaleString()} Mi</p>
+                  </div>
+                </>
+              )}
+              {vehicle.transmission && (
+                <div className={`p-4 border-b border-border/50 ${!vehicle.mileage ? 'border-r' : ''}`}>
+                  <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Transmission</p>
+                  <p className="font-bold">{vehicle.transmission}</p>
+                </div>
+              )}
+              {(vehicle.engine || vehicle.engine_size) && (
+                <div className="p-4 border-b border-r border-border/50">
+                  <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Engine</p>
+                  <p className="font-bold">{vehicle.engine || vehicle.engine_size}</p>
+                </div>
+              )}
+              {vehicle.fuel_type && (
+                <div className="p-4 border-b border-border/50">
+                  <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Fuel Type</p>
+                  <p className="font-bold">{vehicle.fuel_type}</p>
+                </div>
+              )}
+              {vehicle.drivetrain && (
+                <div className="p-4 border-b border-r border-border/50">
+                  <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Drive Type</p>
+                  <p className="font-bold">{vehicle.drivetrain}</p>
+                </div>
+              )}
+              {(vehicle.body_style || vehicle.body_type) && (
+                <div className="p-4 border-b border-border/50">
+                  <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Body Style</p>
+                  <p className="font-bold">{vehicle.body_style || vehicle.body_type}</p>
+                </div>
+              )}
+              {(vehicle.exterior_color || vehicle.color) && (
+                <div className="p-4 border-r border-border/50">
+                  <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Exterior Color</p>
+                  <p className="font-bold">{vehicle.exterior_color || vehicle.color}</p>
+                </div>
+              )}
+              {vehicle.interior_color && (
+                <div className="p-4">
+                  <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Interior Color</p>
+                  <p className="font-bold">{vehicle.interior_color}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Auction Information Card */}
+          {(vehicle.auction_house || vehicle.sale_date || vehicle.auction_location || vehicle.current_location || vehicle.auction_date || vehicle.location || vehicle.lot_number || vehicle.title_status || vehicle.damage_description || vehicle.keys_available !== undefined) && (
+            <div className="alumina-surface rounded-2xl overflow-hidden animate-reveal" style={{ animationDelay: '0.4s' }}>
+              <div className="p-5 border-b border-border flex items-center gap-2">
+                <Gavel className="w-4 h-4 text-primary" />
+                <h3 className="font-bold text-sm uppercase tracking-wider">Auction Information</h3>
+              </div>
+              <div className="grid grid-cols-2 relative z-10">
+                {vehicle.auction_house && (
+                  <div className="p-4 border-b border-r border-border/50">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Auction House</p>
+                    <p className="font-bold">{vehicle.auction_house}</p>
+                  </div>
+                )}
+                {(vehicle.auction_location || vehicle.current_location || vehicle.location) && (
+                  <div className="p-4 border-b border-border/50">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Location</p>
+                    <p className="font-bold">{vehicle.auction_location || vehicle.current_location || vehicle.location}</p>
+                  </div>
+                )}
+                {vehicle.lot_number && (
+                  <div className="p-4 border-b border-r border-border/50">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Lot Number</p>
+                    <p className="font-bold font-mono">#{vehicle.lot_number}</p>
+                  </div>
+                )}
+                {(vehicle.sale_date || vehicle.auction_date) && (
+                  <div className="p-4 border-b border-border/50">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Sale Date</p>
+                    <p className="font-bold">{formatDate((vehicle.sale_date || vehicle.auction_date) as string)}</p>
+                  </div>
+                )}
+                {vehicle.title_status && (
+                  <div className="p-4 border-b border-r border-border/50">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Title Type</p>
+                    <p className="font-bold">{vehicle.title_status}</p>
+                  </div>
+                )}
                 {vehicle.damage_description && (
-                  <div className="pb-5 border-b">
-                    <h4 className="font-semibold mb-3">Damage Description</h4>
-                    <p className="text-muted-foreground leading-relaxed">{vehicle.damage_description}</p>
+                  <div className="p-4 border-b border-border/50">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Primary Damage</p>
+                    <p className="font-bold text-action-600">{vehicle.damage_description}</p>
                   </div>
                 )}
-                {(vehicle as PageVehicle).condition_report && (
-                  <div className="pb-5 border-b">
-                    <h4 className="font-semibold mb-3">Condition Report</h4>
-                    <p className="text-muted-foreground leading-relaxed">{(vehicle as PageVehicle).condition_report}</p>
+                {(vehicle as PageVehicle).grade && (
+                  <div className="p-4 border-r border-border/50">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Grade</p>
+                    <p className="font-bold">{(vehicle as PageVehicle).grade}</p>
                   </div>
                 )}
-                {(vehicle as PageVehicle).inspection_notes && (
-                  <div>
-                    <h4 className="font-semibold mb-3">Inspection Notes</h4>
-                    <p className="text-muted-foreground leading-relaxed">{(vehicle as PageVehicle).inspection_notes}</p>
+                {vehicle.keys_available !== undefined && (
+                  <div className="p-4">
+                    <p className="text-2xs font-bold text-muted-foreground uppercase mb-1">Keys</p>
+                    <p className={`font-bold ${vehicle.keys_available ? 'text-emerald-600' : 'text-action-600'}`}>
+                      {vehicle.keys_available ? 'Present' : 'Not Available'}
+                    </p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
-          {/* Features */}
+          {/* Condition Report Card */}
+          {(vehicle.damage_severity || vehicle.damage_description || (vehicle as PageVehicle).condition_report || (vehicle as PageVehicle).inspection_notes || vehicle.run_and_drive !== undefined || vehicle.keys_available !== undefined) && (
+            <div className="alumina-surface rounded-2xl overflow-hidden animate-reveal" style={{ animationDelay: '0.5s' }}>
+              <div className="p-5 border-b border-border flex items-center gap-2">
+                <ClipboardCheck className="w-4 h-4 text-primary" />
+                <h3 className="font-bold text-sm uppercase tracking-wider">Condition Report</h3>
+              </div>
+              <div className="p-5 space-y-2 relative z-10">
+                {/* Engine/Run Status */}
+                {vehicle.run_and_drive !== undefined && (
+                  <div className="condition-item flex justify-between items-center p-3 rounded-xl">
+                    <span className="text-sm font-medium">Engine Status</span>
+                    <span className={`text-sm font-bold flex items-center gap-2 ${vehicle.run_and_drive ? 'text-emerald-600' : 'text-action-600'}`}>
+                      {vehicle.run_and_drive ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          Runs & Drives
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-4 h-4" />
+                          Not Running
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {/* Keys */}
+                {vehicle.keys_available !== undefined && (
+                  <div className="condition-item flex justify-between items-center p-3 rounded-xl">
+                    <span className="text-sm font-medium">Keys</span>
+                    <span className={`text-sm font-bold flex items-center gap-2 ${vehicle.keys_available ? 'text-emerald-600' : 'text-action-600'}`}>
+                      {vehicle.keys_available ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          Present
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-4 h-4" />
+                          Not Available
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {/* Damage Severity */}
+                {vehicle.damage_severity && (
+                  <div className="condition-item flex justify-between items-center p-3 rounded-xl">
+                    <span className="text-sm font-medium">Damage Level</span>
+                    <span className={`text-sm font-bold flex items-center gap-2 ${
+                      vehicle.damage_severity === 'minor' ? 'text-emerald-600' :
+                      vehicle.damage_severity === 'moderate' ? 'text-amber-600' :
+                      'text-action-600'
+                    }`}>
+                      {vehicle.damage_severity === 'minor' ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          Minor
+                        </>
+                      ) : vehicle.damage_severity === 'moderate' ? (
+                        <>
+                          <AlertTriangle className="w-4 h-4" />
+                          Moderate
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-4 h-4" />
+                          {vehicle.damage_severity === 'total_loss' ? 'Total Loss' : 'Major'}
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {/* Damage Description */}
+                {vehicle.damage_description && (
+                  <div className="condition-item flex justify-between items-center p-3 rounded-xl">
+                    <span className="text-sm font-medium">Primary Damage</span>
+                    <span className="text-sm font-bold text-action-600 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      {vehicle.damage_description}
+                    </span>
+                  </div>
+                )}
+
+                {/* Condition Report Notes */}
+                {(vehicle as PageVehicle).condition_report && (
+                  <div className="pt-4 mt-4 border-t border-border">
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase mb-2">Condition Notes</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{(vehicle as PageVehicle).condition_report}</p>
+                  </div>
+                )}
+
+                {/* Inspection Notes */}
+                {(vehicle as PageVehicle).inspection_notes && (
+                  <div className="pt-4 mt-4 border-t border-border">
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase mb-2">Inspection Notes</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{(vehicle as PageVehicle).inspection_notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Features & Equipment Card */}
           {(vehicle as PageVehicle).features && ((vehicle as PageVehicle).features?.length ?? 0) > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Features & Equipment</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="alumina-surface rounded-2xl overflow-hidden animate-reveal" style={{ animationDelay: '0.6s' }}>
+              <div className="p-5 border-b border-border flex items-center gap-2">
+                <ListChecks className="w-4 h-4 text-primary" />
+                <h3 className="font-bold text-sm uppercase tracking-wider">Features & Equipment</h3>
+              </div>
+              <div className="p-5 relative z-10">
+                <div className="grid grid-cols-2 gap-3">
                   {(vehicle as PageVehicle).features?.map((feature: string, index: number) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-500" />
-                      <span className="text-sm">{feature}</span>
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                      <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      <span>{feature}</span>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Related Vehicles */}
+        {/* Related Vehicles Section */}
         {relatedVehicles.length > 0 && (
-          <div className="mt-20">
-            <h2 className="text-3xl font-bold mb-10">You Might Also Like</h2>
-            <div className="grid md:grid-cols-3 gap-6">
+          <div className="mt-16">
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <p className="text-2xs uppercase font-bold text-action-600 tracking-widest mb-2">You May Also Like</p>
+                <h2 className="text-2xl font-extrabold tracking-tight">Similar Vehicles</h2>
+              </div>
+              <Link
+                href="/inventory"
+                className="text-sm font-bold text-primary hover:text-action-600 transition-colors uppercase tracking-wider flex items-center gap-2"
+              >
+                View All <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedVehicles.map((relatedVehicle) => (
-                <Card key={relatedVehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-                  <Link href={`/inventory/${relatedVehicle.id}`}>
-                    <div className="relative h-48 bg-muted">
-                      {relatedVehicle.vehicle_photos?.[0] ? (
+                <Link
+                  key={relatedVehicle.id}
+                  href={`/inventory/${relatedVehicle.id}`}
+                  className="alumina-surface rounded-2xl border border-border overflow-hidden hover:border-primary hover:shadow-card-hover transition-all card-hover group"
+                >
+                  <div className="h-52 overflow-hidden relative">
+                    {relatedVehicle.vehicle_photos?.[0] ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={relatedVehicle.vehicle_photos[0].url}
                           alt={`${relatedVehicle.year} ${relatedVehicle.make} ${relatedVehicle.model}`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Car className="h-16 w-16 text-muted-foreground" />
-                        </div>
-                      )}
-                      {relatedVehicle.current_status && getPublicStatusLabel(relatedVehicle.current_status as any) && (
-                        <Badge className={`absolute top-3 right-3 font-semibold ${getPublicStatusBadgeStyle(relatedVehicle.current_status as any)}`}>
-                          {getPublicStatusLabel(relatedVehicle.current_status as any)}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-semibold mb-2">
-                        {relatedVehicle.year} {relatedVehicle.make} {relatedVehicle.model}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xl font-bold text-primary">
-                          {relatedVehicle.sale_price && relatedVehicle.sale_price > 0 ? formatCurrency(relatedVehicle.sale_price) : 'Contact for Price'}
-                        </span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Car className="h-12 w-12 text-muted-foreground" />
                       </div>
-                    </CardContent>
-                  </Link>
-                </Card>
+                    )}
+                    {relatedVehicle.current_status && getPublicStatusLabel(relatedVehicle.current_status as any) && (
+                      <Badge className={`absolute top-3 right-3 font-semibold text-2xs ${getPublicStatusBadgeStyle(relatedVehicle.current_status as any)}`}>
+                        {getPublicStatusLabel(relatedVehicle.current_status as any)}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-4 relative z-10">
+                    <h3 className="font-bold text-sm mb-1">
+                      {relatedVehicle.year} {relatedVehicle.make} {relatedVehicle.model}
+                    </h3>
+                    <p className="text-lg font-black text-primary font-mono">
+                      {relatedVehicle.sale_price && relatedVehicle.sale_price > 0 ? (
+                        <>
+                          {formatCurrency(relatedVehicle.sale_price)} <span className="text-xs font-normal text-muted-foreground">AED</span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-semibold text-muted-foreground">Contact for Price</span>
+                      )}
+                    </p>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </main>
 
       {/* Reservation Modal */}
       <ReservationModal

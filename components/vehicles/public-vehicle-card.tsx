@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Car } from 'lucide-react'
@@ -50,6 +50,7 @@ export function PublicVehicleCard({
   priority = false,
   className = ''
 }: PublicVehicleCardProps) {
+  const router = useRouter()
   const [isVisible, setIsVisible] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -120,8 +121,29 @@ export function PublicVehicleCard({
       : `•••••••••••${vehicle.vin.slice(-6)}`
     : null
 
-  // Check if vehicle is in transit
-  const isInTransit = ['in_transit', 'at_auction', 'purchased'].includes(vehicle.current_status)
+  // Check if vehicle is in transit (not yet arrived at yard)
+  const arrivedStatuses = ['at_yard', 'under_enhancement', 'ready_for_sale', 'reserved', 'sold', 'delivered']
+  const isInTransit = !arrivedStatuses.includes(vehicle.current_status)
+
+  // Calculate ETA status for badge rendering
+  const getEtaStatus = () => {
+    if (!vehicle.expected_arrival_date) {
+      return { type: 'pending' as const, days: null }
+    }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const expected = new Date(vehicle.expected_arrival_date)
+    expected.setHours(0, 0, 0, 0)
+    const days = Math.ceil((expected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    if (days < 0) {
+      return { type: 'overdue' as const, days }
+    }
+    return { type: 'future' as const, days }
+  }
+
+  const etaStatus = getEtaStatus()
+  // Show ETA badge for all in-transit vehicles
+  const showEtaBadge = isInTransit
 
   // Get run/drive status color
   const getRunDriveStatus = () => {
@@ -136,6 +158,21 @@ export function PublicVehicleCard({
 
   const runDriveStatus = getRunDriveStatus()
 
+  const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+  const detailsUrl = `/inventory/${vehicle.id}`
+  const actionUrl = hasPrice ? detailsUrl : `/contact?vehicle=${vehicle.id}`
+
+  const handleCardClick = () => {
+    router.push(detailsUrl)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      router.push(detailsUrl)
+    }
+  }
+
   return (
     <div
       ref={cardRef}
@@ -145,128 +182,145 @@ export function PublicVehicleCard({
         ${className}
       `}
     >
-      <Link href={`/inventory/${vehicle.id}`} className="block">
-        <div className="alumina-surface rounded-2xl border border-border overflow-hidden card-hover h-full">
-          {/* Image Section */}
-          <div className="relative h-48 md:h-56 overflow-hidden">
-            {primaryPhoto?.url ? (
-              <Image
-                src={primaryPhoto.url}
-                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                fill
-                priority={priority}
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted">
-                <Car className="h-16 w-16 text-muted-foreground/30" />
-              </div>
-            )}
+      <article
+        className="alumina-surface rounded-2xl border border-border overflow-hidden card-hover h-full cursor-pointer group"
+        onClick={handleCardClick}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        role="article"
+        aria-label={`${vehicleTitle} - ${priceFormatted.isContactPrice ? 'Contact for price' : `${priceFormatted.amount} ${priceFormatted.currency}`}`}
+      >
+        {/* Image Section */}
+        <div className="relative h-48 md:h-56 overflow-hidden">
+          {primaryPhoto?.url ? (
+            <Image
+              src={primaryPhoto.url}
+              alt={vehicleTitle}
+              fill
+              priority={priority}
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-muted">
+              <Car className="h-16 w-16 text-muted-foreground/30" aria-hidden="true" />
+            </div>
+          )}
 
-            {/* Status Tag - Top Left */}
-            {statusLabel && (
-              <div
-                className={`absolute top-3 left-3 status-tag ${
-                  isInTransit ? 'bg-precision-600' : 'bg-success'
-                } text-white`}
-              >
-                {statusLabel}
-              </div>
-            )}
+          {/* Status Tag - Top Left */}
+          {statusLabel && (
+            <div
+              className={`absolute top-3 left-3 status-tag ${
+                isInTransit ? 'bg-precision-600' : 'bg-success'
+              } text-white`}
+            >
+              {statusLabel}
+            </div>
+          )}
 
-            {/* Run & Drive Badge - Top Right */}
-            {runDriveStatus && (
-              <div className="absolute top-3 right-3 frosted-panel px-2 py-1 rounded-lg">
-                <span className={`text-[9px] font-bold uppercase flex items-center gap-1 ${runDriveStatus.color}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${runDriveStatus.dot}`} />
-                  {runDriveStatus.label}
-                </span>
-              </div>
-            )}
+          {/* Run & Drive Badge - Top Right */}
+          {runDriveStatus && (
+            <div className="absolute top-3 right-3 frosted-panel px-2 py-1 rounded-lg">
+              <span className={`text-3xs font-bold uppercase flex items-center gap-1 ${runDriveStatus.color}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${runDriveStatus.dot}`} aria-hidden="true" />
+                {runDriveStatus.label}
+              </span>
+            </div>
+          )}
 
-            {/* Lot Number or ETA - Bottom Left */}
+          {/* ETA Badge - Bottom Left (In-Transit Only) */}
+          {showEtaBadge && (
             <div className="absolute bottom-3 left-3 frosted-panel px-2 py-1 rounded-lg">
-              {isInTransit && vehicle.expected_arrival_date ? (
+              {etaStatus.type === 'pending' ? (
+                <span className="text-3xs font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full" aria-hidden="true" />
+                  ETA Pending
+                </span>
+              ) : (
                 <ArrivalCountdown
                   expectedDate={vehicle.expected_arrival_date}
                   actualDate={vehicle.actual_arrival_date}
                   variant="badge"
                 />
-              ) : vehicle.lot_number ? (
-                <span className="text-[9px] font-bold text-primary uppercase font-mono">
-                  Lot #{vehicle.lot_number}
-                </span>
-              ) : null}
+              )}
             </div>
+          )}
+        </div>
+
+        {/* Content Section */}
+        <div className="p-5 relative z-10">
+          {/* Title */}
+          <h3 className="text-base font-extrabold leading-tight mb-1 line-clamp-1">
+            {vehicleTitle}
+          </h3>
+
+          {/* VIN & LOT# */}
+          {(displayVin || vehicle.lot_number) && (
+            <div className="mb-4">
+              {displayVin && (
+                <p className="text-2xs font-mono text-muted-foreground">
+                  VIN: {displayVin}
+                </p>
+              )}
+              {vehicle.lot_number && (
+                <p className="text-2xs font-mono text-muted-foreground">
+                  LOT #{vehicle.lot_number}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Specs */}
+          <div className="space-y-1.5 mb-4">
+            {vehicle.primary_damage && (
+              <div className="flex justify-between text-xs spec-line pb-1.5">
+                <span className="text-muted-foreground">Damage</span>
+                <span className="font-bold text-action-600">{vehicle.primary_damage}</span>
+              </div>
+            )}
+            {vehicle.mileage && (
+              <div className="flex justify-between text-xs spec-line pb-1.5">
+                <span className="text-muted-foreground">Mileage</span>
+                <span className="font-bold">{vehicle.mileage.toLocaleString()} Mi</span>
+              </div>
+            )}
+            {vehicle.transmission && (
+              <div className="flex justify-between text-xs spec-line pb-1.5">
+                <span className="text-muted-foreground">Trans</span>
+                <span className="font-bold">{vehicle.transmission}</span>
+              </div>
+            )}
           </div>
 
-          {/* Content Section */}
-          <div className="p-5 relative z-10">
-            {/* Title */}
-            <h3 className="text-base font-extrabold leading-tight mb-1 line-clamp-1">
-              {vehicle.year} {vehicle.make} {vehicle.model}
-            </h3>
-
-            {/* VIN */}
-            {displayVin && (
-              <p className="text-[10px] font-mono text-muted-foreground mb-4">
-                VIN: {displayVin}
-              </p>
-            )}
-
-            {/* Specs */}
-            <div className="space-y-1.5 mb-4">
-              {vehicle.primary_damage && (
-                <div className="flex justify-between text-xs spec-line pb-1.5">
-                  <span className="text-muted-foreground">Damage</span>
-                  <span className="font-bold text-action-600">{vehicle.primary_damage}</span>
-                </div>
-              )}
-              {vehicle.mileage && (
-                <div className="flex justify-between text-xs spec-line pb-1.5">
-                  <span className="text-muted-foreground">Mileage</span>
-                  <span className="font-bold">{vehicle.mileage.toLocaleString()} Mi</span>
-                </div>
-              )}
-              {vehicle.transmission && (
-                <div className="flex justify-between text-xs spec-line pb-1.5">
-                  <span className="text-muted-foreground">Trans</span>
-                  <span className="font-bold">{vehicle.transmission}</span>
-                </div>
+          {/* Price & Action */}
+          <div className="flex justify-between items-center pt-4 border-t border-border">
+            <div>
+              <p className="text-2xs font-bold text-muted-foreground uppercase">Price</p>
+              {priceFormatted.isContactPrice ? (
+                <p className="text-sm font-semibold text-foreground">Contact</p>
+              ) : (
+                <p className="text-2xl font-black text-primary font-mono">
+                  {priceFormatted.amount} <span className="text-sm">{priceFormatted.currency}</span>
+                </p>
               )}
             </div>
-
-            {/* Price & Action */}
-            <div className="flex justify-between items-center pt-4 border-t border-border">
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">Price</p>
-                {priceFormatted.isContactPrice ? (
-                  <p className="text-sm font-semibold text-foreground">Contact</p>
-                ) : (
-                  <p className="text-2xl font-black text-primary font-mono">
-                    {priceFormatted.amount} <span className="text-sm">{priceFormatted.currency}</span>
-                  </p>
-                )}
-              </div>
-              <Button
-                size="card"
-                className={`btn-precision ${
-                  isInTransit
-                    ? 'bg-primary hover:bg-primary/90'
-                    : 'bg-action-600 hover:bg-action-700'
-                }`}
-                onClick={(e) => e.stopPropagation()}
-                asChild
-              >
-                <Link href={hasPrice ? `/inventory/${vehicle.id}` : `/contact?vehicle=${vehicle.id}`}>
-                  {isInTransit ? 'Reserve Now' : 'View Details'}
-                </Link>
-              </Button>
-            </div>
+            <Button
+              size="card"
+              className={`btn-precision ${
+                isInTransit
+                  ? 'bg-primary hover:bg-primary/90'
+                  : 'bg-action-600 hover:bg-action-700'
+              }`}
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(actionUrl)
+              }}
+            >
+              {isInTransit ? 'Reserve Now' : 'View Details'}
+            </Button>
           </div>
         </div>
-      </Link>
+      </article>
     </div>
   )
 }

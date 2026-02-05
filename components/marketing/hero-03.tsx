@@ -7,7 +7,7 @@ import { HeroSearchCard } from './hero-search-card'
 
 export function Hero03() {
   return (
-    <section className="hero-gradient relative overflow-hidden">
+    <section className="hero-gradient relative overflow-hidden" aria-labelledby="hero-heading">
       {/* Dot Pattern Overlay - creates premium texture */}
       <div
         className="absolute inset-0 opacity-[0.07]"
@@ -39,7 +39,7 @@ export function Hero03() {
             </p>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95] mb-6 text-balance">
+            <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[0.95] mb-6 text-balance">
               Premium Salvage
               <br />
               <span className="text-precision-300">Delivered to UAE</span>
@@ -60,7 +60,7 @@ export function Hero03() {
               >
                 <Link href="/inventory">
                   View Inventory
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
 
@@ -71,7 +71,7 @@ export function Hero03() {
                 className="border-2 border-white/30 hover:border-white/60 bg-transparent text-white px-8 py-6 rounded-xl font-bold text-sm uppercase tracking-widest transition-all hover:bg-white/5"
               >
                 <Link href="/contact">
-                  <Phone className="mr-2 h-4 w-4" />
+                  <Phone className="mr-2 h-4 w-4" aria-hidden="true" />
                   Contact Sales
                 </Link>
               </Button>

@@ -45,7 +45,7 @@ export function SiteNavbar() {
 
   return (
     <nav className="frosted-panel border-b sticky top-0 z-50">
-      <div className="max-w-content mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-content mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
         <Logo href="/" />
 
         {/* Desktop nav */}

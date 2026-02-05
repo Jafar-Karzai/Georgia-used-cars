@@ -2,15 +2,13 @@
 // moved into (site) route group to use site layout
 
 import Link from 'next/link'
-import { useState, useEffect, Suspense } from 'react'
+import Image from 'next/image'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import {
   Car,
   Search,
@@ -19,17 +17,11 @@ import {
   ChevronLeft,
   Grid3X3,
   List,
-  Gauge,
-  Fuel,
-  Cog,
   Home,
-  CheckCircle,
-  MessageCircle
+  X
 } from 'lucide-react'
 import { SiteNavbar } from '@/components/layout/site-navbar'
-import { getPublicStatusLabel, getPublicStatusBadgeStyle, type StatusGroup, getStatusesForGroup } from '@/lib/utils/vehicle-status'
-import { ArrivalCountdown } from '@/components/vehicles/arrival-countdown'
-import { StatusFilterTabs } from '@/components/vehicles/status-filter-tabs'
+import { type StatusGroup, getStatusesForGroup } from '@/lib/utils/vehicle-status'
 import type { VehicleStatus } from '@/types/database'
 
 interface PublicVehicle {
@@ -54,6 +46,8 @@ interface PublicVehicle {
   expected_arrival_date?: string
   actual_arrival_date?: string
   run_and_drive?: boolean
+  primary_damage?: string
+  lot_number?: string
   created_at: string
   vehicle_photos?: Array<{
     url: string
@@ -72,12 +66,13 @@ interface Filters {
   fuelType?: string
   transmission?: string
   status?: string
+  runAndDrive?: boolean
+  engineStarts?: boolean
 }
 
-const MAKES = ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'Nissan', 'BMW', 'Mercedes-Benz', 'Audi', 'Lexus', 'Hyundai']
+const MAKES = ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'Nissan', 'BMW', 'Mercedes-Benz', 'Audi', 'Lexus', 'Hyundai', 'Porsche', 'Tesla']
 const BODY_TYPES = ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Truck', 'Convertible', 'Wagon']
-const FUEL_TYPES = ['Gasoline', 'Diesel', 'Hybrid', 'Electric']
-const TRANSMISSIONS = ['Automatic', 'Manual', 'CVT']
+const DAMAGE_TYPES = ['Front End', 'Rear End', 'Side Impact', 'Water / Flood', 'Hail Damage', 'Mechanical', 'Vandalism']
 
 function InventoryContent() {
   const searchParams = useSearchParams()
@@ -89,14 +84,16 @@ function InventoryContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalVehicles, setTotalVehicles] = useState(0)
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [isUAE, setIsUAE] = useState<boolean | null>(null)
+  const [currency, setCurrency] = useState<'AED' | 'USD'>('AED')
+  const [sortBy, setSortBy] = useState<string>('newest')
   const [statusCounts, setStatusCounts] = useState<{ all: number; arrived: number; arriving_soon: number }>({
     all: 0,
     arrived: 0,
     arriving_soon: 0
   })
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const itemsPerPage = 12
 
@@ -118,14 +115,14 @@ function InventoryContent() {
         // Use a reliable geolocation API with timeout
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 5000)
-        
+
         const response = await fetch('https://ipapi.co/json/', { signal: controller.signal })
         clearTimeout(timeoutId)
-        
+
         if (!response.ok) {
           throw new Error(`API returned ${response.status}`)
         }
-        
+
         const data = await response.json()
         setIsUAE(data.country_code === 'AE')
       } catch (error) {
@@ -137,12 +134,7 @@ function InventoryContent() {
     detectLocation()
   }, [])
 
-  useEffect(() => {
-    loadVehicles()
-    loadVehicleCounts()
-  }, [currentPage, filters, searchQuery, currentStatusGroup])
-
-  const loadVehicles = async () => {
+  const loadVehicles = useCallback(async () => {
     setLoading(true)
     try {
       // Build query parameters
@@ -184,9 +176,9 @@ function InventoryContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentPage, searchQuery, filters, currentStatusGroup])
 
-  const loadVehicleCounts = async () => {
+  const loadVehicleCounts = useCallback(async () => {
     try {
       // Fetch all public vehicles to count them by status group
       const params = new URLSearchParams()
@@ -216,7 +208,12 @@ function InventoryContent() {
     } catch (error) {
       console.error('Failed to load vehicle counts:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadVehicles()
+    loadVehicleCounts()
+  }, [loadVehicles, loadVehicleCounts])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -224,7 +221,7 @@ function InventoryContent() {
     loadVehicles()
   }
 
-  const handleFilterChange = (key: keyof Filters, value: any) => {
+  const handleFilterChange = (key: keyof Filters, value: string | number | boolean | undefined) => {
     setFilters(prev => ({
       ...prev,
       [key]: value === 'all' ? undefined : value || undefined
@@ -238,15 +235,17 @@ function InventoryContent() {
     setCurrentPage(1)
   }
 
-  const formatPrice = (amount: number | string): { currency: string; amount: string; isContactPrice: boolean } => {
+  const formatPrice = (amount: number | string, curr: 'AED' | 'USD' = currency): { currency: string; amount: string; isContactPrice: boolean } => {
     if (typeof amount === 'string') {
       return { currency: '', amount: amount, isContactPrice: true }
     }
+    // Convert to USD if needed (approximate rate)
+    const displayAmount = curr === 'USD' ? Math.round(amount / 3.67) : amount
     const formatted = new Intl.NumberFormat('en-AE', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount)
-    return { currency: 'AED', amount: formatted, isContactPrice: false }
+    }).format(displayAmount)
+    return { currency: curr, amount: formatted, isContactPrice: false }
   }
 
   // Calculate display price based on vehicle's sale type and user location
@@ -278,483 +277,619 @@ function InventoryContent() {
     }
   }
 
-  // Get VAT note for display
-  const getVatNote = (vehicle: PublicVehicle) => {
-    // Only show VAT note if sale_price exists and is greater than 0
-    if (!vehicle.sale_price || vehicle.sale_price <= 0) return null
-
-    const saleType = vehicle.sale_type || 'local_and_export'
-
-    if (saleType === 'export_only') {
-      return 'VAT free'
-    }
-
-    if (saleType === 'local_only') {
-      return 'Includes 5% VAT'
-    }
-
-    // For local_and_export
-    if (isUAE) {
-      return 'Includes 5% VAT (UAE)'
+  // Handle status group change via URL
+  const handleStatusGroupChange = (group: StatusGroup) => {
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    if (group === 'all') {
+      params.delete('statusGroup')
     } else {
-      return 'VAT free (Export)'
+      params.set('statusGroup', group)
+    }
+    params.delete('page')
+    const queryString = params.toString()
+    window.history.pushState({}, '', queryString ? `/inventory?${queryString}` : '/inventory')
+    setCurrentPage(1)
+    // Trigger re-render by updating a dependency
+    loadVehicles()
+    loadVehicleCounts()
+  }
+
+  // Get status display info for vehicles
+  const getStatusInfo = (vehicle: PublicVehicle) => {
+    const arrivedStatuses = getStatusesForGroup('arrived')
+    const isArrived = arrivedStatuses.includes(vehicle.current_status as VehicleStatus)
+
+    return {
+      isArrived,
+      label: isArrived ? 'In Yard' : 'In Transit',
+      bgClass: isArrived ? 'bg-success' : 'bg-precision-500',
     }
   }
 
+  // Get run status info
+  const getRunStatus = (vehicle: PublicVehicle) => {
+    if (vehicle.run_and_drive === true) {
+      return { label: 'Run & Drive', colorClass: 'text-success', dotClass: 'bg-success' }
+    }
+    if (vehicle.run_and_drive === false) {
+      return { label: 'Does Not Start', colorClass: 'text-action-600', dotClass: 'bg-action-600' }
+    }
+    return null
+  }
+
+  // Calculate ETA status
+  const getEtaStatus = (expectedDate: string | undefined) => {
+    if (!expectedDate) return { type: 'pending' as const, days: null }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const expected = new Date(expectedDate)
+    expected.setHours(0, 0, 0, 0)
+    const days = Math.ceil((expected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    if (days < 0) return { type: 'overdue' as const, days }
+    if (days === 0) return { type: 'today' as const, days: 0 }
+    return { type: 'future' as const, days }
+  }
+
+  const activeFiltersCount = Object.values(filters).filter(v => v !== undefined).length
+
+  // Filter Sidebar Component
+  const FiltersSidebar = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div className={`frosted-panel rounded-2xl ${isMobile ? '' : 'sticky top-28'}`}>
+      <div className="p-5 border-b border-border flex justify-between items-center">
+        <h3 className="font-extrabold flex items-center gap-2">
+          <SlidersHorizontal className="w-4 h-4" />
+          Filters
+        </h3>
+        <button
+          onClick={clearFilters}
+          className="text-2xs font-bold text-action-600 hover:text-action-700 uppercase tracking-wider"
+        >
+          Clear All
+        </button>
+      </div>
+
+      <div className="p-5 space-y-6">
+        {/* Make */}
+        <div>
+          <label className="block text-2xs uppercase font-bold text-muted-foreground mb-2">Make / Brand</label>
+          <Select value={filters.make || ''} onValueChange={(value) => handleFilterChange('make', value)}>
+            <SelectTrigger className="w-full bg-muted/50 border-border rounded-xl px-4 py-3 font-semibold text-sm">
+              <SelectValue placeholder="All Makes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Makes</SelectItem>
+              {MAKES.map(make => (
+                <SelectItem key={make} value={make}>{make}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Year Range */}
+        <div>
+          <label className="block text-2xs uppercase font-bold text-muted-foreground mb-2">Year Range</label>
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="number"
+              placeholder="From"
+              value={filters.minYear || ''}
+              onChange={(e) => handleFilterChange('minYear', e.target.value ? parseInt(e.target.value) : undefined)}
+              className="w-full bg-muted/50 border-border rounded-xl px-4 py-3 font-semibold text-sm"
+            />
+            <Input
+              type="number"
+              placeholder="To"
+              value={filters.maxYear || ''}
+              onChange={(e) => handleFilterChange('maxYear', e.target.value ? parseInt(e.target.value) : undefined)}
+              className="w-full bg-muted/50 border-border rounded-xl px-4 py-3 font-semibold text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Price Range */}
+        <div>
+          <label className="block text-2xs uppercase font-bold text-muted-foreground mb-2">Price Range ({currency})</label>
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="number"
+              placeholder="Min"
+              value={filters.minPrice || ''}
+              onChange={(e) => handleFilterChange('minPrice', e.target.value ? parseInt(e.target.value) : undefined)}
+              className="w-full bg-muted/50 border-border rounded-xl px-4 py-3 font-semibold text-sm"
+            />
+            <Input
+              type="number"
+              placeholder="Max"
+              value={filters.maxPrice || ''}
+              onChange={(e) => handleFilterChange('maxPrice', e.target.value ? parseInt(e.target.value) : undefined)}
+              className="w-full bg-muted/50 border-border rounded-xl px-4 py-3 font-semibold text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Body Type */}
+        <div>
+          <label className="block text-2xs uppercase font-bold text-muted-foreground mb-2">Body Type</label>
+          <Select value={filters.bodyType || ''} onValueChange={(value) => handleFilterChange('bodyType', value)}>
+            <SelectTrigger className="w-full bg-muted/50 border-border rounded-xl px-4 py-3 font-semibold text-sm">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {BODY_TYPES.map(type => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Engine Status */}
+        <div>
+          <label className="block text-2xs uppercase font-bold text-muted-foreground mb-3">Engine Status</label>
+          <div className="space-y-2">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.runAndDrive === true}
+                onChange={(e) => handleFilterChange('runAndDrive', e.target.checked ? true : undefined)}
+                className="w-4 h-4 accent-precision-900 rounded"
+              />
+              <span className="text-sm font-medium flex items-center gap-2">
+                <span className="w-2 h-2 bg-success rounded-full"></span>
+                Run & Drive
+              </span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.engineStarts === true}
+                onChange={(e) => handleFilterChange('engineStarts', e.target.checked ? true : undefined)}
+                className="w-4 h-4 accent-precision-900 rounded"
+              />
+              <span className="text-sm font-medium flex items-center gap-2">
+                <span className="w-2 h-2 bg-warning rounded-full"></span>
+                Starts
+              </span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.runAndDrive === false}
+                onChange={(e) => handleFilterChange('runAndDrive', e.target.checked ? false : undefined)}
+                className="w-4 h-4 accent-precision-900 rounded"
+              />
+              <span className="text-sm font-medium flex items-center gap-2">
+                <span className="w-2 h-2 bg-action-600 rounded-full"></span>
+                Does Not Start
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {/* Damage Type */}
+        <div>
+          <label className="block text-2xs uppercase font-bold text-muted-foreground mb-2">Damage Type</label>
+          <Select value={filters.fuelType || ''} onValueChange={(value) => handleFilterChange('fuelType', value)}>
+            <SelectTrigger className="w-full bg-muted/50 border-border rounded-xl px-4 py-3 font-semibold text-sm">
+              <SelectValue placeholder="All Damage Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Damage Types</SelectItem>
+              {DAMAGE_TYPES.map(type => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button
+          onClick={() => { loadVehicles(); if (isMobile) setMobileFiltersOpen(false); }}
+          className="w-full bg-precision-900 hover:bg-precision-800 text-white py-4 rounded-xl font-bold text-sm uppercase tracking-widest btn-precision"
+        >
+          Apply Filters
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-pattern">
       <SiteNavbar />
 
-      {/* Breadcrumb */}
-      <div className="border-b bg-muted/30">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground transition-colors">
-              <Home className="h-4 w-4" />
+      {/* Page Header */}
+      <header className="frosted-panel border-b">
+        <div className="max-w-content mx-auto px-4 md:px-6 py-6">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-2xs mono text-muted-foreground mb-3">
+            <Link href="/" className="hover:text-precision-900 transition-colors">
+              <Home className="h-3.5 w-3.5" />
             </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-medium">Vehicle Inventory</span>
+            <span>/</span>
+            <span className="text-foreground">Inventory</span>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight mb-2">Vehicle Inventory</h1>
+              <p className="text-muted-foreground">Browse our curated selection of salvage vehicles from USA & Canada</p>
+            </div>
+
+            {/* Currency Toggle */}
+            <div className="flex items-center gap-2 bg-muted p-1 rounded-full border border-border">
+              <span className={`text-2xs font-bold ml-3 ${currency === 'AED' ? 'text-foreground' : 'text-muted-foreground'}`}>AED</span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={currency === 'USD'}
+                  onChange={(e) => setCurrency(e.target.checked ? 'USD' : 'AED')}
+                />
+                <div className="w-12 h-5 bg-muted-foreground/30 rounded-full peer-checked:bg-precision-500 transition-colors"></div>
+                <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 peer-checked:translate-x-7"></div>
+              </label>
+              <span className={`text-2xs font-bold mr-3 ${currency === 'USD' ? 'text-foreground' : 'text-muted-foreground'}`}>USD</span>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Vehicle Inventory</h1>
-          <p className="text-muted-foreground">
-            Browse our collection of premium salvage vehicles imported from US and Canada auctions
-          </p>
-        </div>
+      <main className="max-w-content mx-auto px-4 md:px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
-        {/* Status Filter Tabs */}
-        <div className="mb-6">
-          <StatusFilterTabs
-            counts={statusCounts}
-            currentGroup={currentStatusGroup}
-          />
-        </div>
+          {/* Filters Sidebar - Desktop */}
+          <aside className="hidden lg:block lg:col-span-1">
+            <FiltersSidebar />
+          </aside>
 
-        {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          {/* Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                type="text"
-                placeholder="Search by make, model, year, or VIN..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button type="submit">
-              <Search className="h-4 w-4" />
-            </Button>
-          </form>
-
-          {/* Filter Controls */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Filters
-                    {Object.values(filters).some(v => v !== undefined) && (
-                      <Badge variant="secondary" className="ml-2 h-5 w-5 text-xs p-0 flex items-center justify-center">
-                        {Object.values(filters).filter(v => v !== undefined).length}
-                      </Badge>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80">
-                  <SheetHeader>
-                    <SheetTitle>Filter Vehicles</SheetTitle>
-                  </SheetHeader>
-                  <div className="space-y-6 mt-6">
-                    {/* Make */}
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Make</label>
-                      <Select value={filters.make || ''} onValueChange={(value) => handleFilterChange('make', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any Make" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Any Make</SelectItem>
-                          {MAKES.map(make => (
-                            <SelectItem key={make} value={make}>{make}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Year Range */}
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Year Range</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          type="number"
-                          placeholder="Min Year"
-                          value={filters.minYear || ''}
-                          onChange={(e) => handleFilterChange('minYear', e.target.value ? parseInt(e.target.value) : undefined)}
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Max Year"
-                          value={filters.maxYear || ''}
-                          onChange={(e) => handleFilterChange('maxYear', e.target.value ? parseInt(e.target.value) : undefined)}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Price Range */}
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Price Range (AED)</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          type="number"
-                          placeholder="Min Price"
-                          value={filters.minPrice || ''}
-                          onChange={(e) => handleFilterChange('minPrice', e.target.value ? parseInt(e.target.value) : undefined)}
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Max Price"
-                          value={filters.maxPrice || ''}
-                          onChange={(e) => handleFilterChange('maxPrice', e.target.value ? parseInt(e.target.value) : undefined)}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Body Style */}
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Body Style</label>
-                      <Select value={filters.bodyType || ''} onValueChange={(value) => handleFilterChange('bodyType', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any Style" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Any Style</SelectItem>
-                          {BODY_TYPES.map(type => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Fuel Type */}
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Fuel Type</label>
-                      <Select value={filters.fuelType || ''} onValueChange={(value) => handleFilterChange('fuelType', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any Fuel" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Any Fuel</SelectItem>
-                          {FUEL_TYPES.map(fuel => (
-                            <SelectItem key={fuel} value={fuel}>{fuel}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Transmission */}
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Transmission</label>
-                      <Select value={filters.transmission || ''} onValueChange={(value) => handleFilterChange('transmission', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any Transmission" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Any Transmission</SelectItem>
-                          {TRANSMISSIONS.map(trans => (
-                            <SelectItem key={trans} value={trans}>{trans}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="pt-4">
-                      <Button onClick={clearFilters} variant="outline" className="w-full">
-                        Clear All Filters
-                      </Button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearFilters}
-                disabled={!Object.values(filters).some(v => v !== undefined) && !searchQuery}
-              >
-                Clear All
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {totalVehicles} vehicle{totalVehicles !== 1 ? 's' : ''} found
-              </span>
-              <div className="flex items-center border rounded-lg">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="rounded-r-none"
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="rounded-l-none"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
+          {/* Mobile Filters Overlay */}
+          {mobileFiltersOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <div className="absolute inset-0 bg-black/50" onClick={() => setMobileFiltersOpen(false)} />
+              <div className="absolute right-0 top-0 bottom-0 w-80 bg-background overflow-y-auto">
+                <div className="p-4 border-b flex justify-between items-center">
+                  <h2 className="font-bold">Filters</h2>
+                  <button onClick={() => setMobileFiltersOpen(false)}>
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <FiltersSidebar isMobile />
               </div>
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Vehicle Grid/List */}
-        {loading ? (
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
-            {[...Array(itemsPerPage)].map((_, i) => (
-              <Card key={i} className="overflow-hidden">
-                <Skeleton className="h-60 w-full" />
-                <CardContent className="p-5">
-                  <Skeleton className="h-6 w-3/4 mb-3" />
-                  <Skeleton className="h-20 w-full mb-3" />
-                  <Skeleton className="h-10 w-2/3" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : vehicles.length > 0 ? (
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
-            {vehicles.map((vehicle) => {
-              const priceFormatted = formatPrice(getDisplayPrice(vehicle))
-              const hasPrice = !priceFormatted.isContactPrice
-              // Mask VIN for non-authenticated users (show last 6 digits only)
-              const displayVin = vehicle.vin
-                ? isAuthenticated
-                  ? vehicle.vin
-                  : `•••••••••••${vehicle.vin.slice(-6)}`
-                : null
-              return (
-                <Card key={vehicle.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-border/50 flex flex-col">
-                  <Link href={`/inventory/${vehicle.id}`} className="flex flex-col h-full">
-                    {/* Fixed Height Image Container */}
-                    <div className="relative bg-muted h-60 flex-shrink-0 overflow-hidden">
-                      {vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url ? (
-                        <img
-                          src={vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url || ''}
-                          alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                          className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-muted">
-                          <Car className="h-16 w-16 text-muted-foreground/30" />
-                        </div>
-                      )}
-                      <div className="absolute top-3 right-3 left-3 flex flex-wrap gap-2 justify-end">
-                        {getPublicStatusLabel(vehicle.current_status as VehicleStatus) && (
-                          <Badge className={`border font-semibold shadow-sm ${getPublicStatusBadgeStyle(vehicle.current_status as VehicleStatus)}`}>
-                            {getPublicStatusLabel(vehicle.current_status as VehicleStatus)}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            {/* Toolbar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              {/* Status Tabs */}
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => handleStatusGroupChange('all')}
+                  className={`filter-chip px-5 py-2 rounded-full border border-border text-2xs font-bold uppercase tracking-wider transition-all ${currentStatusGroup === 'all' ? 'active bg-precision-900 text-white border-precision-900' : 'text-muted-foreground hover:border-precision-900 hover:text-precision-900'}`}
+                >
+                  All Vehicles
+                  <span className="ml-1.5 opacity-70">({statusCounts.all})</span>
+                </button>
+                <button
+                  onClick={() => handleStatusGroupChange('arrived')}
+                  className={`filter-chip px-5 py-2 rounded-full border border-border text-2xs font-bold uppercase tracking-wider transition-all ${currentStatusGroup === 'arrived' ? 'active bg-precision-900 text-white border-precision-900' : 'text-muted-foreground hover:border-precision-900 hover:text-precision-900'}`}
+                >
+                  In Stock
+                  <span className="ml-1.5 opacity-70">({statusCounts.arrived})</span>
+                </button>
+                <button
+                  onClick={() => handleStatusGroupChange('arriving_soon')}
+                  className={`filter-chip px-5 py-2 rounded-full border border-border text-2xs font-bold uppercase tracking-wider transition-all ${currentStatusGroup === 'arriving_soon' ? 'active bg-precision-900 text-white border-precision-900' : 'text-muted-foreground hover:border-precision-900 hover:text-precision-900'}`}
+                >
+                  Arriving Soon
+                  <span className="ml-1.5 opacity-70">({statusCounts.arriving_soon})</span>
+                </button>
+              </div>
 
-                    {/* Card Content with proper spacing */}
-                    <CardContent className="p-5 flex flex-col flex-grow">
-                      {/* VIN - Monospace, subtle (masked for non-authenticated users) */}
-                      {displayVin && (
-                        <p className="font-mono text-xs text-muted-foreground mb-1 tracking-wide">
-                          <span className="font-sans">VIN:</span> {displayVin}
-                        </p>
-                      )}
-                      {/* Vehicle Title */}
-                      <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
-                        {vehicle.year} {vehicle.make} {vehicle.model}
-                      </h3>
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* Mobile Filters Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="lg:hidden"
+                  onClick={() => setMobileFiltersOpen(true)}
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  Filters
+                  {activeFiltersCount > 0 && (
+                    <span className="ml-2 bg-precision-900 text-white text-2xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </Button>
 
-                      {/* Badges Section - Arrival & Run & Drive */}
-                      {(vehicle.expected_arrival_date || vehicle.run_and_drive) && (
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                          {vehicle.expected_arrival_date && (
-                            <ArrivalCountdown
-                              expectedDate={vehicle.expected_arrival_date}
-                              actualDate={vehicle.actual_arrival_date}
-                              variant="badge"
-                            />
-                          )}
-                          {vehicle.run_and_drive && (
-                            <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 text-xs">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Run & Drive
-                            </Badge>
-                          )}
-                        </div>
-                      )}
+                {/* Search */}
+                <form onSubmit={handleSearchSubmit} className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Search vehicles..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-card border-border rounded-xl pl-10 pr-4 py-2 text-sm font-medium w-56"
+                  />
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                </form>
 
-                      {/* Specs Section */}
-                      <div className="grid grid-cols-2 gap-2.5 py-3 mb-3 border-y border-border/40">
-                        {vehicle.mileage && (
-                          <div className="flex items-center gap-1.5">
-                            <Gauge className="h-4 w-4 flex-shrink-0 text-primary" />
-                            <span className="text-sm font-medium text-muted-foreground truncate">
-                              {vehicle.mileage.toLocaleString()} mi
-                            </span>
-                          </div>
-                        )}
-                        {vehicle.transmission && (
-                          <div className="flex items-center gap-1.5">
-                            <Cog className="h-4 w-4 flex-shrink-0 text-primary" />
-                            <span className="text-sm font-medium text-muted-foreground truncate">
-                              {vehicle.transmission}
-                            </span>
-                          </div>
-                        )}
-                        {vehicle.fuel_type && (
-                          <div className="flex items-center gap-1.5">
-                            <Fuel className="h-4 w-4 flex-shrink-0 text-primary" />
-                            <span className="text-sm font-medium text-muted-foreground truncate">
-                              {vehicle.fuel_type}
-                            </span>
-                          </div>
-                        )}
-                        {vehicle.body_style && (
-                          <div className="flex items-center gap-1.5">
-                            <Car className="h-4 w-4 flex-shrink-0 text-primary" />
-                            <span className="text-sm font-medium text-muted-foreground truncate">
-                              {vehicle.body_style}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Price Section */}
-                      <div className="flex items-end justify-between gap-3 pt-3 mt-auto border-t border-border/40">
-                        <div className="flex-1 min-w-0">
-                          {priceFormatted.isContactPrice ? (
-                            <p className="text-base font-semibold text-foreground">
-                              {priceFormatted.amount}
-                            </p>
-                          ) : (
-                            <>
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-xs font-medium text-muted-foreground">
-                                  {priceFormatted.currency}
-                                </span>
-                                <span className="text-xl font-bold text-foreground">
-                                  {priceFormatted.amount}
-                                </span>
-                              </div>
-                              {getVatNote(vehicle) && (
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {getVatNote(vehicle)}
-                                </p>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        <Link
-                          href={hasPrice ? `/inventory/${vehicle.id}?reserve=true` : `/contact?vehicle=${vehicle.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex-shrink-0"
-                        >
-                          <Button
-                            size="sm"
-                            variant={hasPrice ? 'default' : 'outline'}
-                            className="transition-all duration-300 group-hover:scale-105"
-                          >
-                            {hasPrice ? (
-                              'Reserve'
-                            ) : (
-                              <>
-                                <MessageCircle className="h-3.5 w-3.5 mr-1" />
-                                Contact
-                              </>
-                            )}
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Link>
-                </Card>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No vehicles found</h3>
-            <p className="text-muted-foreground mb-4">
-              Try adjusting your search criteria or filters
-            </p>
-            <Button onClick={clearFilters} variant="outline">
-              Clear All Filters
-            </Button>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-12">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum
-                if (totalPages <= 5) {
-                  pageNum = i + 1
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i
-                } else {
-                  pageNum = currentPage - 2 + i
-                }
-                
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(pageNum)}
+                {/* View Toggle */}
+                <div className="flex border border-border rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-precision-900 text-white' : 'bg-card text-muted-foreground hover:text-foreground'}`}
                   >
-                    {pageNum}
-                  </Button>
-                )
-              })}
+                    <Grid3X3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-precision-900 text-white' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Sort */}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="bg-card border-border rounded-xl px-4 py-2 text-sm font-medium w-44">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="price_low">Price: Low to High</SelectItem>
+                    <SelectItem value="price_high">Price: High to Low</SelectItem>
+                    <SelectItem value="mileage_low">Mileage: Low to High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            {/* Results Count */}
+            <p className="text-2xs mono text-muted-foreground mb-6 uppercase">
+              Showing <span className="text-foreground font-bold">1-{Math.min(itemsPerPage, totalVehicles)}</span> of <span className="text-foreground font-bold">{totalVehicles}</span> vehicles
+            </p>
+
+            {/* Vehicle Grid */}
+            {loading ? (
+              <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+                {[...Array(itemsPerPage)].map((_, i) => (
+                  <div key={i} className="alumina-surface rounded-2xl border border-border overflow-hidden">
+                    <Skeleton className="h-48 w-full" />
+                    <div className="p-5">
+                      <Skeleton className="h-5 w-3/4 mb-2" />
+                      <Skeleton className="h-3 w-1/2 mb-4" />
+                      <Skeleton className="h-20 w-full mb-4" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : vehicles.length > 0 ? (
+              <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+                {vehicles.map((vehicle, index) => {
+                  const priceFormatted = formatPrice(getDisplayPrice(vehicle))
+                  const hasPrice = !priceFormatted.isContactPrice
+                  const statusInfo = getStatusInfo(vehicle)
+                  const runStatus = getRunStatus(vehicle)
+                  const etaStatus = getEtaStatus(vehicle.expected_arrival_date)
+
+                  // Mask VIN for non-authenticated users (show last 6 digits only)
+                  const displayVin = vehicle.vin
+                    ? isAuthenticated
+                      ? vehicle.vin
+                      : `${'*'.repeat(11)}${vehicle.vin.slice(-6)}`
+                    : null
+
+                  return (
+                    <Link
+                      key={vehicle.id}
+                      href={`/inventory/${vehicle.id}`}
+                      className={`alumina-surface rounded-2xl border border-border overflow-hidden card-hover animate-reveal block`}
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      {/* Image Container */}
+                      <div className="relative h-48 overflow-hidden">
+                        {vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url ? (
+                          <Image
+                            src={vehicle.vehicle_photos?.find(p => p.is_primary)?.url || vehicle.vehicle_photos?.[0]?.url || ''}
+                            alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                            className="object-cover transition-transform duration-500 hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted">
+                            <Car className="h-16 w-16 text-muted-foreground/30" />
+                          </div>
+                        )}
+
+                        {/* Status Tag (top left, angled) */}
+                        <div className={`absolute top-3 left-3 ${statusInfo.bgClass} text-white status-tag`}>
+                          {statusInfo.label}
+                        </div>
+
+                        {/* Run Status Badge (top right, frosted) */}
+                        {runStatus && (
+                          <div className="absolute top-3 right-3 frosted-panel px-2 py-1 rounded-lg text-3xs font-bold uppercase flex items-center gap-1">
+                            <span className={`w-1.5 h-1.5 ${runStatus.dotClass} rounded-full`}></span>
+                            <span className={runStatus.colorClass}>{runStatus.label}</span>
+                          </div>
+                        )}
+
+                        {/* ETA Badge - Bottom Left (In-Transit Only) */}
+                        {!statusInfo.isArrived && (
+                          <div className="absolute bottom-3 left-3 frosted-panel px-2 py-1 rounded-lg text-3xs font-bold uppercase mono">
+                            {etaStatus.type === 'pending' ? (
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></span>
+                                ETA Pending
+                              </span>
+                            ) : etaStatus.type === 'overdue' ? (
+                              <span className="text-warning flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-warning rounded-full"></span>
+                                Delayed
+                              </span>
+                            ) : etaStatus.type === 'today' ? (
+                              <span className="text-precision-500 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-precision-500 rounded-full animate-pulse"></span>
+                                Arriving Today
+                              </span>
+                            ) : (
+                              <span className="text-precision-500 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-precision-500 rounded-full animate-pulse"></span>
+                                ETA: {etaStatus.days} Day{etaStatus.days !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Content */}
+                      <div className="p-5 relative z-10">
+                        <h3 className="text-base font-extrabold leading-tight mb-1">
+                          {vehicle.year} {vehicle.make} {vehicle.model}
+                        </h3>
+                        {/* VIN & LOT# */}
+                        {(displayVin || vehicle.lot_number) && (
+                          <div className="mb-4">
+                            {displayVin && (
+                              <p className="text-2xs mono text-muted-foreground">
+                                VIN: {displayVin}
+                              </p>
+                            )}
+                            {vehicle.lot_number && (
+                              <p className="text-2xs mono text-muted-foreground">
+                                LOT #{vehicle.lot_number}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Specs */}
+                        <div className="space-y-1.5 mb-4">
+                          {vehicle.primary_damage && (
+                            <div className="flex justify-between text-xs spec-line pb-1.5">
+                              <span className="text-muted-foreground">Damage</span>
+                              <span className="font-bold text-action-600">{vehicle.primary_damage}</span>
+                            </div>
+                          )}
+                          {vehicle.mileage && (
+                            <div className="flex justify-between text-xs spec-line pb-1.5">
+                              <span className="text-muted-foreground">Mileage</span>
+                              <span className="font-bold">{vehicle.mileage.toLocaleString()} Mi</span>
+                            </div>
+                          )}
+                          {vehicle.transmission && (
+                            <div className="flex justify-between text-xs spec-line pb-1.5">
+                              <span className="text-muted-foreground">Trans</span>
+                              <span className="font-bold">{vehicle.transmission}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Price and CTA */}
+                        <div className="flex justify-between items-center pt-3 border-t border-border/50">
+                          <div>
+                            <p className="text-3xs font-bold text-muted-foreground uppercase">Price</p>
+                            {hasPrice ? (
+                              <p className="text-xl font-black text-precision-900 mono">
+                                {priceFormatted.amount} <span className="text-xs">{priceFormatted.currency}</span>
+                              </p>
+                            ) : (
+                              <p className="text-sm font-semibold text-foreground">Contact for Price</p>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            className={`${hasPrice && statusInfo.isArrived ? 'bg-action-600 hover:bg-action-700' : 'bg-precision-900 hover:bg-precision-800'} text-white px-4 py-2.5 rounded-xl text-2xs font-bold uppercase tracking-wider btn-precision`}
+                          >
+                            {hasPrice && statusInfo.isArrived ? 'Details' : 'Reserve'}
+                          </Button>
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-16 alumina-surface rounded-2xl border border-border">
+                <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-extrabold mb-2">No vehicles found</h3>
+                <p className="text-muted-foreground mb-6">
+                  Try adjusting your search criteria or filters
+                </p>
+                <Button onClick={clearFilters} variant="outline" className="rounded-xl">
+                  Clear All Filters
+                </Button>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-12">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-xl border border-border text-2xs font-bold uppercase tracking-wider text-muted-foreground hover:border-precision-900 hover:text-precision-900 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Prev
+                </button>
+
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum
+                  if (totalPages <= 5) {
+                    pageNum = i + 1
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i
+                  } else {
+                    pageNum = currentPage - 2 + i
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
+                        currentPage === pageNum
+                          ? 'bg-precision-900 text-white'
+                          : 'border border-border hover:border-precision-900 hover:text-precision-900'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                })}
+
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <>
+                    <span className="text-muted-foreground">...</span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="w-10 h-10 rounded-xl border border-border font-bold text-sm hover:border-precision-900 hover:text-precision-900 transition-all"
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-xl border border-border text-2xs font-bold uppercase tracking-wider text-muted-foreground hover:border-precision-900 hover:text-precision-900 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </main>
     </div>
   )
 }
@@ -762,39 +897,63 @@ function InventoryContent() {
 export default function InventoryPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background bg-pattern">
         <SiteNavbar />
-        <div className="border-b bg-muted/30">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link href="/" className="hover:text-foreground transition-colors">
-                <Home className="h-4 w-4" />
+        <header className="frosted-panel border-b">
+          <div className="max-w-content mx-auto px-4 md:px-6 py-6">
+            <div className="flex items-center gap-2 text-2xs mono text-muted-foreground mb-3">
+              <Link href="/" className="hover:text-precision-900 transition-colors">
+                <Home className="h-3.5 w-3.5" />
               </Link>
-              <ChevronRight className="h-4 w-4" />
-              <span className="text-foreground font-medium">Vehicle Inventory</span>
+              <span>/</span>
+              <span className="text-foreground">Inventory</span>
+            </div>
+            <div className="mb-2">
+              <h1 className="text-3xl font-extrabold tracking-tight mb-2">Vehicle Inventory</h1>
+              <p className="text-muted-foreground">Browse our curated selection of salvage vehicles from USA & Canada</p>
             </div>
           </div>
-        </div>
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Vehicle Inventory</h1>
-            <p className="text-muted-foreground">
-              Browse our collection of premium salvage vehicles imported from US and Canada auctions
-            </p>
+        </header>
+        <main className="max-w-content mx-auto px-4 md:px-6 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <aside className="hidden lg:block lg:col-span-1">
+              <div className="frosted-panel rounded-2xl sticky top-28">
+                <div className="p-5 border-b border-border">
+                  <Skeleton className="h-6 w-24" />
+                </div>
+                <div className="p-5 space-y-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i}>
+                      <Skeleton className="h-3 w-20 mb-2" />
+                      <Skeleton className="h-12 w-full rounded-xl" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
+            <div className="lg:col-span-3">
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Skeleton className="h-10 w-32 rounded-full" />
+                <Skeleton className="h-10 w-28 rounded-full" />
+                <Skeleton className="h-10 w-36 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-40 mb-6" />
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="alumina-surface rounded-2xl border border-border overflow-hidden">
+                    <Skeleton className="h-48 w-full" />
+                    <div className="p-5">
+                      <Skeleton className="h-5 w-3/4 mb-2" />
+                      <Skeleton className="h-3 w-1/2 mb-4" />
+                      <Skeleton className="h-20 w-full mb-4" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {[...Array(12)].map((_, i) => (
-              <Card key={i} className="overflow-hidden">
-                <Skeleton className="h-60 w-full" />
-                <CardContent className="p-5">
-                  <Skeleton className="h-6 w-3/4 mb-3" />
-                  <Skeleton className="h-20 w-full mb-3" />
-                  <Skeleton className="h-10 w-2/3" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        </main>
       </div>
     }>
       <InventoryContent />

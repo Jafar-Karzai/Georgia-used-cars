@@ -98,11 +98,37 @@ export function ArrivalCountdown({
 
   // Render based on variant
   if (variant === 'badge') {
+    // For arrived vehicles, return null (card will show lot number)
+    if (actual) {
+      return null
+    }
+
+    // Overdue - show "Delayed" badge with warning color
+    if (daysRemaining < 0) {
+      return (
+        <span className={cn('text-3xs font-bold text-warning uppercase flex items-center gap-1.5', className)}>
+          <span className="w-1.5 h-1.5 bg-warning rounded-full" aria-hidden="true" />
+          Delayed
+        </span>
+      )
+    }
+
+    // Arriving today
+    if (daysRemaining === 0) {
+      return (
+        <span className={cn('text-3xs font-bold text-precision-500 uppercase flex items-center gap-1.5', className)}>
+          <span className="w-1.5 h-1.5 bg-precision-500 rounded-full animate-pulse" aria-hidden="true" />
+          Arriving Today
+        </span>
+      )
+    }
+
+    // Show simple ETA format
     return (
-      <Badge className={cn('flex items-center gap-1.5', bgColorClass, className)}>
-        {icon}
-        <span className="text-xs font-medium">{message}</span>
-      </Badge>
+      <span className={cn('text-3xs font-bold text-precision-500 uppercase flex items-center gap-1.5', className)}>
+        <span className="w-1.5 h-1.5 bg-precision-500 rounded-full animate-pulse" aria-hidden="true" />
+        ETA: {daysRemaining} Day{daysRemaining !== 1 ? 's' : ''}
+      </span>
     )
   }
 

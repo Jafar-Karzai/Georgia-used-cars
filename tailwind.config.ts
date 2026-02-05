@@ -30,6 +30,8 @@ const config: Config = {
   			mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
   		},
   		fontSize: {
+  			'3xs': ['0.5625rem', { lineHeight: '1.4' }], // 9px - micro labels
+  			'2xs': ['0.625rem', { lineHeight: '1.4' }],  // 10px - small labels, eyebrows
   			'xs': ['0.75rem', { lineHeight: '1.4' }],
   			'sm': ['0.875rem', { lineHeight: '1.5' }],
   			'base': ['1rem', { lineHeight: '1.6' }],

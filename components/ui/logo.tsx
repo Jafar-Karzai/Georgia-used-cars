@@ -89,12 +89,12 @@ export function Logo({
           </span>
           
           {/* Descriptor line - USED CARS */}
-          <span 
+          <span
             className={cn(
               "tracking-widest text-muted-foreground uppercase transition-colors duration-300",
-              variant === 'compact' ? "text-[10px]" : "text-xs"
+              variant === 'compact' ? "text-2xs" : "text-xs"
             )}
-            style={{ 
+            style={{
               fontFamily: 'system-ui, -apple-system, sans-serif',
               fontWeight: 300,
               letterSpacing: '0.12em'
@@ -102,12 +102,12 @@ export function Logo({
           >
             USED CARS
           </span>
-          
+
           {/* Tagline */}
           {showTagline && variant === 'default' && (
-            <span 
-              className="text-[10px] text-muted-foreground/70 tracking-wide mt-0.5"
-              style={{ 
+            <span
+              className="text-2xs text-muted-foreground/70 tracking-wide mt-0.5"
+              style={{
                 fontFamily: 'system-ui, -apple-system, sans-serif',
                 fontWeight: 400,
                 letterSpacing: '0.05em'

@@ -1,0 +1,6 @@
+export { StatsStrip } from './stats-strip'
+export { HowItWorksSection } from './how-it-works'
+export { ValuePropositionsSection } from './value-propositions'
+export { WhoBuysFromUsSection } from './who-buys-from-us'
+export { CTABanner } from './cta-banner'
+export { CategoriesSection } from './categories-section'

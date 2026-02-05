@@ -130,7 +130,7 @@ export function VehicleGallery({ photos, vehicleName }: VehicleGalleryProps) {
                 className="w-full h-full object-cover"
               />
               {photo.is_primary && (
-                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 font-medium">
+                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-2xs px-1.5 py-0.5 font-medium">
                   Main
                 </div>
               )}
